@@ -1,5 +1,6 @@
 import { plainToInstance } from 'class-transformer';
 import {
+  IsEnum,
   IsInt,
   IsNotEmpty,
   IsString,
@@ -7,24 +8,13 @@ import {
   Min,
   validateSync,
 } from 'class-validator';
+import Environment from 'infra/config/Environment';
 
 export class EnvVariables {
-  static PORT: number;
-
-  static POSTGRES_USER: string;
-
-  static POSTGRES_PASS: string;
-
-  static POSTGRES_DB_NAME: string;
-
-  static POSTGRES_HOST: string;
-
-  static POSTGRES_PORT: number;
-
   @IsInt()
   @Min(1)
   @Max(65535)
-  PORT!: number;
+  PORT: number;
 
   @IsString()
   @IsNotEmpty()
@@ -45,6 +35,9 @@ export class EnvVariables {
   @Min(1)
   @Max(65535)
   POSTGRES_PORT!: number;
+
+  @IsEnum(Environment)
+  APP_ENV!: Environment;
 }
 
 export default function validateEnv(config: Record<string, unknown>) {
@@ -64,13 +57,6 @@ export default function validateEnv(config: Record<string, unknown>) {
   if (errors.length > 0) {
     throw new Error(errors.toString());
   }
-
-  EnvVariables.PORT = validatedConfig.PORT;
-  EnvVariables.POSTGRES_USER = validatedConfig.POSTGRES_USER;
-  EnvVariables.POSTGRES_PASS = validatedConfig.POSTGRES_PASS;
-  EnvVariables.POSTGRES_DB_NAME = validatedConfig.POSTGRES_DB_NAME;
-  EnvVariables.POSTGRES_HOST = validatedConfig.POSTGRES_HOST;
-  EnvVariables.POSTGRES_PORT = validatedConfig.POSTGRES_PORT;
 
   return validatedConfig;
 }

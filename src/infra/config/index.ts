@@ -1,21 +1,25 @@
 import { EnvVariables } from 'infra/env/env.validation';
+import { Config } from './interface';
 
-export interface Config {
-  drizzle: {
-    postgresUser: string;
-    postgresPass: string;
-    postgresDbName: string;
-    postgresHost: string;
-    postgresPort: number;
-  };
-}
+const envVars = new EnvVariables();
 
-export const config: Config = {
+const config: Config = {
+  app: {
+    environment: envVars.APP_ENV,
+  },
   drizzle: {
-    postgresUser: EnvVariables.POSTGRES_USER,
-    postgresPass: EnvVariables.POSTGRES_PASS,
-    postgresDbName: EnvVariables.POSTGRES_DB_NAME,
-    postgresHost: EnvVariables.POSTGRES_HOST,
-    postgresPort: EnvVariables.POSTGRES_PORT,
+    postgresUser: envVars.POSTGRES_USER,
+    postgresPass: envVars.POSTGRES_PASS,
+    postgresDbName: envVars.POSTGRES_DB_NAME,
+    postgresHost: envVars.POSTGRES_HOST,
+    postgresPort: envVars.POSTGRES_PORT,
+  },
+  swagger: {
+    title: 'CrescCampo API',
+    version: '1.0',
+    path: '/docs',
+    description: 'CrescCampo API',
   },
 };
+
+export default config;
