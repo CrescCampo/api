@@ -1,3 +1,4 @@
+import { HashGenerator } from 'domain/application/cryptography/hash-generator';
 import UserAlreadyExistsError from 'domain/application/errors/auth/UserAlreadyExistsError';
 import { IFarmerRepository } from 'domain/application/repositories/IFarmerRepository';
 import { IFarmRepository } from 'domain/application/repositories/IFarmRepository';
@@ -7,6 +8,7 @@ import Farmer from 'domain/enterprise/entities/Farmer';
 interface Input {
   name: string;
   email: string;
+  password: string;
 }
 
 interface OutPut {
@@ -17,6 +19,7 @@ export default class RegisterUserUseCase {
   constructor(
     private readonly farmerRepository: IFarmerRepository,
     private readonly farmRepository: IFarmRepository,
+    private readonly hashGenerator: HashGenerator,
   ) {}
 
   async execute(input: Input): Promise<OutPut> {
@@ -34,6 +37,7 @@ export default class RegisterUserUseCase {
       name: input.name,
       email: input.email,
       farmId: farm.id,
+      password: await this.hashGenerator.hash(input.password),
     });
 
     await this.farmerRepository.save(newFarmer);

@@ -4,9 +4,11 @@ import { Optional } from 'core/optional';
 interface FarmerProps {
   name: string;
   email: string;
+  password: string;
   disabled: boolean;
   createdAt: Date;
   updatedAt: Date | null;
+  lastLogin: Date | null;
   farmId: string;
 }
 
@@ -35,6 +37,14 @@ export default class Farmer extends Entity<FarmerProps> {
     return this.props.farmId;
   }
 
+  get lastLogin() {
+    return this.props.lastLogin;
+  }
+
+  get password() {
+    return this.props.password;
+  }
+
   #touch() {
     this.props.updatedAt = new Date();
   }
@@ -49,8 +59,16 @@ export default class Farmer extends Entity<FarmerProps> {
     this.#touch();
   }
 
+  logged() {
+    this.props.lastLogin = new Date();
+    this.#touch();
+  }
+
   static create(
-    props: Optional<FarmerProps, 'disabled' | 'createdAt' | 'updatedAt'>,
+    props: Optional<
+      FarmerProps,
+      'disabled' | 'createdAt' | 'updatedAt' | 'lastLogin'
+    >,
     id?: string,
   ) {
     const farmer = new Farmer(
@@ -59,6 +77,7 @@ export default class Farmer extends Entity<FarmerProps> {
         disabled: props.disabled !== undefined ? props.disabled : false,
         createdAt: props.createdAt ?? new Date(),
         updatedAt: props.updatedAt ?? null,
+        lastLogin: props.lastLogin ?? null,
       },
       id,
     );
