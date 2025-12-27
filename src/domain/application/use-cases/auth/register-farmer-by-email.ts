@@ -4,6 +4,7 @@ import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import FarmRepository from 'domain/application/repositories/FarmRepository';
 import Farm from 'domain/enterprise/entities/Farm';
 import Farmer from 'domain/enterprise/entities/Farmer';
+import { Injectable } from '@nestjs/common';
 
 export interface Input {
   name: string;
@@ -15,6 +16,7 @@ export interface Output {
   userId: string;
 }
 
+@Injectable()
 export default class RegisterUserUseCase {
   constructor(
     private readonly farmerRepository: FarmerRepository,
