@@ -12,6 +12,9 @@ export interface Input {
 export interface Output {
   userId: string;
   token: string;
+  name: string;
+  email: string;
+  farmId: string;
 }
 
 @Injectable()
@@ -56,6 +59,9 @@ export default class LoginFarmerByEmail {
     return {
       userId: farmer.id,
       token,
+      name: farmer.name,
+      email: farmer.email,
+      farmId: farmer.farmId,
     };
   }
 }

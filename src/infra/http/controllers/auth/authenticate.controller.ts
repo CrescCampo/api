@@ -43,6 +43,24 @@ class AuthenticateResponseDTO {
     example: 'token',
   })
   token: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'Maria Clara',
+  })
+  name: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'user@email.com',
+  })
+  email: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'farm-uuid',
+  })
+  farmId: string;
 }
 
 @Controller('auth')
