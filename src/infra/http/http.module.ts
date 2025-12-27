@@ -1,7 +1,13 @@
 import { Module } from '@nestjs/common';
-import HealthCheckController from './controllers/health-check.controller';
+import LoginFarmerByEmail from 'domain/application/use-cases/auth/login-farmer-by-email';
+import CryptographyModule from 'infra/cryptography/cryptography.module';
+import DatabaseModule from 'infra/database/database.module';
+import HealthCheckController from './controllers/health/health-check.controller';
+import AuthenticateController from './controllers/auth/authenticate.controller';
 
 @Module({
-  controllers: [HealthCheckController],
+  imports: [DatabaseModule, CryptographyModule],
+  controllers: [AuthenticateController, HealthCheckController],
+  providers: [LoginFarmerByEmail],
 })
 export default class HttpModule {}

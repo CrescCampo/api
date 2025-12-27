@@ -12,6 +12,7 @@ module.exports = {
   },
   plugins: ['@typescript-eslint', 'prettier'],
   rules: {
+    'max-classes-per-file': 'off',
     'no-shadow': 'off',
     'no-param-reassign': 0,
     '@typescript-eslint/no-shadow': 'error',

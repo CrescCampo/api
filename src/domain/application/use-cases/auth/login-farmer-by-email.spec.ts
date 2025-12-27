@@ -1,5 +1,5 @@
-import { Encrypter } from 'domain/application/cryptography/encrypter';
-import { HashComparer } from 'domain/application/cryptography/hash-comparer';
+import Encrypter from 'domain/application/cryptography/encrypter';
+import HashComparer from 'domain/application/cryptography/hash-comparer';
 import WrongCredentialsError from 'domain/application/errors/auth/WrongCredentialsError';
 import Farm from 'domain/enterprise/entities/Farm';
 import Farmer from 'domain/enterprise/entities/Farmer';

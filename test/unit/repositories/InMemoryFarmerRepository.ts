@@ -1,7 +1,7 @@
-import { IFarmerRepository } from 'domain/application/repositories/IFarmerRepository';
+import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import Farmer from 'domain/enterprise/entities/Farmer';
 
-export default class InMemoryFarmerRepository implements IFarmerRepository {
+export default class InMemoryFarmerRepository implements FarmerRepository {
   items: Farmer[] = [];
 
   save(farmer: Farmer): Promise<void> {

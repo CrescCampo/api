@@ -2,7 +2,16 @@ import Environment from './Environment';
 
 export interface Config {
   app: {
+    port: number;
     environment: Environment;
+    rateLimit: {
+      ttl: number;
+      limit: number;
+    };
+  };
+  jwt: {
+    privateKeyBase64: string;
+    publicKeyBase64: string;
   };
   drizzle: {
     postgresUser: string;

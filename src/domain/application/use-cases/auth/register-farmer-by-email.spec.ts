@@ -1,7 +1,7 @@
 import UserAlreadyExistsError from 'domain/application/errors/auth/UserAlreadyExistsError';
 import Farm from 'domain/enterprise/entities/Farm';
 import Farmer from 'domain/enterprise/entities/Farmer';
-import { HashGenerator } from 'domain/application/cryptography/hash-generator';
+import HashGenerator from 'domain/application/cryptography/hash-generator';
 import InMemoryFarmRepository from '../../../../../test/unit/repositories/InMemoryFarmRepository';
 import InMemoryFarmerRepository from '../../../../../test/unit/repositories/InMemoryFarmerRepository';
 import RegisterUserUseCase from './register-farmer-by-email';

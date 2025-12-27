@@ -1,11 +1,18 @@
-import { EnvVariables } from 'infra/env/env.validation';
+import { envVars } from 'infra/env/env.validation';
 import { Config } from './interface';
-
-const envVars = new EnvVariables();
 
 const config: Config = {
   app: {
+    port: envVars.PORT,
     environment: envVars.APP_ENV,
+    rateLimit: {
+      ttl: 5,
+      limit: 5,
+    },
+  },
+  jwt: {
+    privateKeyBase64: envVars.JWT_PRIVATE_KEY_BASE_64,
+    publicKeyBase64: envVars.JWT_PUBLIC_KEY_BASE_64,
   },
   drizzle: {
     postgresUser: envVars.POSTGRES_USER,

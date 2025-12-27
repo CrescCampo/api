@@ -1,5 +1,5 @@
 {
-  "id": "67ceed54-8496-40f8-b5e1-ab1412d74bd9",
+  "id": "6a661952-0409-4cc4-9d89-79fe8ab2c6d4",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -39,8 +39,20 @@
           "primaryKey": false,
           "notNull": true
         },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "email": {
           "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password": {
+          "name": "password",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -60,6 +72,12 @@
         },
         "updated_at": {
           "name": "updated_at",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_login": {
+          "name": "last_login",
           "type": "date",
           "primaryKey": false,
           "notNull": false

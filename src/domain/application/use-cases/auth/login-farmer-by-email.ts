@@ -1,26 +1,28 @@
-import { Encrypter } from 'domain/application/cryptography/encrypter';
-import { HashComparer } from 'domain/application/cryptography/hash-comparer';
+import { Injectable } from '@nestjs/common';
+import Encrypter from 'domain/application/cryptography/encrypter';
+import HashComparer from 'domain/application/cryptography/hash-comparer';
 import WrongCredentialsError from 'domain/application/errors/auth/WrongCredentialsError';
-import { IFarmerRepository } from 'domain/application/repositories/IFarmerRepository';
+import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 
-interface Input {
+export interface Input {
   email: string;
   password: string;
 }
 
-interface OutPut {
+export interface Output {
   userId: string;
   token: string;
 }
 
+@Injectable()
 export default class LoginFarmerByEmail {
   constructor(
-    private readonly farmerRepository: IFarmerRepository,
+    private readonly farmerRepository: FarmerRepository,
     private readonly hashComparer: HashComparer,
     private readonly encrypter: Encrypter,
   ) {}
 
-  async execute(input: Input): Promise<OutPut> {
+  async execute(input: Input): Promise<Output> {
     const farmer = await this.farmerRepository.findByEmail(input.email);
 
     if (!farmer) {
@@ -48,6 +50,7 @@ export default class LoginFarmerByEmail {
       farmId: farmer.farmId,
       id: farmer.id,
       email: farmer.email,
+      name: farmer.name,
     });
 
     return {

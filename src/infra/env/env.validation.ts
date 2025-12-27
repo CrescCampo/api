@@ -1,4 +1,7 @@
-import { plainToInstance } from 'class-transformer';
+import 'dotenv/config';
+import 'reflect-metadata';
+
+import { Type, plainToInstance } from 'class-transformer';
 import {
   IsEnum,
   IsInt,
@@ -14,49 +17,53 @@ export class EnvVariables {
   @IsInt()
   @Min(1)
   @Max(65535)
+  @Type(() => Number)
   PORT: number;
 
   @IsString()
   @IsNotEmpty()
-  POSTGRES_USER!: string;
+  POSTGRES_USER: string;
 
   @IsString()
   @IsNotEmpty()
-  POSTGRES_PASS!: string;
+  POSTGRES_PASS: string;
 
   @IsString()
   @IsNotEmpty()
-  POSTGRES_DB_NAME!: string;
+  POSTGRES_DB_NAME: string;
 
   @IsString()
-  POSTGRES_HOST!: string;
+  @IsNotEmpty()
+  POSTGRES_HOST: string;
 
   @IsInt()
   @Min(1)
   @Max(65535)
-  POSTGRES_PORT!: number;
+  @Type(() => Number)
+  POSTGRES_PORT: number;
 
   @IsEnum(Environment)
-  APP_ENV!: Environment;
+  APP_ENV: Environment;
+
+  @IsString()
+  @IsNotEmpty()
+  JWT_PRIVATE_KEY_BASE_64: string;
+
+  @IsString()
+  @IsNotEmpty()
+  JWT_PUBLIC_KEY_BASE_64: string;
 }
 
-export default function validateEnv(config: Record<string, unknown>) {
-  const validatedConfig = plainToInstance(EnvVariables, {
-    ...config,
-    PORT: config.PORT ? Number(config.PORT) : undefined,
-    POSTGRES_DB_NAME: config.POSTGRES_DB_NAME,
-    POSTGRES_PORT: config.POSTGRES_PORT
-      ? Number(config.POSTGRES_PORT)
-      : undefined,
-  });
+const envVarsInstance = plainToInstance(EnvVariables, process.env, {
+  enableImplicitConversion: true,
+});
+const envErrors = validateSync(envVarsInstance, { whitelist: true });
 
-  const errors = validateSync(validatedConfig, {
-    skipMissingProperties: false,
-  });
-
-  if (errors.length > 0) {
-    throw new Error(errors.toString());
-  }
-
-  return validatedConfig;
+if (envErrors.length > 0) {
+  const messages = envErrors
+    .flatMap(error => Object.values(error.constraints ?? {}))
+    .join(', ');
+  throw new Error(`Invalid environment variables: ${messages}`);
 }
+
+export const envVars = envVarsInstance;

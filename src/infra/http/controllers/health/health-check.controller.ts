@@ -1,7 +1,15 @@
 import { Controller, Get } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOkResponse,
+  ApiOperation,
+  ApiProperty,
+  ApiTags,
+} from '@nestjs/swagger';
 
-import HealthCheckResponseDTO from './HealthCheckResponseDTO';
+class HealthCheckResponseDTO {
+  @ApiProperty({ example: 'ok' })
+  status: string;
+}
 
 @Controller('health-check')
 @ApiTags('Health')

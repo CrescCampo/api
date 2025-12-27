@@ -1,10 +1,6 @@
 import { defineConfig } from 'drizzle-kit';
-import { config as dotenvConfig } from 'dotenv';
+import Environment from 'infra/config/Environment';
 import config from './src/infra/config';
-import validateEnv from './src/infra/env/env.validation';
-
-dotenvConfig();
-validateEnv(process.env);
 
 export default defineConfig({
   dialect: 'postgresql',
@@ -14,8 +10,12 @@ export default defineConfig({
     host: config.drizzle.postgresHost,
     user: config.drizzle.postgresUser,
     database: config.drizzle.postgresDbName,
+    ssl:
+      config.app.environment !== Environment.PROD
+        ? false
+        : { rejectUnauthorized: false },
   },
-  schema: 'src/infra/database/models/*',
+  schema: 'src/infra/database/drizzle/models/*',
   out: 'src/infra/database/migrations',
   casing: 'snake_case',
 });

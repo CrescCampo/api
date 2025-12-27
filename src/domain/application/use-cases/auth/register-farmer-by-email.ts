@@ -1,28 +1,28 @@
-import { HashGenerator } from 'domain/application/cryptography/hash-generator';
+import HashGenerator from 'domain/application/cryptography/hash-generator';
 import UserAlreadyExistsError from 'domain/application/errors/auth/UserAlreadyExistsError';
-import { IFarmerRepository } from 'domain/application/repositories/IFarmerRepository';
-import { IFarmRepository } from 'domain/application/repositories/IFarmRepository';
+import FarmerRepository from 'domain/application/repositories/FarmerRepository';
+import FarmRepository from 'domain/application/repositories/FarmRepository';
 import Farm from 'domain/enterprise/entities/Farm';
 import Farmer from 'domain/enterprise/entities/Farmer';
 
-interface Input {
+export interface Input {
   name: string;
   email: string;
   password: string;
 }
 
-interface OutPut {
+export interface Output {
   userId: string;
 }
 
 export default class RegisterUserUseCase {
   constructor(
-    private readonly farmerRepository: IFarmerRepository,
-    private readonly farmRepository: IFarmRepository,
+    private readonly farmerRepository: FarmerRepository,
+    private readonly farmRepository: FarmRepository,
     private readonly hashGenerator: HashGenerator,
   ) {}
 
-  async execute(input: Input): Promise<OutPut> {
+  async execute(input: Input): Promise<Output> {
     const existingFarmer = await this.farmerRepository.findByEmail(input.email);
 
     if (existingFarmer) {

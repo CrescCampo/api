@@ -1,7 +1,7 @@
-import { IFarmRepository } from 'domain/application/repositories/IFarmRepository';
+import FarmRepository from 'domain/application/repositories/FarmRepository';
 import Farm from 'domain/enterprise/entities/Farm';
 
-export default class InMemoryFarmRepository implements IFarmRepository {
+export default class InMemoryFarmRepository implements FarmRepository {
   items: Farm[] = [];
 
   async save(farm: Farm) {
