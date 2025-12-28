@@ -1,6 +1,6 @@
 import Entity from 'core/entity';
 import { Optional } from 'core/optional';
-import Culture from '../value-objects/Culture';
+import Culture from './Culture';
 
 interface HarvestProps {
   name: string;
