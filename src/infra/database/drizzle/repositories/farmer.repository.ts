@@ -62,4 +62,30 @@ export default class DrizzleFarmerRepository implements FarmerRepository {
       row.id,
     );
   }
+
+  async findById(id: string): Promise<Farmer | null> {
+    const [row] = await this.db
+      .select()
+      .from(FarmerModel)
+      .where(eq(FarmerModel.id, id))
+      .limit(1);
+
+    if (!row) {
+      return null;
+    }
+
+    return Farmer.create(
+      {
+        name: row.name,
+        email: row.email,
+        password: row.password,
+        disabled: row.disabled,
+        createdAt: row.createdAt ?? new Date(),
+        updatedAt: row.updatedAt ?? null,
+        lastLogin: row.lastLogin ?? null,
+        farmId: row.farmId,
+      },
+      row.id,
+    );
+  }
 }
