@@ -1,18 +1,10 @@
-import {
-  BadRequestException,
-  Controller,
-  Get,
-  Query,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Req, UseGuards } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiOkResponse,
   ApiOperation,
   ApiProperty,
-  ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -174,12 +166,22 @@ class PullResponseDTO {
   @ApiProperty({
     type: [PullHarvestDTO],
   })
-  harvests: PullHarvestDTO[];
+  activeHarvests: PullHarvestDTO[];
 
   @ApiProperty({
     type: [PullTransactionCategoryDTO],
   })
   transactionCategories: PullTransactionCategoryDTO[];
+
+  @ApiProperty({
+    type: [PullHarvestDTO],
+  })
+  recentHarvests: PullHarvestDTO[];
+
+  @ApiProperty({
+    type: () => PullPaginationDTO,
+  })
+  harvestsPagination: PullPaginationDTO;
 
   @ApiProperty({
     type: [PullTransactionDTO],
@@ -225,27 +227,13 @@ export default class PullController {
   @Get('/pull')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Pull app changes since a timestamp' })
-  @ApiQuery({
-    name: 'since',
-    type: Number,
-    required: true,
-  })
   @ApiOkResponse({
     description: 'Changes pulled successfully',
     type: PullResponseDTO,
   })
   @ApiBadRequestResponse({ description: 'Invalid since query param' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  async handle(
-    @Query('since') since: string,
-    @Req() req: AuthenticatedRequest,
-  ) {
-    const sinceValue = Number(since);
-
-    if (!Number.isFinite(sinceValue)) {
-      throw new BadRequestException('Invalid since query param');
-    }
-
-    return this.appPullUseCase.execute(req.user.id, { since: sinceValue });
+  async handle(@Req() req: AuthenticatedRequest) {
+    return this.appPullUseCase.execute(req.user.id);
   }
 }

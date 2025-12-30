@@ -7,10 +7,6 @@ import TransactionRepository from 'domain/application/repositories/TransactionRe
 import TransactionType from 'domain/enterprise/enums/TransactionType';
 import type { PaginationParams } from 'core/pagination-params';
 
-export interface Input {
-  since: number;
-}
-
 export interface TransactionDTO {
   id: string;
   harvestId: string;
@@ -43,7 +39,9 @@ export interface HarvestDTO {
 
 export interface Output {
   cultures: CultureDTO[];
-  harvests: HarvestDTO[];
+  activeHarvests: HarvestDTO[];
+  recentHarvests: HarvestDTO[];
+  harvestsPagination: PaginationParams;
   transactionCategories: TransactionCategoryDTO[];
   transactions: TransactionDTO[];
   transactionsPagination: PaginationParams;
@@ -62,22 +60,20 @@ export default class AppPullUseCase {
     private readonly transactionRepository: TransactionRepository,
   ) {}
 
-  async execute(userId: string, input: Input): Promise<Output> {
-    if (!Number.isFinite(input.since)) {
-      throw new Error('Invalid since parameter');
-    }
-
+  async execute(userId: string): Promise<Output> {
     const farmer = await this.farmerRepository.findById(userId);
 
     if (!farmer) {
       throw new Error(`Farmer ${userId} not found`);
     }
 
+    const pageSize = 10;
     const { farmId } = farmer;
     const [
       cultures,
       activeHarvests,
       recentHarvests,
+      totalHarvests,
       transactionCategories,
       transactions,
       totalTransactions,
@@ -85,24 +81,14 @@ export default class AppPullUseCase {
     ] = await Promise.all([
       this.cultureRepository.findByFarmId(farmId),
       this.harvestRepository.findActiveByFarmId(farmId),
-      this.harvestRepository.findRecentByFarmId(farmId, 10),
+      this.harvestRepository.findRecentByFarmId(farmId, pageSize),
+      this.harvestRepository.countByFarmId(farmId),
       this.transactionCategoryRepository.findByFarmId(farmId),
-      this.transactionRepository.findByFarmIdRecent(farmId, 10),
+      this.transactionRepository.findByFarmIdRecent(farmId, pageSize),
       this.transactionRepository.countByFarmId(farmId),
       this.harvestRepository.getTotalsByFarmId(farmId),
     ]);
 
-    const harvestsById = new Map<string, (typeof activeHarvests)[number]>();
-
-    activeHarvests.forEach(harvest => {
-      harvestsById.set(harvest.id, harvest);
-    });
-
-    recentHarvests.forEach(harvest => {
-      harvestsById.set(harvest.id, harvest);
-    });
-
-    const harvests = Array.from(harvestsById.values());
     const { totalRevenue, totalExpenses } = harvestTotals;
 
     return {
@@ -110,7 +96,7 @@ export default class AppPullUseCase {
         id: culture.id,
         name: culture.name,
       })),
-      harvests: harvests.map(harvest => ({
+      activeHarvests: activeHarvests.map(harvest => ({
         id: harvest.id,
         name: harvest.name,
         cultureId: harvest.culture.id,
@@ -119,6 +105,22 @@ export default class AppPullUseCase {
         revenue: harvest.revenue,
         expenses: harvest.expenses,
       })),
+      recentHarvests: recentHarvests.map(harvest => ({
+        id: harvest.id,
+        name: harvest.name,
+        cultureId: harvest.culture.id,
+        startDate: harvest.startDate.getTime(),
+        endDate: harvest.endDate?.getTime(),
+        revenue: harvest.revenue,
+        expenses: harvest.expenses,
+      })),
+      harvestsPagination: {
+        meta: {
+          currentPage: 1,
+          items: recentHarvests.length,
+          totalItems: totalHarvests,
+        },
+      },
       transactionCategories: transactionCategories.map(category => ({
         id: category.id,
         name: category.name,
