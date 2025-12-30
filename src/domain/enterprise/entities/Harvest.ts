@@ -11,13 +11,50 @@ interface HarvestProps {
   endDate: Date | null;
   revenue: number;
   expenses: number;
+  farmId: string;
 }
 
 export default class Harvest extends Entity<HarvestProps> {
+  get name() {
+    return this.props.name;
+  }
+
+  get createdAt() {
+    return this.props.createdAt;
+  }
+
+  get updatedAt() {
+    return this.props.updatedAt;
+  }
+
+  get culture() {
+    return this.props.culture;
+  }
+
+  get startDate() {
+    return this.props.startDate;
+  }
+
+  get endDate() {
+    return this.props.endDate;
+  }
+
+  get revenue() {
+    return this.props.revenue;
+  }
+
+  get expenses() {
+    return this.props.expenses;
+  }
+
+  get farmId() {
+    return this.props.farmId;
+  }
+
   static create(
     props: Optional<
       HarvestProps,
-      'createdAt' | 'revenue' | 'expenses' | 'endDate'
+      'createdAt' | 'updatedAt' | 'revenue' | 'expenses' | 'endDate'
     >,
     id?: string,
   ) {

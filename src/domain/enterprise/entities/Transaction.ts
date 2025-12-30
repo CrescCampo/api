@@ -1,7 +1,7 @@
 import Entity from 'core/entity';
 import { Optional } from 'core/optional';
 import TransactionType from '../enums/TransactionType';
-import TransactionCategory from '../value-objects/TransactionCategory';
+import TransactionCategory from './TransactionCategory';
 
 interface TransactionProps {
   harvestId: string;
