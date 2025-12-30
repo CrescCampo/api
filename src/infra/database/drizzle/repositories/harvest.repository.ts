@@ -118,6 +118,37 @@ export default class DrizzleHarvestRepository implements HarvestRepository {
     return rows.map(row => this.mapRowToHarvest(row));
   }
 
+  async findByFarmIdPaginated(
+    farmId: string,
+    limit: number,
+    offset: number,
+  ): Promise<Harvest[]> {
+    const rows = await this.db
+      .select({
+        harvest: HarvestModel,
+        culture: CultureModel,
+      })
+      .from(HarvestModel)
+      .innerJoin(CultureModel, eq(HarvestModel.cultureId, CultureModel.id))
+      .where(eq(HarvestModel.farmId, farmId))
+      .orderBy(desc(HarvestModel.startDate))
+      .limit(limit)
+      .offset(offset);
+
+    return rows.map(row => this.mapRowToHarvest(row));
+  }
+
+  async countByFarmId(farmId: string): Promise<number> {
+    const [row] = await this.db
+      .select({
+        totalItems: sql<number>`count(*)`,
+      })
+      .from(HarvestModel)
+      .where(eq(HarvestModel.farmId, farmId));
+
+    return Number(row?.totalItems ?? 0);
+  }
+
   async getTotalsByFarmId(farmId: string): Promise<{
     totalRevenue: number;
     totalExpenses: number;

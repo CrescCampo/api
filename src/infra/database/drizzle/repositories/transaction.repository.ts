@@ -85,6 +85,29 @@ export default class DrizzleTransactionRepository
     return rows.map(row => this.mapRowToTransaction(row));
   }
 
+  async findByFarmIdPaginated(
+    farmId: string,
+    limit: number,
+    offset: number,
+  ): Promise<Transaction[]> {
+    const rows = await this.db
+      .select({
+        transaction: TransactionModel,
+        category: TransactionCategoryModel,
+      })
+      .from(TransactionModel)
+      .innerJoin(
+        TransactionCategoryModel,
+        eq(TransactionModel.categoryId, TransactionCategoryModel.id),
+      )
+      .where(eq(TransactionCategoryModel.farmId, farmId))
+      .orderBy(desc(TransactionModel.date))
+      .limit(limit)
+      .offset(offset);
+
+    return rows.map(row => this.mapRowToTransaction(row));
+  }
+
   async countByFarmId(farmId: string): Promise<number> {
     const [row] = await this.db
       .select({
