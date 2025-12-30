@@ -1,5 +1,6 @@
 import Entity from 'core/entity';
 import { Optional } from 'core/optional';
+import TransactionType from '../enums/TransactionType';
 import Culture from './Culture';
 
 interface HarvestProps {
@@ -49,6 +50,16 @@ export default class Harvest extends Entity<HarvestProps> {
 
   get farmId() {
     return this.props.farmId;
+  }
+
+  applyTransaction(type: TransactionType, amount: number, updatedAt?: Date) {
+    if (type === TransactionType.REVENUE) {
+      this.props.revenue += amount;
+    } else {
+      this.props.expenses += amount;
+    }
+
+    this.props.updatedAt = updatedAt ?? new Date();
   }
 
   static create(
