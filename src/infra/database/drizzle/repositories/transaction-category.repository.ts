@@ -2,7 +2,7 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import TransactionCategoryRepository from 'domain/application/repositories/TransactionCategoryRepository';
 import TransactionCategory from 'domain/enterprise/entities/TransactionCategory';
 import { Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { and, eq, gte } from 'drizzle-orm';
 import TransactionCategoryModel from '../models/TransactionCategory';
 
 @Injectable()
@@ -40,6 +40,45 @@ export default class DrizzleTransactionCategoryRepository
       return null;
     }
 
+    return TransactionCategory.create(
+      {
+        name: row.name,
+        farmId: row.farmId,
+        createdAt: row.createdAt,
+      },
+      row.id,
+    );
+  }
+
+  async findByFarmIdSince(
+    farmId: string,
+    since: Date,
+  ): Promise<TransactionCategory[]> {
+    const rows = await this.db
+      .select()
+      .from(TransactionCategoryModel)
+      .where(
+        and(
+          eq(TransactionCategoryModel.farmId, farmId),
+          gte(TransactionCategoryModel.createdAt, since),
+        ),
+      );
+
+    return rows.map(row => this.mapRowToCategory(row));
+  }
+
+  async findByFarmId(farmId: string): Promise<TransactionCategory[]> {
+    const rows = await this.db
+      .select()
+      .from(TransactionCategoryModel)
+      .where(eq(TransactionCategoryModel.farmId, farmId));
+
+    return rows.map(row => this.mapRowToCategory(row));
+  }
+
+  private mapRowToCategory(
+    row: typeof TransactionCategoryModel.$inferSelect,
+  ): TransactionCategory {
     return TransactionCategory.create(
       {
         name: row.name,

@@ -15,11 +15,13 @@ export default class DrizzleCultureRepository implements CultureRepository {
       .values({
         id: culture.id,
         name: culture.name,
+        farmId: culture.farmId,
       })
       .onConflictDoUpdate({
         target: CultureModel.id,
         set: {
           name: culture.name,
+          farmId: culture.farmId,
         },
       });
   }
@@ -38,8 +40,40 @@ export default class DrizzleCultureRepository implements CultureRepository {
     return Culture.create(
       {
         name: row.name,
+        farmId: row.farmId,
       },
       row.id,
+    );
+  }
+
+  async findAll(): Promise<Culture[]> {
+    const rows = await this.db.select().from(CultureModel);
+
+    return rows.map(row =>
+      Culture.create(
+        {
+          name: row.name,
+          farmId: row.farmId,
+        },
+        row.id,
+      ),
+    );
+  }
+
+  async findByFarmId(farmId: string): Promise<Culture[]> {
+    const rows = await this.db
+      .select()
+      .from(CultureModel)
+      .where(eq(CultureModel.farmId, farmId));
+
+    return rows.map(row =>
+      Culture.create(
+        {
+          name: row.name,
+          farmId: row.farmId,
+        },
+        row.id,
+      ),
     );
   }
 }

@@ -1,10 +1,4 @@
-import {
-  Body,
-  Controller,
-  Post,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import {
   ApiBody,
   ApiCreatedResponse,
@@ -60,7 +54,6 @@ export default class RegisterFarmerController {
     description: 'Farmer registered successfully',
     type: RegisterFarmerResponseDTO,
   })
-  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   async handle(@Body() body: RegisterFarmerBodyDTO) {
     const { name, email, password } = body;
 

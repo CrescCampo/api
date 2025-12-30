@@ -1,12 +1,18 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { plainToInstance } from 'class-transformer';
-import { IsEmail, IsString, IsUUID, validateSync } from 'class-validator';
+import {
+  IsEmail,
+  IsInt,
+  IsOptional,
+  IsString,
+  validateSync,
+} from 'class-validator';
 import config from 'infra/config';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 class TokenPayload {
-  @IsUUID()
+  @IsString()
   id: string;
 
   @IsString()
@@ -17,6 +23,10 @@ class TokenPayload {
 
   @IsEmail()
   email: string;
+
+  @IsOptional()
+  @IsInt()
+  iat?: number;
 }
 
 @Injectable()
