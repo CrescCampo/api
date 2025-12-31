@@ -7,9 +7,7 @@ import { eq } from 'drizzle-orm';
 import OutboxEventModel from '../models/OutboxEvent';
 
 @Injectable()
-export default class DrizzleOutboxEventRepository
-  implements OutboxEventRepository
-{
+export default class DrizzleOutboxEventRepository implements OutboxEventRepository {
   constructor(private readonly db: NodePgDatabase<Record<string, never>>) {}
 
   async exists(id: string): Promise<boolean> {

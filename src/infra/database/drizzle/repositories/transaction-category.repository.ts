@@ -6,9 +6,7 @@ import { and, eq, gte } from 'drizzle-orm';
 import TransactionCategoryModel from '../models/TransactionCategory';
 
 @Injectable()
-export default class DrizzleTransactionCategoryRepository
-  implements TransactionCategoryRepository
-{
+export default class DrizzleTransactionCategoryRepository implements TransactionCategoryRepository {
   constructor(private readonly db: NodePgDatabase<Record<string, never>>) {}
 
   async save(category: TransactionCategory): Promise<void> {

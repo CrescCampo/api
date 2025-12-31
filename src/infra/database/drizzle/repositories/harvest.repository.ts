@@ -98,7 +98,9 @@ export default class DrizzleHarvestRepository implements HarvestRepository {
       })
       .from(HarvestModel)
       .innerJoin(CultureModel, eq(HarvestModel.cultureId, CultureModel.id))
-      .where(and(eq(HarvestModel.farmId, farmId), isNull(HarvestModel.endDate)));
+      .where(
+        and(eq(HarvestModel.farmId, farmId), isNull(HarvestModel.endDate)),
+      );
 
     return rows.map(row => this.mapRowToHarvest(row));
   }

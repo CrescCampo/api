@@ -4,14 +4,12 @@ import Transaction from 'domain/enterprise/entities/Transaction';
 import TransactionCategory from 'domain/enterprise/entities/TransactionCategory';
 import TransactionType from 'domain/enterprise/enums/TransactionType';
 import { Injectable } from '@nestjs/common';
+import { and, desc, eq, gte, sql } from 'drizzle-orm';
 import TransactionModel from '../models/Transaction';
 import TransactionCategoryModel from '../models/TransactionCategory';
-import { and, desc, eq, gte, sql } from 'drizzle-orm';
 
 @Injectable()
-export default class DrizzleTransactionRepository
-  implements TransactionRepository
-{
+export default class DrizzleTransactionRepository implements TransactionRepository {
   constructor(private readonly db: NodePgDatabase<Record<string, never>>) {}
 
   async save(transaction: Transaction): Promise<void> {
@@ -40,10 +38,7 @@ export default class DrizzleTransactionRepository
       });
   }
 
-  async findByFarmIdSince(
-    farmId: string,
-    since: Date,
-  ): Promise<Transaction[]> {
+  async findByFarmIdSince(farmId: string, since: Date): Promise<Transaction[]> {
     const rows = await this.db
       .select({
         transaction: TransactionModel,
