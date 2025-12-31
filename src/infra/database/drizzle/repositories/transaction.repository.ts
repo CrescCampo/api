@@ -118,6 +118,40 @@ export default class DrizzleTransactionRepository implements TransactionReposito
     return Number(row?.totalItems ?? 0);
   }
 
+  async findByHarvestIdPaginated(
+    harvestId: string,
+    limit: number,
+    offset: number,
+  ): Promise<Transaction[]> {
+    const rows = await this.db
+      .select({
+        transaction: TransactionModel,
+        category: TransactionCategoryModel,
+      })
+      .from(TransactionModel)
+      .innerJoin(
+        TransactionCategoryModel,
+        eq(TransactionModel.categoryId, TransactionCategoryModel.id),
+      )
+      .where(eq(TransactionModel.harvestId, harvestId))
+      .orderBy(desc(TransactionModel.date))
+      .limit(limit)
+      .offset(offset);
+
+    return rows.map(row => this.mapRowToTransaction(row));
+  }
+
+  async countByHarvestId(harvestId: string): Promise<number> {
+    const [row] = await this.db
+      .select({
+        totalItems: sql<number>`count(*)`,
+      })
+      .from(TransactionModel)
+      .where(eq(TransactionModel.harvestId, harvestId));
+
+    return Number(row?.totalItems ?? 0);
+  }
+
   private mapRowToTransaction(row: {
     transaction: typeof TransactionModel.$inferSelect;
     category: typeof TransactionCategoryModel.$inferSelect;

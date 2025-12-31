@@ -20,4 +20,12 @@ export default abstract class TransactionRepository {
   ): Promise<Transaction[]>;
 
   abstract countByFarmId(farmId: string): Promise<number>;
+
+  abstract findByHarvestIdPaginated(
+    harvestId: string,
+    limit: number,
+    offset: number,
+  ): Promise<Transaction[]>;
+
+  abstract countByHarvestId(harvestId: string): Promise<number>;
 }

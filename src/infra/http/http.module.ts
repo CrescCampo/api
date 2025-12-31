@@ -7,12 +7,14 @@ import AppPushUseCase from 'domain/application/use-cases/app/push';
 import AppPullUseCase from 'domain/application/use-cases/app/pull';
 import ListHarvestsByFarm from 'domain/application/use-cases/app/list-harvests-by-farm';
 import ListTransactionsByFarm from 'domain/application/use-cases/app/list-transactions-by-farm';
+import ListTransactionsByHarvest from 'domain/application/use-cases/app/list-transactions-by-harvest';
 import HealthCheckController from './controllers/health/health-check.controller';
 import AuthenticateController from './controllers/auth/authenticate.controller';
 import RegisterFarmerController from './controllers/auth/register-farmer.controller';
 import PushController from './controllers/app/push.controller';
 import PullController from './controllers/app/pull.controller';
 import GetHarvestsController from './controllers/harvests/get-harvests.controller';
+import GetHarvestTransactionsController from './controllers/harvests/get-harvest-transactions.controller';
 import GetTransactionsController from './controllers/transactions/get-transactions.controller';
 
 @Module({
@@ -24,6 +26,7 @@ import GetTransactionsController from './controllers/transactions/get-transactio
     AuthenticateController,
     RegisterFarmerController,
     GetHarvestsController,
+    GetHarvestTransactionsController,
     GetTransactionsController,
   ],
   providers: [
@@ -33,6 +36,7 @@ import GetTransactionsController from './controllers/transactions/get-transactio
     AppPullUseCase,
     ListHarvestsByFarm,
     ListTransactionsByFarm,
+    ListTransactionsByHarvest,
   ],
 })
 export default class HttpModule {}
