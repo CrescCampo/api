@@ -124,7 +124,12 @@ export default class DrizzleHarvestRepository implements HarvestRepository {
     farmId: string,
     limit: number,
     offset: number,
+    search?: string,
   ): Promise<Harvest[]> {
+    const searchCondition = this.buildSearchCondition(search);
+    const whereCondition = searchCondition
+      ? and(eq(HarvestModel.farmId, farmId), searchCondition)
+      : eq(HarvestModel.farmId, farmId);
     const rows = await this.db
       .select({
         harvest: HarvestModel,
@@ -132,7 +137,7 @@ export default class DrizzleHarvestRepository implements HarvestRepository {
       })
       .from(HarvestModel)
       .innerJoin(CultureModel, eq(HarvestModel.cultureId, CultureModel.id))
-      .where(eq(HarvestModel.farmId, farmId))
+      .where(whereCondition)
       .orderBy(desc(HarvestModel.startDate))
       .limit(limit)
       .offset(offset);
@@ -140,13 +145,18 @@ export default class DrizzleHarvestRepository implements HarvestRepository {
     return rows.map(row => this.mapRowToHarvest(row));
   }
 
-  async countByFarmId(farmId: string): Promise<number> {
+  async countByFarmId(farmId: string, search?: string): Promise<number> {
+    const searchCondition = this.buildSearchCondition(search);
+    const whereCondition = searchCondition
+      ? and(eq(HarvestModel.farmId, farmId), searchCondition)
+      : eq(HarvestModel.farmId, farmId);
     const [row] = await this.db
       .select({
         totalItems: sql<number>`count(*)`,
       })
       .from(HarvestModel)
-      .where(eq(HarvestModel.farmId, farmId));
+      .innerJoin(CultureModel, eq(HarvestModel.cultureId, CultureModel.id))
+      .where(whereCondition);
 
     return Number(row?.totalItems ?? 0);
   }
@@ -194,6 +204,19 @@ export default class DrizzleHarvestRepository implements HarvestRepository {
         updatedAt: row.harvest.updatedAt,
       },
       row.harvest.id,
+    );
+  }
+
+  private buildSearchCondition(search?: string) {
+    if (!search) {
+      return undefined;
+    }
+
+    const pattern = `%${search}%`;
+
+    return or(
+      sql`${HarvestModel.name} ilike ${pattern}`,
+      sql`${CultureModel.name} ilike ${pattern}`,
     );
   }
 }

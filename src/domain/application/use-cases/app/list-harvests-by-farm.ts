@@ -17,6 +17,7 @@ export interface Input {
   userId: string;
   page?: number;
   pageSize?: number;
+  search?: string;
 }
 
 export interface Output {
@@ -41,14 +42,16 @@ export default class ListHarvestsByFarm {
     const page = input.page && input.page > 0 ? input.page : 1;
     const pageSize = input.pageSize && input.pageSize > 0 ? input.pageSize : 10;
     const offset = (page - 1) * pageSize;
+    const search = input.search?.trim() || undefined;
 
     const [harvests, totalItems] = await Promise.all([
       this.harvestRepository.findByFarmIdPaginated(
         farmer.farmId,
         pageSize,
         offset,
+        search,
       ),
-      this.harvestRepository.countByFarmId(farmer.farmId),
+      this.harvestRepository.countByFarmId(farmer.farmId, search),
     ]);
 
     return {

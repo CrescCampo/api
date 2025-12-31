@@ -9,7 +9,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { IsInt, IsOptional, Min } from 'class-validator';
+import { IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import type { Request } from 'express';
 import JwtAuthGuard from 'infra/auth/jwt-auth.guard';
@@ -37,6 +37,15 @@ class PaginationQueryDTO {
   @IsInt()
   @Min(1)
   pageSize?: number;
+
+  @ApiProperty({
+    type: String,
+    required: false,
+    example: '2024',
+  })
+  @IsOptional()
+  @IsString()
+  search?: string;
 }
 
 class HarvestPaginationMetaDTO {
@@ -140,6 +149,7 @@ export default class GetHarvestsController {
   @ApiOperation({ summary: 'List harvests for the authenticated farm' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'pageSize', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false, type: String })
   @ApiOkResponse({
     description: 'Harvests fetched successfully',
     type: HarvestsResponseDTO,
@@ -154,6 +164,7 @@ export default class GetHarvestsController {
       userId: req.user.id,
       page: query.page,
       pageSize: query.pageSize,
+      search: query.search,
     });
   }
 }
