@@ -18,11 +18,11 @@ import GetTransactionsController from './controllers/transactions/get-transactio
 @Module({
   imports: [DatabaseModule, CryptographyModule],
   controllers: [
-    AuthenticateController,
-    RegisterFarmerController,
     HealthCheckController,
     PushController,
     PullController,
+    AuthenticateController,
+    RegisterFarmerController,
     GetHarvestsController,
     GetTransactionsController,
   ],
