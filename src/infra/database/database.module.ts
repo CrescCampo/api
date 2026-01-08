@@ -6,6 +6,7 @@ import HarvestRepository from 'domain/application/repositories/HarvestRepository
 import TransactionCategoryRepository from 'domain/application/repositories/TransactionCategoryRepository';
 import TransactionRepository from 'domain/application/repositories/TransactionRepository';
 import OutboxEventRepository from 'domain/application/repositories/OutboxEventRepository';
+import FeedbackRepository from 'domain/application/repositories/FeedbackRepository';
 import DrizzleService from './drizzle/drizzle.service';
 import DrizzleFarmRepository from './drizzle/repositories/farm.repository';
 import DrizzleFarmerRepository from './drizzle/repositories/farmer.repository';
@@ -14,6 +15,7 @@ import DrizzleHarvestRepository from './drizzle/repositories/harvest.repository'
 import DrizzleTransactionCategoryRepository from './drizzle/repositories/transaction-category.repository';
 import DrizzleTransactionRepository from './drizzle/repositories/transaction.repository';
 import DrizzleOutboxEventRepository from './drizzle/repositories/outbox-event.repository';
+import DrizzleFeedbackRepository from './drizzle/repositories/feedback.repository';
 
 @Module({
   providers: [
@@ -60,6 +62,12 @@ import DrizzleOutboxEventRepository from './drizzle/repositories/outbox-event.re
         new DrizzleOutboxEventRepository(drizzle.connection),
       inject: [DrizzleService],
     },
+    {
+      provide: FeedbackRepository,
+      useFactory: (drizzle: DrizzleService) =>
+        new DrizzleFeedbackRepository(drizzle.connection),
+      inject: [DrizzleService],
+    },
   ],
   exports: [
     DrizzleService,
@@ -70,6 +78,7 @@ import DrizzleOutboxEventRepository from './drizzle/repositories/outbox-event.re
     TransactionCategoryRepository,
     TransactionRepository,
     OutboxEventRepository,
+    FeedbackRepository,
   ],
 })
 export default class DatabaseModule {}

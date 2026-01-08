@@ -2,6 +2,7 @@ import { HttpStatus } from '@nestjs/common';
 import { UseCaseError } from 'core/use-case-error';
 import UserAlreadyExistsError from 'domain/application/errors/auth/UserAlreadyExistsError';
 import WrongCredentialsError from 'domain/application/errors/auth/WrongCredentialsError';
+import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFoundError';
 
 export default class ErrorStatusMapper {
   private static readonly errorStatusMap = new Map<string, HttpStatus>([
@@ -10,6 +11,9 @@ export default class ErrorStatusMapper {
 
     // 409 - Conflict (Resource already exists)
     [UserAlreadyExistsError.name, HttpStatus.CONFLICT],
+
+    // 404 - Not Found
+    [FarmerNotFoundError.name, HttpStatus.NOT_FOUND],
   ]);
 
   static getStatusCode(error: Error): HttpStatus {
