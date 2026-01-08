@@ -84,7 +84,13 @@ export default class DrizzleTransactionRepository implements TransactionReposito
     farmId: string,
     limit: number,
     offset: number,
+    type?: TransactionType,
   ): Promise<Transaction[]> {
+    const conditions = [eq(TransactionCategoryModel.farmId, farmId)];
+    if (type) {
+      conditions.push(eq(TransactionModel.type, type));
+    }
+
     const rows = await this.db
       .select({
         transaction: TransactionModel,
@@ -95,7 +101,9 @@ export default class DrizzleTransactionRepository implements TransactionReposito
         TransactionCategoryModel,
         eq(TransactionModel.categoryId, TransactionCategoryModel.id),
       )
-      .where(eq(TransactionCategoryModel.farmId, farmId))
+      .where(
+        conditions.length > 1 ? and(...conditions) : conditions[0],
+      )
       .orderBy(desc(TransactionModel.date))
       .limit(limit)
       .offset(offset);
@@ -103,7 +111,15 @@ export default class DrizzleTransactionRepository implements TransactionReposito
     return rows.map(row => this.mapRowToTransaction(row));
   }
 
-  async countByFarmId(farmId: string): Promise<number> {
+  async countByFarmId(
+    farmId: string,
+    type?: TransactionType,
+  ): Promise<number> {
+    const conditions = [eq(TransactionCategoryModel.farmId, farmId)];
+    if (type) {
+      conditions.push(eq(TransactionModel.type, type));
+    }
+
     const [row] = await this.db
       .select({
         totalItems: sql<number>`count(*)`,
@@ -113,7 +129,9 @@ export default class DrizzleTransactionRepository implements TransactionReposito
         TransactionCategoryModel,
         eq(TransactionModel.categoryId, TransactionCategoryModel.id),
       )
-      .where(eq(TransactionCategoryModel.farmId, farmId));
+      .where(
+        conditions.length > 1 ? and(...conditions) : conditions[0],
+      );
 
     return Number(row?.totalItems ?? 0);
   }

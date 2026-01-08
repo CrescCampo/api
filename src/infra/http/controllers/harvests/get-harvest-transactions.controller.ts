@@ -15,7 +15,7 @@ import { Type } from 'class-transformer';
 import type { Request } from 'express';
 import JwtAuthGuard from 'infra/auth/jwt-auth.guard';
 import TransactionType from 'domain/enterprise/enums/TransactionType';
-import ListTransactionsByHarvest from 'domain/application/use-cases/app/list-transactions-by-harvest';
+import ListTransactionsByHarvest from 'domain/application/use-cases/transactions/list-transactions-by-harvest';
 
 class HarvestParamDTO {
   @ApiProperty({

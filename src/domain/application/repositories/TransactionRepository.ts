@@ -1,4 +1,5 @@
 import Transaction from 'domain/enterprise/entities/Transaction';
+import TransactionType from 'domain/enterprise/enums/TransactionType';
 
 export default abstract class TransactionRepository {
   abstract save(transaction: Transaction): Promise<void>;
@@ -17,9 +18,13 @@ export default abstract class TransactionRepository {
     farmId: string,
     limit: number,
     offset: number,
+    type?: TransactionType,
   ): Promise<Transaction[]>;
 
-  abstract countByFarmId(farmId: string): Promise<number>;
+  abstract countByFarmId(
+    farmId: string,
+    type?: TransactionType,
+  ): Promise<number>;
 
   abstract findByHarvestIdPaginated(
     harvestId: string,

@@ -9,12 +9,12 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { IsInt, IsOptional, Min } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import type { Request } from 'express';
 import JwtAuthGuard from 'infra/auth/jwt-auth.guard';
 import TransactionType from 'domain/enterprise/enums/TransactionType';
-import ListTransactionsByFarm from 'domain/application/use-cases/app/list-transactions-by-farm';
+import ListTransactionsByFarm from 'domain/application/use-cases/transactions/list-transactions-by-farm';
 
 class PaginationQueryDTO {
   @ApiProperty({
@@ -38,6 +38,15 @@ class PaginationQueryDTO {
   @IsInt()
   @Min(1)
   pageSize?: number;
+
+  @ApiProperty({
+    enum: TransactionType,
+    required: false,
+    example: TransactionType.EXPENSE,
+  })
+  @IsOptional()
+  @IsEnum(TransactionType)
+  type?: TransactionType;
 }
 
 class TransactionPaginationMetaDTO {
@@ -142,6 +151,7 @@ export default class GetTransactionsController {
   @ApiOperation({ summary: 'List transactions for the authenticated farm' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'pageSize', required: false, type: Number })
+  @ApiQuery({ name: 'type', required: false, enum: TransactionType })
   @ApiOkResponse({
     description: 'Transactions fetched successfully',
     type: TransactionsResponseDTO,
@@ -156,6 +166,7 @@ export default class GetTransactionsController {
       userId: req.user.id,
       page: query.page,
       pageSize: query.pageSize,
+      type: query.type,
     });
   }
 }

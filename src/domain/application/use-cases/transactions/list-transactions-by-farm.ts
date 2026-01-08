@@ -18,6 +18,7 @@ export interface Input {
   userId: string;
   page?: number;
   pageSize?: number;
+  type?: TransactionType;
 }
 
 export interface Output {
@@ -48,8 +49,9 @@ export default class ListTransactionsByFarm {
         farmer.farmId,
         pageSize,
         offset,
+        input.type,
       ),
-      this.transactionRepository.countByFarmId(farmer.farmId),
+      this.transactionRepository.countByFarmId(farmer.farmId, input.type),
     ]);
 
     return {

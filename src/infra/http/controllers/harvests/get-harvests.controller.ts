@@ -13,7 +13,7 @@ import { IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import type { Request } from 'express';
 import JwtAuthGuard from 'infra/auth/jwt-auth.guard';
-import ListHarvestsByFarm from 'domain/application/use-cases/app/list-harvests-by-farm';
+import ListHarvestsByFarm from 'domain/application/use-cases/harvests/list-harvests-by-farm';
 
 class PaginationQueryDTO {
   @ApiProperty({
