@@ -1,5 +1,4 @@
 import { defineConfig } from 'drizzle-kit';
-import Environment from 'infra/config/Environment';
 import config from './src/infra/config';
 
 export default defineConfig({
@@ -10,10 +9,7 @@ export default defineConfig({
     host: config.drizzle.postgresHost,
     user: config.drizzle.postgresUser,
     database: config.drizzle.postgresDbName,
-    ssl:
-      config.app.environment !== Environment.PROD
-        ? false
-        : { rejectUnauthorized: false },
+    ssl: false,
   },
   schema: 'src/infra/database/drizzle/models/*',
   out: 'src/infra/database/migrations',
