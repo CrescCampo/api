@@ -3,7 +3,7 @@ import HarvestRepository from 'domain/application/repositories/HarvestRepository
 import Harvest from 'domain/enterprise/entities/Harvest';
 import Culture from 'domain/enterprise/entities/Culture';
 import { Injectable } from '@nestjs/common';
-import { and, desc, eq, gte, isNull, or, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import HarvestModel from '../models/Harvest';
 import CultureModel from '../models/Culture';
 
@@ -125,11 +125,15 @@ export default class DrizzleHarvestRepository implements HarvestRepository {
     limit: number,
     offset: number,
     search?: string,
+    active?: boolean,
   ): Promise<Harvest[]> {
     const searchCondition = this.buildSearchCondition(search);
-    const whereCondition = searchCondition
-      ? and(eq(HarvestModel.farmId, farmId), searchCondition)
-      : eq(HarvestModel.farmId, farmId);
+    const activeCondition = this.buildActiveCondition(active);
+    const whereCondition = this.buildFarmListWhereCondition(
+      farmId,
+      searchCondition,
+      activeCondition,
+    );
     const rows = await this.db
       .select({
         harvest: HarvestModel,
@@ -145,11 +149,18 @@ export default class DrizzleHarvestRepository implements HarvestRepository {
     return rows.map(row => this.mapRowToHarvest(row));
   }
 
-  async countByFarmId(farmId: string, search?: string): Promise<number> {
+  async countByFarmId(
+    farmId: string,
+    search?: string,
+    active?: boolean,
+  ): Promise<number> {
     const searchCondition = this.buildSearchCondition(search);
-    const whereCondition = searchCondition
-      ? and(eq(HarvestModel.farmId, farmId), searchCondition)
-      : eq(HarvestModel.farmId, farmId);
+    const activeCondition = this.buildActiveCondition(active);
+    const whereCondition = this.buildFarmListWhereCondition(
+      farmId,
+      searchCondition,
+      activeCondition,
+    );
     const [row] = await this.db
       .select({
         totalItems: sql<number>`count(*)`,
@@ -218,5 +229,43 @@ export default class DrizzleHarvestRepository implements HarvestRepository {
       sql`${HarvestModel.name} ilike ${pattern}`,
       sql`${CultureModel.name} ilike ${pattern}`,
     );
+  }
+
+  private buildActiveCondition(active?: boolean) {
+    if (active === undefined) {
+      return undefined;
+    }
+
+    return active
+      ? isNull(HarvestModel.endDate)
+      : isNotNull(HarvestModel.endDate);
+  }
+
+  private buildFarmListWhereCondition(
+    farmId: string,
+    searchCondition?: ReturnType<
+      DrizzleHarvestRepository['buildSearchCondition']
+    >,
+    activeCondition?: ReturnType<
+      DrizzleHarvestRepository['buildActiveCondition']
+    >,
+  ) {
+    if (searchCondition && activeCondition) {
+      return and(
+        eq(HarvestModel.farmId, farmId),
+        searchCondition,
+        activeCondition,
+      );
+    }
+
+    if (searchCondition) {
+      return and(eq(HarvestModel.farmId, farmId), searchCondition);
+    }
+
+    if (activeCondition) {
+      return and(eq(HarvestModel.farmId, farmId), activeCondition);
+    }
+
+    return eq(HarvestModel.farmId, farmId);
   }
 }

@@ -9,7 +9,13 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import {
+  IsBooleanString,
+  IsInt,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import type { Request } from 'express';
 import JwtAuthGuard from 'infra/auth/jwt-auth.guard';
@@ -46,6 +52,16 @@ class PaginationQueryDTO {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @ApiProperty({
+    type: String,
+    required: false,
+    enum: ['true', 'false'],
+    example: 'true',
+  })
+  @IsOptional()
+  @IsBooleanString()
+  active?: string;
 }
 
 class HarvestPaginationMetaDTO {
@@ -150,6 +166,7 @@ export default class GetHarvestsController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'pageSize', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'active', required: false, type: Boolean })
   @ApiOkResponse({
     description: 'Harvests fetched successfully',
     type: HarvestsResponseDTO,
@@ -165,6 +182,7 @@ export default class GetHarvestsController {
       page: query.page,
       pageSize: query.pageSize,
       search: query.search,
+      active: query.active === undefined ? undefined : query.active === 'true',
     });
   }
 }

@@ -21,9 +21,14 @@ export default abstract class HarvestRepository {
     limit: number,
     offset: number,
     search?: string,
+    active?: boolean,
   ): Promise<Harvest[]>;
 
-  abstract countByFarmId(farmId: string, search?: string): Promise<number>;
+  abstract countByFarmId(
+    farmId: string,
+    search?: string,
+    active?: boolean,
+  ): Promise<number>;
 
   abstract getTotalsByFarmId(farmId: string): Promise<{
     totalRevenue: number;
