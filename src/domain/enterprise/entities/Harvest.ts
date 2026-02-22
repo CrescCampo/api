@@ -40,6 +40,10 @@ export default class Harvest extends Entity<HarvestProps> {
     return this.props.endDate;
   }
 
+  get isFinished() {
+    return this.props.endDate !== null;
+  }
+
   get revenue() {
     return this.props.revenue;
   }
@@ -53,6 +57,10 @@ export default class Harvest extends Entity<HarvestProps> {
   }
 
   applyTransaction(type: TransactionType, amount: number, updatedAt?: Date) {
+    if (this.isFinished) {
+      throw new Error('Cannot apply transaction to finished harvest');
+    }
+
     if (type === TransactionType.REVENUE) {
       this.props.revenue += amount;
     } else {

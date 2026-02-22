@@ -355,12 +355,12 @@ export default class AppPushUseCase {
           event.payload.id,
         );
 
-        await this.transactionRepository.save(transaction);
         harvest.applyTransaction(
           event.payload.type,
           event.payload.amount,
           toDate(event.createdAt),
         );
+        await this.transactionRepository.save(transaction);
         await this.harvestRepository.save(harvest);
         await this.outboxEventRepository.save({
           id: event.id,
