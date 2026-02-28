@@ -4,10 +4,12 @@ import Farmer from 'domain/enterprise/entities/Farmer';
 import HashGenerator from 'domain/application/cryptography/hash-generator';
 import InMemoryFarmRepository from '../../../../../test/unit/repositories/InMemoryFarmRepository';
 import InMemoryFarmerRepository from '../../../../../test/unit/repositories/InMemoryFarmerRepository';
+import InMemoryCultureRepository from '../../../../../test/unit/repositories/InMemoryCultureRepository';
 import RegisterUserUseCase from './register-farmer-by-email';
 
 let inMemoryFarmerRepository: InMemoryFarmerRepository;
 let inMemoryFarmRepository: InMemoryFarmRepository;
+let inMemoryCultureRepository: InMemoryCultureRepository;
 let hashGenerator: HashGenerator;
 let sut: RegisterUserUseCase;
 
@@ -21,12 +23,14 @@ describe('RegisterUserUseCase', () => {
   beforeEach(() => {
     inMemoryFarmerRepository = new InMemoryFarmerRepository();
     inMemoryFarmRepository = new InMemoryFarmRepository();
+    inMemoryCultureRepository = new InMemoryCultureRepository();
     hashGenerator = new FakeHashGenerator();
 
     sut = new RegisterUserUseCase(
       inMemoryFarmerRepository,
       inMemoryFarmRepository,
       hashGenerator,
+      inMemoryCultureRepository,
     );
   });
 
@@ -65,6 +69,22 @@ describe('RegisterUserUseCase', () => {
     expect(inMemoryFarmerRepository.items[0].password).toBe('hashed-secret');
     expect(inMemoryFarmerRepository.items[0].farmId).toBe(
       inMemoryFarmRepository.items[0].id,
+    );
+  });
+
+  it('should create default cultures for the new farm', async () => {
+    await sut.execute({
+      name: 'Joao Paulo',
+      email: 'joao@example.com',
+      password: 'secret',
+    });
+
+    const farmId = inMemoryFarmRepository.items[0].id;
+    const cultures = await inMemoryCultureRepository.findByFarmId(farmId);
+
+    expect(cultures).toHaveLength(4);
+    expect(cultures.map(c => c.name)).toEqual(
+      expect.arrayContaining(['Morango', 'Mandioca', 'Café', 'Pimentão']),
     );
   });
 });
