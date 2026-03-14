@@ -39,6 +39,7 @@ export default class UpdateFarmerPhone {
           text: `Olá, ${farmer.name}! 🌱 Seja bem-vindo(a) ao CrescCampo! Seu número foi cadastrado com sucesso. A partir de agora, você poderá receber atualizações importantes por aqui.`,
         })
         .catch(error => {
+          this.logger.error(error);
           this.logger.error(
             `Failed to send welcome message to farmer ${farmerId}: ${error.message}`,
           );
