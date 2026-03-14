@@ -48,6 +48,8 @@ jobs:
           APP_ENV: ${{ secrets.APP_ENV }}
           JWT_PRIVATE_KEY_BASE_64: ${{ secrets.JWT_PRIVATE_KEY_BASE_64 }}
           JWT_PUBLIC_KEY_BASE_64: ${{ secrets.JWT_PUBLIC_KEY_BASE_64 }}
+          WHATSAPP_API_URL: ${{ secrets.WHATSAPP_API_URL }}
+          WHATSAPP_API_KEY: ${{ secrets.WHATSAPP_API_KEY }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
