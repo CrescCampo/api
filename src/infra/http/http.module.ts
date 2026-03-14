@@ -9,6 +9,7 @@ import ListHarvestsByFarm from 'domain/application/use-cases/harvests/list-harve
 import ListTransactionsByFarm from 'domain/application/use-cases/transactions/list-transactions-by-farm';
 import ListTransactionsByHarvest from 'domain/application/use-cases/transactions/list-transactions-by-harvest';
 import SendFeedbackUseCase from 'domain/application/use-cases/feedbacks/send-feedback';
+import UpdateFarmerPhone from 'domain/application/use-cases/farmers/update-farmer-phone';
 import HealthCheckController from './controllers/health/health-check.controller';
 import AuthenticateController from './controllers/auth/authenticate.controller';
 import RegisterFarmerController from './controllers/auth/register-farmer.controller';
@@ -18,6 +19,7 @@ import GetHarvestsController from './controllers/harvests/get-harvests.controlle
 import GetHarvestTransactionsController from './controllers/harvests/get-harvest-transactions.controller';
 import GetTransactionsController from './controllers/transactions/get-transactions.controller';
 import SendFeedbackController from './controllers/feedbacks/send-feedback.controller';
+import UpdateFarmerPhoneController from './controllers/farmers/update-farmer-phone.controller';
 
 @Module({
   imports: [DatabaseModule, CryptographyModule],
@@ -31,6 +33,7 @@ import SendFeedbackController from './controllers/feedbacks/send-feedback.contro
     GetHarvestTransactionsController,
     GetTransactionsController,
     SendFeedbackController,
+    UpdateFarmerPhoneController,
   ],
   providers: [
     LoginFarmerByEmail,
@@ -41,6 +44,7 @@ import SendFeedbackController from './controllers/feedbacks/send-feedback.contro
     ListTransactionsByFarm,
     ListTransactionsByHarvest,
     SendFeedbackUseCase,
+    UpdateFarmerPhone,
   ],
 })
 export default class HttpModule {}

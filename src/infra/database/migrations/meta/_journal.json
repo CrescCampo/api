@@ -29,6 +29,13 @@
       "when": 1767818158053,
       "tag": "0003_mighty_black_panther",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1773510377867,
+      "tag": "0004_loose_xorn",
+      "breakpoints": true
     }
   ]
 }

@@ -11,6 +11,7 @@ export const FarmerModel = pgTable(
     name: text().notNull(),
     email: text().unique().notNull(),
     password: text().notNull(),
+    phone: text(),
     disabled: boolean().default(false).notNull(),
     createdAt: date({ mode: 'date' }),
     updatedAt: date({ mode: 'date' }),

@@ -5,6 +5,7 @@ interface FarmerProps {
   name: string;
   email: string;
   password: string;
+  phone: string | null;
   disabled: boolean;
   createdAt: Date;
   updatedAt: Date | null;
@@ -45,6 +46,15 @@ export default class Farmer extends Entity<FarmerProps> {
     return this.props.password;
   }
 
+  get phone() {
+    return this.props.phone;
+  }
+
+  set phone(phone: string | null) {
+    this.props.phone = phone;
+    this.#touch();
+  }
+
   #touch() {
     this.props.updatedAt = new Date();
   }
@@ -67,13 +77,14 @@ export default class Farmer extends Entity<FarmerProps> {
   static create(
     props: Optional<
       FarmerProps,
-      'disabled' | 'createdAt' | 'updatedAt' | 'lastLogin'
+      'disabled' | 'createdAt' | 'updatedAt' | 'lastLogin' | 'phone'
     >,
     id?: string,
   ) {
     const farmer = new Farmer(
       {
         ...props,
+        phone: props.phone ?? null,
         disabled: props.disabled !== undefined ? props.disabled : false,
         createdAt: props.createdAt ?? new Date(),
         updatedAt: props.updatedAt ?? null,
