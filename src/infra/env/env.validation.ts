@@ -52,6 +52,14 @@ export class EnvVariables {
   @IsString()
   @IsNotEmpty()
   JWT_PUBLIC_KEY_BASE_64: string;
+
+  @IsString()
+  @IsNotEmpty()
+  WHATSAPP_API_URL: string;
+
+  @IsString()
+  @IsNotEmpty()
+  WHATSAPP_API_KEY: string;
 }
 
 const envVarsInstance = plainToInstance(EnvVariables, process.env, {

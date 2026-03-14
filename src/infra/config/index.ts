@@ -27,6 +27,10 @@ const config: Config = {
     path: '/docs',
     description: 'CrescCampo API',
   },
+  whatsapp: {
+    apiUrl: envVars.WHATSAPP_API_URL,
+    apiKey: envVars.WHATSAPP_API_KEY,
+  },
 };
 
 export default config;

@@ -4,13 +4,18 @@ import Farmer from 'domain/enterprise/entities/Farmer';
 import InMemoryFarmerRepository from '../../../../../test/unit/repositories/InMemoryFarmerRepository';
 import UpdateFarmerPhone from './update-farmer-phone';
 
-let inMemoryFarmerRepository: InMemoryFarmerRepository;
-let sut: UpdateFarmerPhone;
+const fakeWhatsAppGateway = {
+  sendMessage: vi.fn().mockResolvedValue({ id: 'msg-id', status: 'pending' }),
+};
+
+let inMemoryFarmerRepository;
+let sut;
 
 describe('UpdateFarmerPhone', () => {
   beforeEach(() => {
     inMemoryFarmerRepository = new InMemoryFarmerRepository();
-    sut = new UpdateFarmerPhone(inMemoryFarmerRepository);
+    sut = new UpdateFarmerPhone(inMemoryFarmerRepository, fakeWhatsAppGateway);
+    vi.clearAllMocks();
   });
 
   it('should throw error if farmer does not exist', async () => {

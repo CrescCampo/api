@@ -26,4 +26,8 @@ export interface Config {
     version: string;
     path: string;
   };
+  whatsapp: {
+    apiUrl: string;
+    apiKey: string;
+  };
 }
