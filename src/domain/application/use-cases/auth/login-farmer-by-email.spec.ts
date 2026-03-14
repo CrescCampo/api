@@ -100,6 +100,8 @@ describe('LoginFarmerByEmail', () => {
       farmId: farmer.farmId,
       id: farmer.id,
       email: farmer.email,
+      name: farmer.name,
+      phone: null,
     });
   });
 });

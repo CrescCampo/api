@@ -14,6 +14,7 @@ export interface Output {
   token: string;
   name: string;
   email: string;
+  phone: string | null;
   farmId: string;
 }
 
@@ -54,6 +55,7 @@ export default class LoginFarmerByEmail {
       id: farmer.id,
       email: farmer.email,
       name: farmer.name,
+      phone: farmer.phone,
     });
 
     return {
@@ -61,6 +63,7 @@ export default class LoginFarmerByEmail {
       token,
       name: farmer.name,
       email: farmer.email,
+      phone: farmer.phone,
       farmId: farmer.farmId,
     };
   }

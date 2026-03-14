@@ -52,6 +52,13 @@ class AuthenticateResponseDTO {
 
   @ApiProperty({
     type: String,
+    example: '+5511999999999',
+    nullable: true,
+  })
+  phone: string | null;
+
+  @ApiProperty({
+    type: String,
     example: 'farm-uuid',
   })
   farmId: string;
