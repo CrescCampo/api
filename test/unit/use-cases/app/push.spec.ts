@@ -12,8 +12,8 @@ import TransactionCategoryRepository from 'domain/application/repositories/Trans
 import OutboxEventRepository, {
   OutboxEventRecord,
 } from 'domain/application/repositories/OutboxEventRepository';
-import InMemoryFarmerRepository from '../../../../../test/unit/repositories/InMemoryFarmerRepository';
-import AppPushUseCase, { OutboxEventEntity, OutboxEventType } from './push';
+import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
+import AppPushUseCase, { OutboxEventEntity, OutboxEventType } from 'domain/application/use-cases/app/push';
 
 class InMemoryCultureRepository implements CultureRepository {
   items: Culture[] = [];

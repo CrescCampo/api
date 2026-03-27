@@ -2,10 +2,10 @@ import UserAlreadyExistsError from 'domain/application/errors/auth/UserAlreadyEx
 import Farm from 'domain/enterprise/entities/Farm';
 import Farmer from 'domain/enterprise/entities/Farmer';
 import HashGenerator from 'domain/application/cryptography/hash-generator';
-import InMemoryFarmRepository from '../../../../../test/unit/repositories/InMemoryFarmRepository';
-import InMemoryFarmerRepository from '../../../../../test/unit/repositories/InMemoryFarmerRepository';
-import InMemoryCultureRepository from '../../../../../test/unit/repositories/InMemoryCultureRepository';
-import RegisterUserUseCase from './register-farmer-by-email';
+import InMemoryFarmRepository from '../../repositories/InMemoryFarmRepository';
+import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
+import InMemoryCultureRepository from '../../repositories/InMemoryCultureRepository';
+import RegisterUserUseCase from 'domain/application/use-cases/auth/register-farmer-by-email';
 
 let inMemoryFarmerRepository: InMemoryFarmerRepository;
 let inMemoryFarmRepository: InMemoryFarmRepository;

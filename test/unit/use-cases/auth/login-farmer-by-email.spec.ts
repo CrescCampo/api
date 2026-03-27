@@ -3,8 +3,8 @@ import HashComparer from 'domain/application/cryptography/hash-comparer';
 import WrongCredentialsError from 'domain/application/errors/auth/WrongCredentialsError';
 import Farm from 'domain/enterprise/entities/Farm';
 import Farmer from 'domain/enterprise/entities/Farmer';
-import InMemoryFarmerRepository from '../../../../../test/unit/repositories/InMemoryFarmerRepository';
-import LoginFarmerByEmail from './login-farmer-by-email';
+import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
+import LoginFarmerByEmail from 'domain/application/use-cases/auth/login-farmer-by-email';
 
 let inMemoryFarmerRepository: InMemoryFarmerRepository;
 let hashComparer: HashComparer;
