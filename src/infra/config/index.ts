@@ -6,8 +6,8 @@ const config: Config = {
     port: envVars.PORT,
     environment: envVars.APP_ENV,
     rateLimit: {
-      ttl: 5,
-      limit: 5,
+      ttl: envVars.RATE_LIMIT_TTL,
+      limit: envVars.RATE_LIMIT_LIMIT,
     },
   },
   jwt: {

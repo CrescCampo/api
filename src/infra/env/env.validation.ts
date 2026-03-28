@@ -6,6 +6,7 @@ import {
   IsEnum,
   IsInt,
   IsNotEmpty,
+  IsOptional,
   IsString,
   Max,
   Min,
@@ -60,6 +61,16 @@ export class EnvVariables {
   @IsString()
   @IsNotEmpty()
   WHATSAPP_API_KEY: string;
+
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  RATE_LIMIT_TTL: number = 5;
+
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  RATE_LIMIT_LIMIT: number = 5;
 }
 
 const envVarsInstance = plainToInstance(EnvVariables, process.env, {
