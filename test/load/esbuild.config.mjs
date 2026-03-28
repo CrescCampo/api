@@ -10,5 +10,5 @@ await build({
   platform: 'browser',
   format: 'esm',
   target: 'es2020',
-  external: ['k6', 'k6/*'],
+  external: ['k6', 'k6/*', 'https://jslib.k6.io/*'],
 });

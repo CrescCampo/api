@@ -164,6 +164,8 @@ async function main() {
       baseUrl,
       testEmail: 'demo@cresc.campo',
       testPassword: 'password123',
+      scriptName: script,
+      scenario,
     });
 
     if (exitCode !== 0) {

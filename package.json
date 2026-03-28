@@ -26,12 +26,16 @@
     "migrate": "drizzle-kit migrate",
     "studio": "drizzle-kit studio",
     "test:load:build": "node test/load/esbuild.config.mjs",
-    "test:load": "npm run test:load:build && k6 run test/load/dist/transactions.js",
-    "test:load:harvests": "npm run test:load:build && k6 run test/load/dist/harvests.js",
-    "test:load:single": "tsx test/load/infra/runner.ts --scenario=single --script=transactions",
-    "test:load:single:harvests": "tsx test/load/infra/runner.ts --scenario=single --script=harvests",
-    "test:load:balanced": "tsx test/load/infra/runner.ts --scenario=balanced --script=transactions",
-    "test:load:balanced:harvests": "tsx test/load/infra/runner.ts --scenario=balanced --script=harvests"
+    "test:load:onboarding": "tsx test/load/infra/runner.ts --scenario=single --script=onboarding",
+    "test:load:browsing": "tsx test/load/infra/runner.ts --scenario=single --script=daily-browsing",
+    "test:load:financial": "tsx test/load/infra/runner.ts --scenario=single --script=financial-management",
+    "test:load:sync": "tsx test/load/infra/runner.ts --scenario=single --script=mobile-sync",
+    "test:load:feedback": "tsx test/load/infra/runner.ts --scenario=single --script=feedback-burst",
+    "test:load:onboarding:balanced": "tsx test/load/infra/runner.ts --scenario=balanced --script=onboarding",
+    "test:load:browsing:balanced": "tsx test/load/infra/runner.ts --scenario=balanced --script=daily-browsing",
+    "test:load:financial:balanced": "tsx test/load/infra/runner.ts --scenario=balanced --script=financial-management",
+    "test:load:sync:balanced": "tsx test/load/infra/runner.ts --scenario=balanced --script=mobile-sync",
+    "test:load:feedback:balanced": "tsx test/load/infra/runner.ts --scenario=balanced --script=feedback-burst"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
