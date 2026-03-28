@@ -20,6 +20,11 @@ export default class Harvest extends Entity<HarvestProps> {
     return this.props.name;
   }
 
+  set name(name: string) {
+    this.props.name = name;
+    this.#touch();
+  }
+
   get createdAt() {
     return this.props.createdAt;
   }
@@ -68,6 +73,20 @@ export default class Harvest extends Entity<HarvestProps> {
     }
 
     this.props.updatedAt = updatedAt ?? new Date();
+  }
+
+  reverseTransaction(type: TransactionType, amount: number) {
+    if (type === TransactionType.REVENUE) {
+      this.props.revenue -= amount;
+    } else {
+      this.props.expenses -= amount;
+    }
+
+    this.#touch();
+  }
+
+  #touch() {
+    this.props.updatedAt = new Date();
   }
 
   static create(

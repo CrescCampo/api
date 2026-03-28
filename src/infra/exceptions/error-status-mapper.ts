@@ -3,6 +3,8 @@ import { UseCaseError } from 'core/use-case-error';
 import UserAlreadyExistsError from 'domain/application/errors/auth/UserAlreadyExistsError';
 import WrongCredentialsError from 'domain/application/errors/auth/WrongCredentialsError';
 import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFoundError';
+import TransactionNotFoundError from 'domain/application/errors/transaction/TransactionNotFoundError';
+import HarvestNotFoundError from 'domain/application/errors/harvest/HarvestNotFoundError';
 
 export default class ErrorStatusMapper {
   private static readonly errorStatusMap = new Map<string, HttpStatus>([
@@ -14,6 +16,8 @@ export default class ErrorStatusMapper {
 
     // 404 - Not Found
     [FarmerNotFoundError.name, HttpStatus.NOT_FOUND],
+    [TransactionNotFoundError.name, HttpStatus.NOT_FOUND],
+    [HarvestNotFoundError.name, HttpStatus.NOT_FOUND],
   ]);
 
   static getStatusCode(error: Error): HttpStatus {

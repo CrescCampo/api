@@ -4,6 +4,10 @@ import TransactionType from 'domain/enterprise/enums/TransactionType';
 export default abstract class TransactionRepository {
   abstract save(transaction: Transaction): Promise<void>;
 
+  abstract findById(id: string): Promise<Transaction | null>;
+
+  abstract delete(id: string): Promise<void>;
+
   abstract findByFarmIdSince(
     farmId: string,
     since: Date,

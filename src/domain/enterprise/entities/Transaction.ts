@@ -22,20 +22,40 @@ export default class Transaction extends Entity<TransactionProps> {
     return this.props.type;
   }
 
+  set type(type: TransactionType) {
+    this.props.type = type;
+  }
+
   get description() {
     return this.props.description;
+  }
+
+  set description(description: string) {
+    this.props.description = description;
   }
 
   get amount() {
     return this.props.amount;
   }
 
+  set amount(amount: number) {
+    this.props.amount = amount;
+  }
+
   get category() {
     return this.props.category;
   }
 
+  set category(category: TransactionCategory) {
+    this.props.category = category;
+  }
+
   get date() {
     return this.props.date;
+  }
+
+  set date(date: Date) {
+    this.props.date = date;
   }
 
   get createdAt() {

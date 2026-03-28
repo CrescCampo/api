@@ -9,6 +9,9 @@ import AppPullUseCase from 'domain/application/use-cases/app/pull';
 import ListHarvestsByFarm from 'domain/application/use-cases/harvests/list-harvests-by-farm';
 import ListTransactionsByFarm from 'domain/application/use-cases/transactions/list-transactions-by-farm';
 import ListTransactionsByHarvest from 'domain/application/use-cases/transactions/list-transactions-by-harvest';
+import DeleteTransaction from 'domain/application/use-cases/transactions/delete-transaction';
+import EditTransaction from 'domain/application/use-cases/transactions/edit-transaction';
+import EditHarvestName from 'domain/application/use-cases/harvests/edit-harvest-name';
 import SendFeedbackUseCase from 'domain/application/use-cases/feedbacks/send-feedback';
 import UpdateFarmerPhone from 'domain/application/use-cases/farmers/update-farmer-phone';
 import HealthCheckController from './controllers/health/health-check.controller';
@@ -19,6 +22,9 @@ import PullController from './controllers/app/pull.controller';
 import GetHarvestsController from './controllers/harvests/get-harvests.controller';
 import GetHarvestTransactionsController from './controllers/harvests/get-harvest-transactions.controller';
 import GetTransactionsController from './controllers/transactions/get-transactions.controller';
+import DeleteTransactionController from './controllers/transactions/delete-transaction.controller';
+import EditTransactionController from './controllers/transactions/edit-transaction.controller';
+import EditHarvestNameController from './controllers/harvests/edit-harvest-name.controller';
 import SendFeedbackController from './controllers/feedbacks/send-feedback.controller';
 import UpdateFarmerPhoneController from './controllers/farmers/update-farmer-phone.controller';
 
@@ -33,6 +39,9 @@ import UpdateFarmerPhoneController from './controllers/farmers/update-farmer-pho
     GetHarvestsController,
     GetHarvestTransactionsController,
     GetTransactionsController,
+    DeleteTransactionController,
+    EditTransactionController,
+    EditHarvestNameController,
     SendFeedbackController,
     UpdateFarmerPhoneController,
   ],
@@ -44,6 +53,9 @@ import UpdateFarmerPhoneController from './controllers/farmers/update-farmer-pho
     ListHarvestsByFarm,
     ListTransactionsByFarm,
     ListTransactionsByHarvest,
+    DeleteTransaction,
+    EditTransaction,
+    EditHarvestName,
     SendFeedbackUseCase,
     UpdateFarmerPhone,
   ],
