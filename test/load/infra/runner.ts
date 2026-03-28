@@ -25,10 +25,11 @@ function loadJwtKeys(): { privateKeyBase64: string; publicKeyBase64: string } {
   return { privateKeyBase64, publicKeyBase64 };
 }
 
-function parseArgs(): { scenario: Scenario; script: string } {
+function parseArgs(): { scenario: Scenario; script: string; replicas: number } {
   const args = process.argv.slice(2);
   let scenario: Scenario = 'single';
   let script = 'transactions';
+  let replicas = 2;
 
   for (const arg of args) {
     if (arg.startsWith('--scenario=')) {
@@ -41,9 +42,16 @@ function parseArgs(): { scenario: Scenario; script: string } {
     if (arg.startsWith('--script=')) {
       script = arg.split('=')[1];
     }
+    if (arg.startsWith('--replicas=')) {
+      const value = parseInt(arg.split('=')[1], 10);
+      if (isNaN(value) || value < 1) {
+        throw new Error(`Invalid replicas: ${arg.split('=')[1]}. Must be a positive integer.`);
+      }
+      replicas = value;
+    }
   }
 
-  return { scenario, script };
+  return { scenario, script, replicas };
 }
 
 function checkK6() {
@@ -91,11 +99,14 @@ async function runSeed(
 }
 
 async function main() {
-  const { scenario, script } = parseArgs();
+  const { scenario, script, replicas } = parseArgs();
 
   console.log(`\n=== Load Test Runner ===`);
   console.log(`Scenario: ${scenario}`);
   console.log(`Script: ${script}`);
+  if (scenario === 'balanced') {
+    console.log(`Replicas: ${replicas}`);
+  }
   console.log('========================\n');
 
   checkK6();
@@ -143,6 +154,7 @@ async function main() {
     apiContainers = await createApiContainers({
       network,
       scenario,
+      replicas,
       jwtKeys,
     });
     for (const api of apiContainers) {
@@ -151,7 +163,7 @@ async function main() {
 
     // 7. Start Nginx
     console.log('[7/7] Starting Nginx...');
-    nginx = await createNginx(network, scenario);
+    nginx = await createNginx(network, scenario, replicas);
     const nginxHost = nginx.getHost();
     const nginxPort = nginx.getMappedPort(80);
     const baseUrl = `http://${nginxHost}:${nginxPort}`;

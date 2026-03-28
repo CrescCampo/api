@@ -44,7 +44,7 @@ export default function (): void {
     { headers: { 'Content-Type': 'application/json' } },
   );
   check(loginRes, {
-    'login - status 200': (r) => r.status === 200,
+    'login - status 201': (r) => r.status === 201,
     'login - has token': (r) => r.json('token') !== undefined,
   });
 

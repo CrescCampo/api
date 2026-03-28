@@ -10,6 +10,7 @@ const IMAGE_NAME = 'cresccampo-api-load';
 interface CreateApiOptions {
   network: StartedNetwork;
   scenario: Scenario;
+  replicas: number;
   jwtKeys: {
     privateKeyBase64: string;
     publicKeyBase64: string;
@@ -27,7 +28,7 @@ function buildApiImage() {
 export async function createApiContainers(
   options: CreateApiOptions,
 ): Promise<StartedTestContainer[]> {
-  const { network, scenario, jwtKeys } = options;
+  const { network, scenario, replicas, jwtKeys } = options;
 
   buildApiImage();
 
@@ -48,7 +49,9 @@ export async function createApiContainers(
   };
 
   const aliases =
-    scenario === 'single' ? ['api'] : ['api-1', 'api-2'];
+    scenario === 'single'
+      ? ['api']
+      : Array.from({ length: replicas }, (_, i) => `api-${i + 1}`);
 
   const containers: StartedTestContainer[] = [];
 

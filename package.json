@@ -35,7 +35,9 @@
     "test:load:browsing:balanced": "tsx test/load/infra/runner.ts --scenario=balanced --script=daily-browsing",
     "test:load:financial:balanced": "tsx test/load/infra/runner.ts --scenario=balanced --script=financial-management",
     "test:load:sync:balanced": "tsx test/load/infra/runner.ts --scenario=balanced --script=mobile-sync",
-    "test:load:feedback:balanced": "tsx test/load/infra/runner.ts --scenario=balanced --script=feedback-burst"
+    "test:load:feedback:balanced": "tsx test/load/infra/runner.ts --scenario=balanced --script=feedback-burst",
+    "test:load:peak": "tsx test/load/infra/runner.ts --scenario=single --script=peak-traffic",
+    "test:load:peak:balanced": "tsx test/load/infra/runner.ts --scenario=balanced --script=peak-traffic"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
