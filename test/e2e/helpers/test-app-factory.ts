@@ -9,6 +9,7 @@ export default class TestAppFactory {
     }).compile();
 
     const app = moduleFixture.createNestApplication();
+    app.useLogger(false);
 
     app.useGlobalPipes(
       new ValidationPipe({
