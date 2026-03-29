@@ -94,10 +94,11 @@ export default class DrizzleFarmerRepository implements FarmerRepository {
   }
 
   async findByPhone(phone: string): Promise<Farmer | null> {
+    const normalized = phone.startsWith('+') ? phone : `+${phone}`;
     const [row] = await this.db
       .select()
       .from(FarmerModel)
-      .where(eq(FarmerModel.phone, phone))
+      .where(eq(FarmerModel.phone, normalized))
       .limit(1);
 
     if (!row) {
