@@ -32,7 +32,6 @@ export default defineConfig({
     setupFiles: ['./test/setup-env.ts'],
     maxWorkers: '50%',
     testTimeout: 10000,
-    workerIdleMemoryLimit: '512MB',
     coverage: {
       reportsDirectory: 'coverage/unit',
       include: ['src/domain/application/use-cases/**/*.ts'],
