@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import Farmer from 'domain/enterprise/entities/Farmer';
@@ -95,10 +95,12 @@ export default class DrizzleFarmerRepository implements FarmerRepository {
 
   async findByPhone(phone: string): Promise<Farmer | null> {
     const normalized = phone.startsWith('+') ? phone : `+${phone}`;
+    const candidates = this.brazilianPhoneVariants(normalized);
+
     const [row] = await this.db
       .select()
       .from(FarmerModel)
-      .where(eq(FarmerModel.phone, normalized))
+      .where(inArray(FarmerModel.phone, candidates))
       .limit(1);
 
     if (!row) {
@@ -119,5 +121,24 @@ export default class DrizzleFarmerRepository implements FarmerRepository {
       },
       row.id,
     );
+  }
+
+  private brazilianPhoneVariants(phone: string): string[] {
+    const variants = [phone];
+
+    // Brazilian numbers: +55 + 2-digit area code + 8 or 9 digit number
+    const match = phone.match(/^\+55(\d{2})(\d+)$/);
+    if (match) {
+      const [, areaCode, number] = match;
+      if (number.length === 8) {
+        // Add the 9th digit
+        variants.push(`+55${areaCode}9${number}`);
+      } else if (number.length === 9 && number.startsWith('9')) {
+        // Remove the 9th digit
+        variants.push(`+55${areaCode}${number.slice(1)}`);
+      }
+    }
+
+    return variants;
   }
 }
