@@ -15,14 +15,19 @@ const tools: ChatCompletionTool[] = [
     function: {
       name: 'create_transaction',
       description:
-        'Registra um lançamento financeiro (receita ou despesa) em uma safra',
+        'Registra um lançamento financeiro (receita ou despesa) em uma safra. Resolva o nome da safra e categoria mencionados pelo usuário para os IDs internos do contexto do sistema.',
       parameters: {
         type: 'object',
         properties: {
-          harvestId: { type: 'string', description: 'ID da safra' },
+          harvestId: {
+            type: 'string',
+            description:
+              'ID interno da safra (obtido da lista no contexto do sistema, nunca pedir ao usuário)',
+          },
           categoryId: {
             type: 'string',
-            description: 'ID da categoria de lançamento',
+            description:
+              'ID interno da categoria (obtido da lista no contexto do sistema, nunca pedir ao usuário)',
           },
           type: {
             type: 'string',
@@ -52,7 +57,7 @@ const tools: ChatCompletionTool[] = [
     function: {
       name: 'list_harvests',
       description:
-        'Lista as safras ativas da fazenda do agricultor com seus IDs',
+        'Lista as safras ativas da fazenda do agricultor com nomes e valores',
       parameters: { type: 'object', properties: {} },
     },
   },
@@ -61,7 +66,7 @@ const tools: ChatCompletionTool[] = [
     function: {
       name: 'list_categories',
       description:
-        'Lista as categorias de lançamento cadastradas na fazenda com seus IDs',
+        'Lista as categorias de lançamento cadastradas na fazenda',
       parameters: { type: 'object', properties: {} },
     },
   },
@@ -78,11 +83,16 @@ const tools: ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'get_harvest_expenses',
-      description: 'Retorna os gastos totais de uma safra específica',
+      description:
+        'Retorna os gastos totais de uma safra específica. Resolva o nome da safra para o ID interno do contexto.',
       parameters: {
         type: 'object',
         properties: {
-          harvestId: { type: 'string', description: 'ID da safra' },
+          harvestId: {
+            type: 'string',
+            description:
+              'ID interno da safra (obtido da lista no contexto do sistema, nunca pedir ao usuário)',
+          },
         },
         required: ['harvestId'],
       },

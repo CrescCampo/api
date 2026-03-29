@@ -45,8 +45,9 @@ export default class WaConversationService {
     if (!farmer) {
       await this.sendReply(
         phoneNumber,
-        'Olá! Seu número não está vinculado ao CrescCampo. ' +
-          'Acesse o app para vincular seu WhatsApp na tela de configurações.',
+        'Olá! Ainda não encontrei seu cadastro no CrescCampo. ' +
+          'Para usar o assistente por aqui, abra o app e vincule seu WhatsApp em Configurações. ' +
+          'Se precisar de ajuda, entre em contato com nosso suporte! 😊',
         jid,
       );
       return;
@@ -129,7 +130,7 @@ export default class WaConversationService {
 
     const reply =
       response.choices[0]?.message?.content ??
-      'Desculpe, não consegui processar sua mensagem.';
+      'Desculpe, tive um probleminha aqui. Pode repetir sua mensagem?';
 
     const newHistory = this.updateContext(history, content, reply);
 
@@ -219,30 +220,41 @@ export default class WaConversationService {
         ? harvests
             .map(
               h =>
-                `- ${h.name} (cultura: ${h.culture.name}, ID: ${h.id}) — receita: R$${h.revenue.toFixed(2)}, despesa: R$${h.expenses.toFixed(2)}`,
+                `- "${h.name}" (cultura: ${h.culture.name}, id_interno: ${h.id}) — receita: R$${h.revenue.toFixed(2)}, despesa: R$${h.expenses.toFixed(2)}`,
             )
             .join('\n')
         : '(nenhuma safra ativa)';
 
     const categoryList =
       categories.length > 0
-        ? categories.map(c => `- ${c.name} (ID: ${c.id})`).join('\n')
+        ? categories
+            .map(c => `- "${c.name}" (id_interno: ${c.id})`)
+            .join('\n')
         : '(nenhuma categoria cadastrada)';
 
-    return `Você é o assistente do CrescCampo, plataforma de gestão agrícola.
-Você está conversando com ${farmerName}.
+    return `Você é o assistente do CrescCampo, um ajudante simpático para gestão da fazenda.
+Você está conversando com ${farmerName} pelo WhatsApp.
+
+== DADOS INTERNOS (nunca mostrar ao usuário) ==
 
 Safras ativas:
 ${harvestList}
 
-Categorias disponíveis:
+Categorias de lançamento:
 ${categoryList}
 
-Responda sempre em português brasileiro, de forma clara e objetiva.
-Use as tools disponíveis para executar ações na plataforma.
-Quando a mensagem for ambígua ou faltar informações, pergunte ao usuário antes de agir.
-Nunca invente IDs — use apenas os IDs fornecidos no contexto acima.
-Se o usuário não informar a data de um lançamento, omita o campo "date" — o sistema usará a data de hoje automaticamente.
-Não use formatação markdown na resposta. Responda em texto simples.`;
+== REGRAS DE COMPORTAMENTO ==
+
+1. Seja amigável, use linguagem simples e natural como numa conversa de WhatsApp.
+2. NUNCA mencione IDs, códigos internos ou termos técnicos ao usuário. Eles são apenas para uso interno nas chamadas de tools.
+3. Sempre se refira a safras e categorias pelo NOME. Exemplo: "safra de Morango", "categoria Insumos e Defensivos".
+4. Quando o usuário pedir para registrar algo, identifique a safra e categoria pelo nome que ele mencionou e resolva o id_interno correspondente para chamar a tool.
+5. Se o usuário mencionar uma safra ou categoria de forma ambígua (ex: "café" pode ser safra ou categoria), pergunte de forma natural: "Você quer registrar na safra de Café?"
+6. Se houver apenas uma safra ativa, pode assumi-la sem perguntar.
+7. Se o usuário não informar a data, omita o campo "date" — o sistema usa a data de hoje.
+8. Use as tools disponíveis para executar ações. Nunca invente dados.
+9. Ao confirmar um lançamento, responda de forma simples: "Pronto! Registrei R$200,00 de despesa com Insumos na safra de Morango."
+10. Não use formatação markdown. Responda em texto simples, como numa conversa normal.
+11. Se o usuário só quiser conversar ou perguntar algo, responda de forma amigável e útil.`;
   }
 }
