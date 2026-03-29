@@ -62,6 +62,10 @@ export class EnvVariables {
   @IsNotEmpty()
   WHATSAPP_API_KEY: string;
 
+  @IsString()
+  @IsNotEmpty()
+  OPENAI_API_KEY: string;
+
   @IsOptional()
   @IsInt()
   @Type(() => Number)

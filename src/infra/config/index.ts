@@ -31,6 +31,9 @@ const config: Config = {
     apiUrl: envVars.WHATSAPP_API_URL,
     apiKey: envVars.WHATSAPP_API_KEY,
   },
+  openai: {
+    apiKey: envVars.OPENAI_API_KEY,
+  },
 };
 
 export default config;

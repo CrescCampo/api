@@ -7,6 +7,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { WinstonModule } from 'nest-winston';
 import HttpModule from './http/http.module';
 import CryptographyModule from './cryptography/cryptography.module';
+import WhatsappProcessorModule from './whatsapp-processor/whatsapp-processor.module';
 import config from './config';
 import AllExceptionsFilter from './exceptions/all-excpetions.filter';
 import LoggerInterceptor from './logs/logger.interceptor';
@@ -22,6 +23,7 @@ import winstonConfig from './config/winston.config';
     AuthModule,
     HttpModule,
     CryptographyModule,
+    WhatsappProcessorModule,
   ],
   providers: [
     { provide: APP_INTERCEPTOR, useClass: LoggerInterceptor },

@@ -50,12 +50,13 @@ jobs:
           JWT_PUBLIC_KEY_BASE_64: ${{ secrets.JWT_PUBLIC_KEY_BASE_64 }}
           WHATSAPP_API_URL: ${{ secrets.WHATSAPP_API_URL }}
           WHATSAPP_API_KEY: ${{ secrets.WHATSAPP_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
-          envs: APP_DIR,IMAGE_NAME,CONTAINER_NAME,APP_PORT,GITHUB_SHA,PORT,POSTGRES_USER,POSTGRES_PASS,POSTGRES_DB_NAME,POSTGRES_HOST,POSTGRES_PORT,APP_ENV,JWT_PRIVATE_KEY_BASE_64,JWT_PUBLIC_KEY_BASE_64,WHATSAPP_API_URL,WHATSAPP_API_KEY
+          envs: APP_DIR,IMAGE_NAME,CONTAINER_NAME,APP_PORT,GITHUB_SHA,PORT,POSTGRES_USER,POSTGRES_PASS,POSTGRES_DB_NAME,POSTGRES_HOST,POSTGRES_PORT,APP_ENV,JWT_PRIVATE_KEY_BASE_64,JWT_PUBLIC_KEY_BASE_64,WHATSAPP_API_URL,WHATSAPP_API_KEY,OPENAI_API_KEY
           script: |
             set -euo pipefail
 
@@ -64,7 +65,7 @@ jobs:
               exit 1
             fi
 
-            if [ -z "${PORT}" ] || [ -z "${POSTGRES_USER}" ] || [ -z "${POSTGRES_PASS}" ] || [ -z "${POSTGRES_DB_NAME}" ] || [ -z "${POSTGRES_HOST}" ] || [ -z "${POSTGRES_PORT}" ] || [ -z "${APP_ENV}" ] || [ -z "${JWT_PRIVATE_KEY_BASE_64}" ] || [ -z "${JWT_PUBLIC_KEY_BASE_64}" ] || [ -z "${WHATSAPP_API_URL}" ] || [ -z "${WHATSAPP_API_KEY}" ]; then
+            if [ -z "${PORT}" ] || [ -z "${POSTGRES_USER}" ] || [ -z "${POSTGRES_PASS}" ] || [ -z "${POSTGRES_DB_NAME}" ] || [ -z "${POSTGRES_HOST}" ] || [ -z "${POSTGRES_PORT}" ] || [ -z "${APP_ENV}" ] || [ -z "${JWT_PRIVATE_KEY_BASE_64}" ] || [ -z "${JWT_PUBLIC_KEY_BASE_64}" ] || [ -z "${WHATSAPP_API_URL}" ] || [ -z "${WHATSAPP_API_KEY}" ] || [ -z "${OPENAI_API_KEY}" ]; then
               echo "One or more required env secrets are missing" >&2
               exit 1
             fi
@@ -101,6 +102,7 @@ jobs:
             printf '%s\n' "JWT_PUBLIC_KEY_BASE_64=${JWT_PUBLIC_KEY_BASE_64}" >> .env
             printf '%s\n' "WHATSAPP_API_URL=${WHATSAPP_API_URL}" >> .env
             printf '%s\n' "WHATSAPP_API_KEY=${WHATSAPP_API_KEY}" >> .env
+            printf '%s\n' "OPENAI_API_KEY=${OPENAI_API_KEY}" >> .env
 
             docker build --target migrator -t "${IMAGE_NAME}:migrator-${GITHUB_SHA}" .
             docker run --rm --env-file .env --add-host=host.docker.internal:host-gateway "${IMAGE_NAME}:migrator-${GITHUB_SHA}"

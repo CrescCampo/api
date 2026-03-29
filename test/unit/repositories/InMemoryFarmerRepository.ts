@@ -35,4 +35,14 @@ export default class InMemoryFarmerRepository implements FarmerRepository {
 
     return Promise.resolve(existingFarmer);
   }
+
+  findByPhone(phone: string): Promise<Farmer | null> {
+    const existingFarmer = this.items.find(user => user.phone === phone);
+
+    if (!existingFarmer) {
+      return Promise.resolve(null);
+    }
+
+    return Promise.resolve(existingFarmer);
+  }
 }

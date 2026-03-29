@@ -30,4 +30,7 @@ export interface Config {
     apiUrl: string;
     apiKey: string;
   };
+  openai: {
+    apiKey: string;
+  };
 }
