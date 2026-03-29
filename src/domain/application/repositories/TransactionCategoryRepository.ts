@@ -11,4 +11,6 @@ export default abstract class TransactionCategoryRepository {
   ): Promise<TransactionCategory[]>;
 
   abstract findByFarmId(farmId: string): Promise<TransactionCategory[]>;
+
+  abstract saveMany(categories: TransactionCategory[]): Promise<void>;
 }

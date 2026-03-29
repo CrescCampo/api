@@ -2,7 +2,7 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import TransactionCategoryRepository from 'domain/application/repositories/TransactionCategoryRepository';
 import TransactionCategory from 'domain/enterprise/entities/TransactionCategory';
 import { Injectable } from '@nestjs/common';
-import { and, eq, gte } from 'drizzle-orm';
+import { and, eq, gte, sql } from 'drizzle-orm';
 import TransactionCategoryModel from '../models/TransactionCategory';
 
 @Injectable()
@@ -72,6 +72,28 @@ export default class DrizzleTransactionCategoryRepository implements Transaction
       .where(eq(TransactionCategoryModel.farmId, farmId));
 
     return rows.map(row => this.mapRowToCategory(row));
+  }
+
+  async saveMany(categories: TransactionCategory[]): Promise<void> {
+    if (categories.length === 0) return;
+
+    await this.db
+      .insert(TransactionCategoryModel)
+      .values(
+        categories.map(c => ({
+          id: c.id,
+          name: c.name,
+          farmId: c.farmId,
+          createdAt: c.createdAt,
+        })),
+      )
+      .onConflictDoUpdate({
+        target: TransactionCategoryModel.id,
+        set: {
+          name: sql`excluded.name`,
+          farmId: sql`excluded.farm_id`,
+        },
+      });
   }
 
   private mapRowToCategory(

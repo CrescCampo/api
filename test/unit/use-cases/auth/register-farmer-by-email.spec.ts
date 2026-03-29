@@ -5,11 +5,13 @@ import HashGenerator from 'domain/application/cryptography/hash-generator';
 import InMemoryFarmRepository from '../../repositories/InMemoryFarmRepository';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryCultureRepository from '../../repositories/InMemoryCultureRepository';
+import InMemoryTransactionCategoryRepository from '../../repositories/InMemoryTransactionCategoryRepository';
 import RegisterUserUseCase from 'domain/application/use-cases/auth/register-farmer-by-email';
 
 let inMemoryFarmerRepository: InMemoryFarmerRepository;
 let inMemoryFarmRepository: InMemoryFarmRepository;
 let inMemoryCultureRepository: InMemoryCultureRepository;
+let inMemoryTransactionCategoryRepository: InMemoryTransactionCategoryRepository;
 let hashGenerator: HashGenerator;
 let sut: RegisterUserUseCase;
 
@@ -24,6 +26,8 @@ describe('RegisterUserUseCase', () => {
     inMemoryFarmerRepository = new InMemoryFarmerRepository();
     inMemoryFarmRepository = new InMemoryFarmRepository();
     inMemoryCultureRepository = new InMemoryCultureRepository();
+    inMemoryTransactionCategoryRepository =
+      new InMemoryTransactionCategoryRepository();
     hashGenerator = new FakeHashGenerator();
 
     sut = new RegisterUserUseCase(
@@ -31,6 +35,7 @@ describe('RegisterUserUseCase', () => {
       inMemoryFarmRepository,
       hashGenerator,
       inMemoryCultureRepository,
+      inMemoryTransactionCategoryRepository,
     );
   });
 
@@ -85,6 +90,30 @@ describe('RegisterUserUseCase', () => {
     expect(cultures).toHaveLength(4);
     expect(cultures.map(c => c.name)).toEqual(
       expect.arrayContaining(['Morango', 'Mandioca', 'Café', 'Pimentão']),
+    );
+  });
+
+  it('should create default transaction categories for the new farm', async () => {
+    await sut.execute({
+      name: 'Joao Paulo',
+      email: 'joao@example.com',
+      password: 'secret',
+    });
+
+    const farmId = inMemoryFarmRepository.items[0].id;
+    const categories =
+      await inMemoryTransactionCategoryRepository.findByFarmId(farmId);
+
+    expect(categories).toHaveLength(6);
+    expect(categories.map(c => c.name)).toEqual(
+      expect.arrayContaining([
+        'Venda de Produtos',
+        'Insumos e Defensivos',
+        'Sementes e Mudas',
+        'Mão de Obra',
+        'Equipamentos e Manutenção',
+        'Combustível',
+      ]),
     );
   });
 });

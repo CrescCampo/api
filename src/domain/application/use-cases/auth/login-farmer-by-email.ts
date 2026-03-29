@@ -55,6 +55,7 @@ export default class LoginFarmerByEmail {
       id: farmer.id,
       email: farmer.email,
       name: farmer.name,
+      phone: farmer.phone,
     });
 
     return {
