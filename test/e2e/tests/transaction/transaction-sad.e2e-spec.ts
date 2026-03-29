@@ -35,4 +35,11 @@ describe('Auth — Caminho Feliz (e2e)', () => {
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Transaction not found');
   });
+  it('TC-011 | [DELETE] /transactions/:id - deve rejeitar ID de transição inexistente ao deletar', async () => {
+    const response = await request(app.getHttpServer())
+      .delete('/transactions/00000000-0000-0000-0000-000000000000')
+      .set('Authorization', `Bearer ${token}`);
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe('Transaction not found');
+  });
 });
