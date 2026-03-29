@@ -13,6 +13,7 @@ const messages = pgTable('messages', {
     .primaryKey()
     .default(sql`gen_random_uuid()`),
   phoneNumber: varchar('phone_number', { length: 20 }).notNull(),
+  jid: varchar('jid', { length: 100 }),
   text: text('text').notNull(),
   status: varchar('status', { length: 20 }).notNull().default('pending'),
   retryCount: integer('retry_count').default(0),

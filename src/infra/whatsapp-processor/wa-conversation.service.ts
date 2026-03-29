@@ -35,7 +35,11 @@ export default class WaConversationService {
     this.db = drizzleService.connection;
   }
 
-  async handle(phoneNumber: string, content: string): Promise<void> {
+  async handle(
+    phoneNumber: string,
+    content: string,
+    jid?: string | null,
+  ): Promise<void> {
     const farmer = await this.farmerRepository.findByPhone(phoneNumber);
 
     if (!farmer) {
@@ -43,6 +47,7 @@ export default class WaConversationService {
         phoneNumber,
         'Olá! Seu número não está vinculado ao CrescCampo. ' +
           'Acesse o app para vincular seu WhatsApp na tela de configurações.',
+        jid,
       );
       return;
     }
@@ -137,7 +142,7 @@ export default class WaConversationService {
       })
       .where(eq(waConversations.phoneNumber, phoneNumber));
 
-    await this.sendReply(phoneNumber, reply);
+    await this.sendReply(phoneNumber, reply, jid);
   }
 
   private async findOrCreateConversation(
@@ -167,9 +172,14 @@ export default class WaConversationService {
     return created;
   }
 
-  private async sendReply(phoneNumber: string, text: string): Promise<void> {
+  private async sendReply(
+    phoneNumber: string,
+    text: string,
+    jid?: string | null,
+  ): Promise<void> {
     await this.db.insert(messagesTable).values({
       phoneNumber,
+      jid: jid ?? undefined,
       text,
     });
   }

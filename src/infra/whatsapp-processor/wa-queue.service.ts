@@ -43,7 +43,11 @@ export default class WaQueueService {
           .where(eq(waIncomingMessages.id, msg.id));
 
         try {
-          await this.conversationService.handle(msg.phoneNumber, msg.content);
+          await this.conversationService.handle(
+            msg.phoneNumber,
+            msg.content,
+            msg.jid,
+          );
 
           await this.db
             .update(waIncomingMessages)

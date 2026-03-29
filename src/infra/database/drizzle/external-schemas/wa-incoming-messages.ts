@@ -6,6 +6,7 @@ const waIncomingMessages = pgTable('wa_incoming_messages', {
     .primaryKey()
     .default(sql`gen_random_uuid()`),
   phoneNumber: varchar('phone_number', { length: 20 }).notNull(),
+  jid: varchar('jid', { length: 100 }),
   content: text('content').notNull(),
   status: varchar('status', { length: 20 }).notNull().default('pending'),
   error: text('error'),
