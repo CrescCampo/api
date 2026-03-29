@@ -227,9 +227,7 @@ export default class WaConversationService {
 
     const categoryList =
       categories.length > 0
-        ? categories
-            .map(c => `- "${c.name}" (id_interno: ${c.id})`)
-            .join('\n')
+        ? categories.map(c => `- "${c.name}" (id_interno: ${c.id})`).join('\n')
         : '(nenhuma categoria cadastrada)';
 
     return `Você é o assistente do CrescCampo, um ajudante simpático para gestão da fazenda.

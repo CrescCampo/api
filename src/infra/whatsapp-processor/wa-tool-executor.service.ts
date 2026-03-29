@@ -57,16 +57,23 @@ export default class WaToolExecutorService {
 
     const harvest = await this.harvestRepository.findById(harvestId);
     if (!harvest) {
-      return JSON.stringify({ error: 'Não encontrei essa safra. Verifique o nome e tente novamente.' });
+      return JSON.stringify({
+        error: 'Não encontrei essa safra. Verifique o nome e tente novamente.',
+      });
     }
     if (harvest.farmId !== farmId) {
-      return JSON.stringify({ error: 'Essa safra não faz parte da sua fazenda.' });
+      return JSON.stringify({
+        error: 'Essa safra não faz parte da sua fazenda.',
+      });
     }
 
     const category =
       await this.transactionCategoryRepository.findById(categoryId);
     if (!category) {
-      return JSON.stringify({ error: 'Não encontrei essa categoria. Verifique o nome e tente novamente.' });
+      return JSON.stringify({
+        error:
+          'Não encontrei essa categoria. Verifique o nome e tente novamente.',
+      });
     }
     if (category.farmId !== farmId) {
       return JSON.stringify({
@@ -145,10 +152,14 @@ export default class WaToolExecutorService {
 
     const harvest = await this.harvestRepository.findById(harvestId);
     if (!harvest) {
-      return JSON.stringify({ error: 'Não encontrei essa safra. Verifique o nome e tente novamente.' });
+      return JSON.stringify({
+        error: 'Não encontrei essa safra. Verifique o nome e tente novamente.',
+      });
     }
     if (harvest.farmId !== farmId) {
-      return JSON.stringify({ error: 'Essa safra não faz parte da sua fazenda.' });
+      return JSON.stringify({
+        error: 'Essa safra não faz parte da sua fazenda.',
+      });
     }
 
     return JSON.stringify({

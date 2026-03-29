@@ -65,8 +65,7 @@ const tools: ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'list_categories',
-      description:
-        'Lista as categorias de lançamento cadastradas na fazenda',
+      description: 'Lista as categorias de lançamento cadastradas na fazenda',
       parameters: { type: 'object', properties: {} },
     },
   },
