@@ -1,3 +1,4 @@
+// TC-022 | Daily Browsing — navegação diária de harvests e transactions
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import type { Options } from 'k6/options';
@@ -30,17 +31,18 @@ export default function (data: AuthData): void {
   };
 
   // 1. List harvests (first page)
-  const harvestsRes = http.get(
-    `${BASE_URL}/harvests?page=1&pageSize=10`,
-    { headers },
-  );
+  const harvestsRes = http.get(`${BASE_URL}/harvests?page=1&pageSize=10`, {
+    headers,
+  });
   check(harvestsRes, {
-    'list harvests - status 200': (r) => r.status === 200,
-    'list harvests - has data': (r) => r.json('harvests') !== undefined,
+    'list harvests - status 200': r => r.status === 200,
+    'list harvests - has data': r => r.json('harvests') !== undefined,
   });
 
   // 2. Pick the first harvest and get its transactions
-  const harvests = harvestsRes.json('harvests') as Array<{ id: string }> | undefined;
+  const harvests = harvestsRes.json('harvests') as
+    | Array<{ id: string }>
+    | undefined;
   if (harvests && harvests.length > 0) {
     const harvestId = harvests[0].id;
 
@@ -51,32 +53,31 @@ export default function (data: AuthData): void {
       { headers },
     );
     check(txRes, {
-      'harvest transactions - status 200': (r) => r.status === 200,
-      'harvest transactions - has data': (r) => r.json('transactions') !== undefined,
+      'harvest transactions - status 200': r => r.status === 200,
+      'harvest transactions - has data': r =>
+        r.json('transactions') !== undefined,
     });
   }
 
   // 3. Browse second page of harvests
   sleep(0.3);
 
-  const page2Res = http.get(
-    `${BASE_URL}/harvests?page=2&pageSize=10`,
-    { headers },
-  );
+  const page2Res = http.get(`${BASE_URL}/harvests?page=2&pageSize=10`, {
+    headers,
+  });
   check(page2Res, {
-    'harvests page 2 - status 200': (r) => r.status === 200,
+    'harvests page 2 - status 200': r => r.status === 200,
   });
 
   // 4. List all transactions
   sleep(0.3);
 
-  const allTxRes = http.get(
-    `${BASE_URL}/transactions?page=1&pageSize=10`,
-    { headers },
-  );
+  const allTxRes = http.get(`${BASE_URL}/transactions?page=1&pageSize=10`, {
+    headers,
+  });
   check(allTxRes, {
-    'list transactions - status 200': (r) => r.status === 200,
-    'list transactions - has data': (r) => r.json('transactions') !== undefined,
+    'list transactions - status 200': r => r.status === 200,
+    'list transactions - has data': r => r.json('transactions') !== undefined,
   });
 
   sleep(1);

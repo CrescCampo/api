@@ -1,3 +1,4 @@
+// TC-023 | Mobile Sync — sincronização push/pull do app móvel
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import type { Options } from 'k6/options';
@@ -32,11 +33,11 @@ export default function (data: AuthData): void {
   // 1. Full pull (simulates app opening and syncing all data)
   const pullRes = http.get(`${BASE_URL}/app/pull`, { headers });
   check(pullRes, {
-    'pull - status 200': (r) => r.status === 200,
-    'pull - has cultures': (r) => r.json('cultures') !== undefined,
-    'pull - has harvests': (r) => r.json('harvests') !== undefined,
-    'pull - has transactions': (r) => r.json('transactions') !== undefined,
-    'pull - has categories': (r) => r.json('categories') !== undefined,
+    'pull - status 200': r => r.status === 200,
+    'pull - has cultures': r => r.json('cultures') !== undefined,
+    'pull - has harvests': r => r.json('harvests') !== undefined,
+    'pull - has transactions': r => r.json('transactions') !== undefined,
+    'pull - has categories': r => r.json('categories') !== undefined,
   });
 
   // Simulates user reading data on the app
@@ -45,7 +46,7 @@ export default function (data: AuthData): void {
   // 2. Second pull (simulates background refresh)
   const refreshRes = http.get(`${BASE_URL}/app/pull`, { headers });
   check(refreshRes, {
-    'refresh pull - status 200': (r) => r.status === 200,
+    'refresh pull - status 200': r => r.status === 200,
   });
 
   sleep(1);

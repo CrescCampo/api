@@ -1,3 +1,4 @@
+// TC-024 | Financial Management — CRUD de transações sob carga
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import type { Options } from 'k6/options';
@@ -32,15 +33,16 @@ export function setup(): SetupData {
   };
 
   // Fetch existing transactions to get IDs
-  const res = http.get(
-    `${BASE_URL}/transactions?page=1&pageSize=50`,
-    { headers },
-  );
+  const res = http.get(`${BASE_URL}/transactions?page=1&pageSize=50`, {
+    headers,
+  });
 
-  const transactions = res.json('transactions') as Array<{ id: string; categoryId: string }> | undefined;
-  const transactionIds = transactions ? transactions.map((t) => t.id) : [];
+  const transactions = res.json('transactions') as
+    | Array<{ id: string; categoryId: string }>
+    | undefined;
+  const transactionIds = transactions ? transactions.map(t => t.id) : [];
   const categoryIds = transactions
-    ? [...new Set(transactions.map((t) => t.categoryId))]
+    ? [...new Set(transactions.map(t => t.categoryId))]
     : [];
 
   return { token, transactionIds, categoryIds };
@@ -55,10 +57,12 @@ export default function (data: SetupData): void {
   if (data.transactionIds.length === 0) return;
 
   // Pick a random transaction
-  const txId = data.transactionIds[Math.floor(Math.random() * data.transactionIds.length)];
-  const categoryId = data.categoryIds.length > 0
-    ? data.categoryIds[Math.floor(Math.random() * data.categoryIds.length)]
-    : undefined;
+  const txId =
+    data.transactionIds[Math.floor(Math.random() * data.transactionIds.length)];
+  const categoryId =
+    data.categoryIds.length > 0
+      ? data.categoryIds[Math.floor(Math.random() * data.categoryIds.length)]
+      : undefined;
 
   // 1. Edit transaction description and amount
   const editRes = http.patch(
@@ -71,18 +75,17 @@ export default function (data: SetupData): void {
     { headers },
   );
   check(editRes, {
-    'edit transaction - status 200': (r) => r.status === 200,
+    'edit transaction - status 200': r => r.status === 200,
   });
 
   sleep(0.5);
 
   // 2. List transactions to verify
-  const listRes = http.get(
-    `${BASE_URL}/transactions?page=1&pageSize=10`,
-    { headers },
-  );
+  const listRes = http.get(`${BASE_URL}/transactions?page=1&pageSize=10`, {
+    headers,
+  });
   check(listRes, {
-    'list after edit - status 200': (r) => r.status === 200,
+    'list after edit - status 200': r => r.status === 200,
   });
 
   sleep(1);

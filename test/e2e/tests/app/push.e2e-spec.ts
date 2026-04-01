@@ -25,7 +25,7 @@ describe('Push Controller (e2e)', () => {
     await app.close();
   });
 
-  it('[POST] /app/push — deve criar cultura via push', async () => {
+  it('TC-012 | [POST] /app/push — deve criar cultura via push (201)', async () => {
     const cultureId = randomUUID();
     const response = await request(app.getHttpServer())
       .post('/app/push')

@@ -1,3 +1,4 @@
+// TC-026 | Peak Traffic — estresse com tráfego de pico combinado
 import http from 'k6/http';
 import { check } from 'k6';
 import type { Options } from 'k6/options';
@@ -83,9 +84,9 @@ export function setup(): SetupData {
   const transactions = res.json('transactions') as
     | Array<{ id: string; categoryId: string }>
     | undefined;
-  const transactionIds = transactions ? transactions.map((t) => t.id) : [];
+  const transactionIds = transactions ? transactions.map(t => t.id) : [];
   const categoryIds = transactions
-    ? [...new Set(transactions.map((t) => t.categoryId))]
+    ? [...new Set(transactions.map(t => t.categoryId))]
     : [];
 
   return { token, transactionIds, categoryIds };
@@ -103,7 +104,7 @@ export function onboarding(): void {
     { headers: { 'Content-Type': 'application/json' } },
   );
   check(registerRes, {
-    'register - status 201': (r) => r.status === 201,
+    'register - status 201': r => r.status === 201,
   });
 
   // bcrypt.compare on login is also CPU-heavy — minimal gap
@@ -113,8 +114,8 @@ export function onboarding(): void {
     { headers: { 'Content-Type': 'application/json' } },
   );
   check(loginRes, {
-    'login - status 201': (r) => r.status === 201,
-    'login - has token': (r) => r.json('token') !== undefined,
+    'login - status 201': r => r.status === 201,
+    'login - has token': r => r.json('token') !== undefined,
   });
 }
 
@@ -128,17 +129,17 @@ export function mobileSync(data: SetupData): void {
   // Triple pull — no breathing room
   const pull1 = http.get(`${BASE_URL}/app/pull`, { headers });
   check(pull1, {
-    'pull - status 200': (r) => r.status === 200,
+    'pull - status 200': r => r.status === 200,
   });
 
   const pull2 = http.get(`${BASE_URL}/app/pull`, { headers });
   check(pull2, {
-    'refresh - status 200': (r) => r.status === 200,
+    'refresh - status 200': r => r.status === 200,
   });
 
   const pull3 = http.get(`${BASE_URL}/app/pull`, { headers });
   check(pull3, {
-    'pull 3 - status 200': (r) => r.status === 200,
+    'pull 3 - status 200': r => r.status === 200,
   });
 }
 
@@ -149,12 +150,11 @@ export function browsing(data: SetupData): void {
     'Content-Type': 'application/json',
   };
 
-  const harvestsRes = http.get(
-    `${BASE_URL}/harvests?page=1&pageSize=10`,
-    { headers },
-  );
+  const harvestsRes = http.get(`${BASE_URL}/harvests?page=1&pageSize=10`, {
+    headers,
+  });
   check(harvestsRes, {
-    'list harvests - status 200': (r) => r.status === 200,
+    'list harvests - status 200': r => r.status === 200,
   });
 
   const harvests = harvestsRes.json('harvests') as
@@ -168,16 +168,15 @@ export function browsing(data: SetupData): void {
       { headers },
     );
     check(txRes, {
-      'harvest transactions - status 200': (r) => r.status === 200,
+      'harvest transactions - status 200': r => r.status === 200,
     });
   }
 
-  const allTxRes = http.get(
-    `${BASE_URL}/transactions?page=1&pageSize=10`,
-    { headers },
-  );
+  const allTxRes = http.get(`${BASE_URL}/transactions?page=1&pageSize=10`, {
+    headers,
+  });
   check(allTxRes, {
-    'list transactions - status 200': (r) => r.status === 200,
+    'list transactions - status 200': r => r.status === 200,
   });
 
   // Feedback write to add more pressure
@@ -194,7 +193,7 @@ export function browsing(data: SetupData): void {
     { headers },
   );
   check(res, {
-    'feedback - status 201': (r) => r.status === 201,
+    'feedback - status 201': r => r.status === 201,
   });
 }
 
@@ -208,9 +207,7 @@ export function editing(data: SetupData): void {
   if (data.transactionIds.length === 0) return;
 
   const txId =
-    data.transactionIds[
-      Math.floor(Math.random() * data.transactionIds.length)
-    ];
+    data.transactionIds[Math.floor(Math.random() * data.transactionIds.length)];
   const categoryId =
     data.categoryIds.length > 0
       ? data.categoryIds[Math.floor(Math.random() * data.categoryIds.length)]
@@ -226,15 +223,14 @@ export function editing(data: SetupData): void {
     { headers },
   );
   check(editRes, {
-    'edit transaction - status 200': (r) => r.status === 200,
+    'edit transaction - status 200': r => r.status === 200,
   });
 
-  const listRes = http.get(
-    `${BASE_URL}/transactions?page=1&pageSize=10`,
-    { headers },
-  );
+  const listRes = http.get(`${BASE_URL}/transactions?page=1&pageSize=10`, {
+    headers,
+  });
   check(listRes, {
-    'list after edit - status 200': (r) => r.status === 200,
+    'list after edit - status 200': r => r.status === 200,
   });
 }
 

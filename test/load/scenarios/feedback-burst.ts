@@ -1,3 +1,4 @@
+// TC-025 | Feedback Burst — rajada de envio de feedbacks
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import type { Options } from 'k6/options';
@@ -43,7 +44,8 @@ export default function (data: AuthData): void {
 
   const rating = Math.floor(Math.random() * 6); // 0-5
   const category = CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)];
-  const description = DESCRIPTIONS[Math.floor(Math.random() * DESCRIPTIONS.length)];
+  const description =
+    DESCRIPTIONS[Math.floor(Math.random() * DESCRIPTIONS.length)];
 
   const res = http.post(
     `${BASE_URL}/feedbacks`,
@@ -51,8 +53,8 @@ export default function (data: AuthData): void {
     { headers },
   );
   check(res, {
-    'send feedback - status 201': (r) => r.status === 201,
-    'send feedback - has feedbackId': (r) => r.json('feedbackId') !== undefined,
+    'send feedback - status 201': r => r.status === 201,
+    'send feedback - has feedbackId': r => r.json('feedbackId') !== undefined,
   });
 
   sleep(0.5);

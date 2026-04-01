@@ -33,7 +33,7 @@ describe('Pull Controller (e2e)', () => {
     expect(response.body.transactions).toEqual([]);
   });
 
-  it('[GET] /app/pull — deve retornar harvests, transactions e totais após push de dados (200)', async () => {
+  it('TC-013 | [GET] /app/pull — deve retornar harvests, transactions e totais após push de dados (200)', async () => {
     await seedFullDataSet(app, token, {
       transaction: { type: 'expense', amount: 500 },
     });

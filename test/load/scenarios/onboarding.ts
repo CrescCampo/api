@@ -1,3 +1,4 @@
+// TC-021 | Onboarding — registro de novos usuários sob carga
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import type { Options } from 'k6/options';
@@ -31,8 +32,8 @@ export default function (): void {
     { headers: { 'Content-Type': 'application/json' } },
   );
   check(registerRes, {
-    'register - status 201': (r) => r.status === 201,
-    'register - has userId': (r) => r.json('userId') !== undefined,
+    'register - status 201': r => r.status === 201,
+    'register - has userId': r => r.json('userId') !== undefined,
   });
 
   sleep(0.5);
@@ -44,8 +45,8 @@ export default function (): void {
     { headers: { 'Content-Type': 'application/json' } },
   );
   check(loginRes, {
-    'login - status 201': (r) => r.status === 201,
-    'login - has token': (r) => r.json('token') !== undefined,
+    'login - status 201': r => r.status === 201,
+    'login - has token': r => r.json('token') !== undefined,
   });
 
   sleep(0.5);

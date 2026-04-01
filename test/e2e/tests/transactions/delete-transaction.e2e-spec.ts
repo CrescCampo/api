@@ -30,7 +30,7 @@ describe('Delete Transaction Controller (e2e)', () => {
     expect(response.body).toHaveProperty('transactionId', transaction.id);
   });
 
-  it('[DELETE] /transactions/:id — deve reverter totais do harvest ao deletar', async () => {
+  it('TC-014 | [DELETE] /transactions/:id — deve reverter totais do harvest ao deletar', async () => {
     const { transaction, harvest } = await seedFullDataSet(app, token, {
       transaction: { type: 'expense', amount: 500 },
     });
