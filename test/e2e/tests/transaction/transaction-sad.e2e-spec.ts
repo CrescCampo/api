@@ -27,7 +27,7 @@ describe('Transactions — Caminho Triste (e2e)', () => {
     expect(response.status).toBe(400);
     expect(response.body.message[0]).toBe('page must not be less than 1');
   });
-  it('TC-010 | [PATCH] /transactions/:id - deve rejeitar ID de transsssição inexistente', async () => {
+  it('TC-010 | [PATCH] /transactions/:id - deve rejeitar ID de transição inexistente', async () => {
     const response = await request(app.getHttpServer())
       .patch('/transactions/00000000-0000-0000-0000-000000000000')
       .set('Authorization', `Bearer ${token}`)
