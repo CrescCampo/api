@@ -4,7 +4,7 @@ import TestAppFactory from '../../helpers/test-app-factory';
 import { cleanDatabase } from '../../setup/clean-database';
 import createAndAuthenticateUser from '../../helpers/create-and-authenticate-user';
 
-describe('Auth — Caminho Feliz (e2e)', () => {
+describe('Transactions — Caminho Triste (e2e)', () => {
   let app: INestApplication;
   let token: string;
   beforeAll(async () => {
