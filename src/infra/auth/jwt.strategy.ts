@@ -25,6 +25,10 @@ class TokenPayload {
   email: string;
 
   @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
   @IsInt()
   iat?: number;
 }
