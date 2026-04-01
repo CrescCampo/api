@@ -17,6 +17,7 @@ lerna-debug.log*
 # Tests
 /coverage
 /.nyc_output
+/test-reports
 test/load/reports/
 test/load/dist/
 

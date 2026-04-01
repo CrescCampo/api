@@ -32,6 +32,10 @@ export default defineConfig({
     setupFiles: ['./test/setup-env.ts', './test/e2e/setup/setup-e2e.ts'],
     testTimeout: 60000,
     maxWorkers: 1,
+    reporters: ['default', 'html'],
+    outputFile: {
+      html: 'test-reports/e2e/index.html',
+    },
     coverage: {
       reportsDirectory: 'coverage/e2e',
       include: ['src/infra/http/controllers/**/*.ts'],
