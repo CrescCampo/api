@@ -44,13 +44,95 @@ npm run start:dev
 
 ## Testes
 
+O projeto possui três níveis de testes automatizados, todos executáveis via linha de comando (CI/CD friendly):
+
+| Tipo | Framework | Comando |
+|------|-----------|---------|
+| Unitário | Vitest | `npm test` |
+| E2E | Vitest + Supertest + Testcontainers | `npm run test:e2e` |
+| Carga (bônus) | k6 + Testcontainers | `npm run test:load:*` |
+
+### Pré-requisitos
+
+- **Node.js 20+**
+- **Docker** (obrigatório para testes E2E e de carga)
+- [**k6**](https://grafana.com/docs/k6/latest/set-up/install-k6/) (apenas para testes de carga)
+
+### Instalação e Execução
+
 ```bash
-npm test                  # Testes unitários
-npm run test:unit         # Unitários com coverage
-npm run test:e2e          # Testes E2E (requer Docker)
+# 1. Instalar dependências
+npm install
+
+# 2. Copiar variáveis de ambiente
+cp .env.example .env
+
+# 3. Executar testes unitários
+npm test
+
+# 4. Executar testes unitários com coverage
+npm run test:unit
+
+# 5. Executar testes E2E (requer Docker rodando)
+npm run test:e2e
+
+# 6. Executar testes de carga (requer Docker + k6)
+npm run test:load:browsing
 ```
 
-Para detalhes completos sobre a configuração de testes, veja [`TESTING.md`](TESTING.md).
+### Relatórios
+
+Todos os testes produzem relatórios de execução automaticamente:
+
+| Tipo | Comando | Relatório Gerado |
+|------|---------|------------------|
+| Cobertura unitária | `npm run test:unit` | `coverage/unit/index.html` |
+| Cobertura E2E | `npm run test:e2e` | `coverage/e2e/index.html` |
+| Resultado E2E (HTML) | `npm run test:e2e` | `test-reports/e2e/index.html` |
+| Dashboard de carga | `npm run test:load:*` | `test/load/reports/*.html` |
+
+### Casos de Teste E2E
+
+14 casos de teste automatizados com identificadores únicos (TC-001 a TC-014):
+
+#### Dados Válidos / Caminho Feliz
+
+| ID | Rota | Descrição |
+|----|------|-----------|
+| TC-001 | `POST /auth/register` | Deve registrar um novo usuário e retornar userId |
+| TC-002 | `POST /auth/login` | Deve autenticar e retornar token e dados do usuário |
+| TC-012 | `POST /app/push` | Deve criar cultura via push (201) |
+| TC-013 | `GET /app/pull` | Deve retornar harvests, transactions e totais após push (200) |
+| TC-014 | `DELETE /transactions/:id` | Deve reverter totais do harvest ao deletar |
+
+#### Dados Inválidos / Caminho Triste
+
+| ID | Rota | Descrição |
+|----|------|-----------|
+| TC-003 | `POST /auth/register` | Deve rejeitar email com formato inválido (400) |
+| TC-004 | `POST /auth/register` | Deve rejeitar email já cadastrado |
+| TC-005 | `POST /auth/login` | Deve rejeitar senha incorreta (401) |
+| TC-006 | `POST /auth/login` | Deve rejeitar email inexistente (401) |
+| TC-007 | `POST /auth/register` | Deve rejeitar body vazio (400) |
+| TC-008 | `GET /transactions` | Deve rejeitar requisição sem token (401) |
+| TC-009 | `GET /transactions` | Deve rejeitar page=0 (400) |
+| TC-010 | `PATCH /transactions/:id` | Deve rejeitar ID de transação inexistente (404) |
+| TC-011 | `DELETE /transactions/:id` | Deve rejeitar ID de transação inexistente ao deletar (404) |
+
+### Casos de Teste de Carga (Bônus)
+
+6 cenários de performance com k6:
+
+| ID | Cenário | VUs | Thresholds |
+|----|---------|-----|------------|
+| TC-021 | Onboarding — registro de novos usuários | 10 | p95<800ms, err<5% |
+| TC-022 | Daily Browsing — navegação de harvests e transactions | 10 | p95<500ms, err<1% |
+| TC-023 | Mobile Sync — sincronização push/pull do app | 10 | p95<1000ms, err<1% |
+| TC-024 | Financial Management — CRUD de transações | 5 | p95<600ms, err<5% |
+| TC-025 | Feedback Burst — rajada de envio de feedbacks | 15 | p95<500ms, err<1% |
+| TC-026 | Peak Traffic — estresse com tráfego de pico combinado | 80 | p95<200ms, err<5% |
+
+Para documentação completa sobre configuração, infraestrutura e como adicionar novos testes, veja [`TESTING.md`](TESTING.md).
 
 ## Testes de Performance
 
@@ -124,3 +206,11 @@ src/
 Dependências fluem para dentro: `infra -> application -> enterprise -> core`.
 
 Para documentação completa da arquitetura, veja a pasta [`docs/`](docs/).
+
+## Uso de IA
+
+Este projeto utilizou ferramentas de inteligência artificial como apoio durante o desenvolvimento:
+
+- **Claude (Anthropic)**: Auxílio na implementação de testes, configuração de infraestrutura de testes (Testcontainers, k6) e documentação.
+
+Todas as decisões de arquitetura, implementação e revisão de código foram realizadas pelos integrantes do grupo. O uso de IA foi limitado a assistência e aceleração do desenvolvimento.
