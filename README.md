@@ -205,7 +205,7 @@ src/
 
 Dependências fluem para dentro: `infra -> application -> enterprise -> core`.
 
-Para documentação completa da arquitetura, veja a pasta [`docs/`](docs/).
+Para documentação completa da arquitetura, veja [`../docs/api/`](../docs/api/) na raiz do monorepo.
 
 ## Uso de IA
 
