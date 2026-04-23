@@ -5,12 +5,12 @@ import Culture from 'domain/enterprise/entities/Culture';
 import Transaction from 'domain/enterprise/entities/Transaction';
 import TransactionCategory from 'domain/enterprise/entities/TransactionCategory';
 import TransactionType from 'domain/enterprise/enums/TransactionType';
+import AppPullUseCase from 'domain/application/use-cases/app/pull';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryCultureRepository from '../../repositories/InMemoryCultureRepository';
 import InMemoryHarvestRepository from '../../repositories/InMemoryHarvestRepository';
 import InMemoryTransactionCategoryRepository from '../../repositories/InMemoryTransactionCategoryRepository';
 import InMemoryTransactionRepository from '../../repositories/InMemoryTransactionRepository';
-import AppPullUseCase from 'domain/application/use-cases/app/pull';
 
 let inMemoryFarmerRepository: InMemoryFarmerRepository;
 let inMemoryCultureRepository: InMemoryCultureRepository;

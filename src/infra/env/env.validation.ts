@@ -67,6 +67,10 @@ export class EnvVariables {
   OPENAI_API_KEY: string;
 
   @IsOptional()
+  @IsString()
+  JWT_EXPIRES_IN: string = '7d';
+
+  @IsOptional()
   @IsInt()
   @Type(() => Number)
   RATE_LIMIT_TTL: number = 5;

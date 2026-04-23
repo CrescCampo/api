@@ -1,8 +1,8 @@
 import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFoundError';
 import Farm from 'domain/enterprise/entities/Farm';
 import Farmer from 'domain/enterprise/entities/Farmer';
-import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import UpdateFarmerPhone from 'domain/application/use-cases/farmers/update-farmer-phone';
+import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 
 const fakeWhatsAppGateway = {
   sendMessage: vi.fn().mockResolvedValue({ id: 'msg-id', status: 'pending' }),

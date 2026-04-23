@@ -13,6 +13,7 @@ const config: Config = {
   jwt: {
     privateKeyBase64: envVars.JWT_PRIVATE_KEY_BASE_64,
     publicKeyBase64: envVars.JWT_PUBLIC_KEY_BASE_64,
+    expiresIn: envVars.JWT_EXPIRES_IN,
   },
   drizzle: {
     postgresUser: envVars.POSTGRES_USER,

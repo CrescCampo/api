@@ -5,9 +5,9 @@ import Culture from 'domain/enterprise/entities/Culture';
 import Transaction from 'domain/enterprise/entities/Transaction';
 import TransactionCategory from 'domain/enterprise/entities/TransactionCategory';
 import TransactionType from 'domain/enterprise/enums/TransactionType';
+import ListTransactionsByFarm from 'domain/application/use-cases/transactions/list-transactions-by-farm';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryTransactionRepository from '../../repositories/InMemoryTransactionRepository';
-import ListTransactionsByFarm from 'domain/application/use-cases/transactions/list-transactions-by-farm';
 
 let inMemoryFarmerRepository: InMemoryFarmerRepository;
 let inMemoryTransactionRepository: InMemoryTransactionRepository;
@@ -24,9 +24,9 @@ describe('ListTransactionsByFarm', () => {
   });
 
   it('should throw when farmer does not exist', async () => {
-    await expect(
-      sut.execute({ userId: 'non-existent' }),
-    ).rejects.toThrow('Farmer non-existent not found');
+    await expect(sut.execute({ userId: 'non-existent' })).rejects.toThrow(
+      'Farmer non-existent not found',
+    );
   });
 
   it('should return empty list when no transactions exist', async () => {
@@ -142,7 +142,11 @@ describe('ListTransactionsByFarm', () => {
 
     await inMemoryFarmerRepository.save(farmer);
 
-    const result = await sut.execute({ userId: farmer.id, page: 2, pageSize: 5 });
+    const result = await sut.execute({
+      userId: farmer.id,
+      page: 2,
+      pageSize: 5,
+    });
 
     expect(result.transactions).toHaveLength(5);
     expect(result.pagination.meta.currentPage).toBe(2);

@@ -41,9 +41,7 @@ class UpdateFarmerPhoneResponseDTO {
 @Controller('farmers')
 @ApiTags('Farmers')
 export default class UpdateFarmerPhoneController {
-  constructor(
-    private readonly updateFarmerPhone: UpdateFarmerPhone,
-  ) {}
+  constructor(private readonly updateFarmerPhone: UpdateFarmerPhone) {}
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
