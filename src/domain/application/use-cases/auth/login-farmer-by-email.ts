@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import Encrypter from 'domain/application/cryptography/encrypter';
 import HashComparer from 'domain/application/cryptography/hash-comparer';
+import HashGenerator from 'domain/application/cryptography/hash-generator';
 import WrongCredentialsError from 'domain/application/errors/auth/WrongCredentialsError';
 import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 
@@ -23,6 +24,7 @@ export default class LoginFarmerByEmail {
   constructor(
     private readonly farmerRepository: FarmerRepository,
     private readonly hashComparer: HashComparer,
+    private readonly hashGenerator: HashGenerator,
     private readonly encrypter: Encrypter,
   ) {}
 
@@ -47,6 +49,10 @@ export default class LoginFarmerByEmail {
     }
 
     farmer.logged();
+
+    if (farmer.password.startsWith('$2a$08$')) {
+      farmer.password = await this.hashGenerator.hash(input.password);
+    }
 
     await this.farmerRepository.save(farmer);
 

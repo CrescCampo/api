@@ -46,6 +46,11 @@ export default class Farmer extends Entity<FarmerProps> {
     return this.props.password;
   }
 
+  set password(hash: string) {
+    this.props.password = hash;
+    this.#touch();
+  }
+
   get phone() {
     return this.props.phone;
   }

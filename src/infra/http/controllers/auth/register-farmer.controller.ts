@@ -6,7 +6,13 @@ import {
   ApiProperty,
   ApiTags,
 } from '@nestjs/swagger';
-import { IsEmail, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 import RegisterUserUseCase from 'domain/application/use-cases/auth/register-farmer-by-email';
 
 class RegisterFarmerBodyDTO {
@@ -15,6 +21,7 @@ class RegisterFarmerBodyDTO {
     example: 'Maria Clara',
   })
   @IsString()
+  @MaxLength(100)
   name: string;
 
   @ApiProperty({
@@ -26,9 +33,13 @@ class RegisterFarmerBodyDTO {
 
   @ApiProperty({
     type: String,
-    example: 'pass',
+    example: 'senha@Segura1',
   })
   @IsString()
+  @MinLength(10)
+  @MaxLength(72)
+  @Matches(/[A-Za-z]/, { message: 'password must contain a letter' })
+  @Matches(/\d|\W/, { message: 'password must contain a number or symbol' })
   password: string;
 }
 
