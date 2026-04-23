@@ -8,10 +8,10 @@ import TransactionType from 'domain/enterprise/enums/TransactionType';
 import TransactionCategoryRepository from 'domain/application/repositories/TransactionCategoryRepository';
 import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFoundError';
 import TransactionNotFoundError from 'domain/application/errors/transaction/TransactionNotFoundError';
+import EditTransaction from 'domain/application/use-cases/transactions/edit-transaction';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryTransactionRepository from '../../repositories/InMemoryTransactionRepository';
 import InMemoryHarvestRepository from '../../repositories/InMemoryHarvestRepository';
-import EditTransaction from 'domain/application/use-cases/transactions/edit-transaction';
 
 class InMemoryTransactionCategoryRepository implements TransactionCategoryRepository {
   items: TransactionCategory[] = [];

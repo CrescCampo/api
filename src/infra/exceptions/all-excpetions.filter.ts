@@ -9,6 +9,32 @@ import { Response, Request } from 'express';
 
 import ErrorStatusMapper from './error-status-mapper';
 
+const SAFE_HEADERS = [
+  'host',
+  'user-agent',
+  'content-type',
+  'content-length',
+  'accept',
+];
+const SENSITIVE_BODY_FIELDS = ['password', 'token', 'refreshToken', 'apiKey'];
+
+function pickSafeHeaders(h: Request['headers']) {
+  return Object.fromEntries(
+    Object.entries(h ?? {}).filter(([k]) =>
+      SAFE_HEADERS.includes(k.toLowerCase()),
+    ),
+  );
+}
+
+function redactBody(b: unknown) {
+  if (!b || typeof b !== 'object') return b;
+  return Object.fromEntries(
+    Object.entries(b as Record<string, unknown>).map(([k, v]) =>
+      SENSITIVE_BODY_FIELDS.includes(k) ? [k, '[redacted]'] : [k, v],
+    ),
+  );
+}
+
 @Catch()
 export default class AllExceptionsFilter implements ExceptionFilter {
   catch(exception: Error, host: ArgumentsHost) {
@@ -21,11 +47,10 @@ export default class AllExceptionsFilter implements ExceptionFilter {
     const errorResponse = this.getErrorResponse(error, request);
     const errorLog = this.getErrorLog(errorResponse, request, exception);
 
-    // Log critical errors with ERROR level, domain errors with WARN level
     const logLevel = ErrorStatusMapper.isCriticalError(exception)
       ? 'error'
       : 'warn';
-    Logger[logLevel](errorLog, 'All Exception Filter');
+    Logger[logLevel](JSON.stringify(errorLog), 'All Exception Filter');
 
     response.status(error.statusCode).json(error);
   }
@@ -52,7 +77,10 @@ export default class AllExceptionsFilter implements ExceptionFilter {
     };
   }
 
-  private getErrorResponse = (error: any, request: Request) => ({
+  private getErrorResponse = (
+    error: { statusCode: number; error: string; message: string },
+    request: Request,
+  ) => ({
     statusCode: error.statusCode,
     error: error.error,
     message: error.message,
@@ -62,20 +90,14 @@ export default class AllExceptionsFilter implements ExceptionFilter {
   });
 
   private getErrorLog = (
-    errorResponse: any,
+    errorResponse: { statusCode: number; error: string; timeStamp: Date },
     request: Request,
     exception: Error,
-  ): string => {
-    const { statusCode, error, timeStamp } = errorResponse;
-    const { method, url } = request;
-    const errorLog = `Time: ${timeStamp}
-    Response Code: ${statusCode} - Method: ${method} - URL: ${url}\n
-    From IP: ${request.ip ?? 'none'}
-    Req Headers: ${JSON.stringify(request.headers ?? 'empty headers')}
-    Req Body: ${JSON.stringify(request.body ?? 'empty body')}
-    Req Query: ${JSON.stringify(request.query ?? 'empty query')}
-    Req Params: ${JSON.stringify(request.params ?? 'empty params')}\n
-    ${exception.stack ? exception.stack : error}`;
-    return errorLog;
-  };
+  ) => ({
+    path: request.url,
+    method: request.method,
+    headers: pickSafeHeaders(request.headers),
+    body: redactBody(request.body),
+    error: { message: exception.message, stack: exception.stack },
+  });
 }

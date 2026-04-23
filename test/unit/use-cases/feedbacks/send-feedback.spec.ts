@@ -2,9 +2,9 @@ import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFound
 import Farmer from 'domain/enterprise/entities/Farmer';
 import Farm from 'domain/enterprise/entities/Farm';
 import FeedbackCategory from 'domain/enterprise/enums/FeedbackCategory';
+import SendFeedbackUseCase from 'domain/application/use-cases/feedbacks/send-feedback';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryFeedbackRepository from '../../repositories/InMemoryFeedbackRepository';
-import SendFeedbackUseCase from 'domain/application/use-cases/feedbacks/send-feedback';
 
 let inMemoryFarmerRepository: InMemoryFarmerRepository;
 let inMemoryFeedbackRepository: InMemoryFeedbackRepository;

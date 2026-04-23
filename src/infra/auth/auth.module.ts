@@ -11,7 +11,7 @@ import JwtStrategy from './jwt.strategy';
       global: true,
       privateKey: Buffer.from(config.jwt.privateKeyBase64, 'base64'),
       publicKey: Buffer.from(config.jwt.publicKeyBase64, 'base64'),
-      signOptions: { algorithm: 'RS256' },
+      signOptions: { algorithm: 'RS256', expiresIn: config.jwt.expiresIn },
     }),
   ],
   providers: [JwtStrategy],

@@ -7,10 +7,10 @@ import TransactionCategory from 'domain/enterprise/entities/TransactionCategory'
 import TransactionType from 'domain/enterprise/enums/TransactionType';
 import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFoundError';
 import TransactionNotFoundError from 'domain/application/errors/transaction/TransactionNotFoundError';
+import DeleteTransaction from 'domain/application/use-cases/transactions/delete-transaction';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryTransactionRepository from '../../repositories/InMemoryTransactionRepository';
 import InMemoryHarvestRepository from '../../repositories/InMemoryHarvestRepository';
-import DeleteTransaction from 'domain/application/use-cases/transactions/delete-transaction';
 
 let inMemoryFarmerRepository: InMemoryFarmerRepository;
 let inMemoryTransactionRepository: InMemoryTransactionRepository;

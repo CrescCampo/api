@@ -4,9 +4,9 @@ import Harvest from 'domain/enterprise/entities/Harvest';
 import Culture from 'domain/enterprise/entities/Culture';
 import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFoundError';
 import HarvestNotFoundError from 'domain/application/errors/harvest/HarvestNotFoundError';
+import EditHarvestName from 'domain/application/use-cases/harvests/edit-harvest-name';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryHarvestRepository from '../../repositories/InMemoryHarvestRepository';
-import EditHarvestName from 'domain/application/use-cases/harvests/edit-harvest-name';
 
 let inMemoryFarmerRepository: InMemoryFarmerRepository;
 let inMemoryHarvestRepository: InMemoryHarvestRepository;

@@ -8,7 +8,6 @@ interface TransactionCategoryProps {
 }
 
 export default class TransactionCategory extends Entity<TransactionCategoryProps> {
-
   get name() {
     return this.props.name;
   }
@@ -21,7 +20,10 @@ export default class TransactionCategory extends Entity<TransactionCategoryProps
     return this.props.farmId;
   }
 
-  static create(props: Optional<TransactionCategoryProps, 'createdAt'>, id?: string) {
+  static create(
+    props: Optional<TransactionCategoryProps, 'createdAt'>,
+    id?: string,
+  ) {
     return new TransactionCategory(
       {
         ...props,

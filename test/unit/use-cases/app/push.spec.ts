@@ -12,11 +12,11 @@ import TransactionCategoryRepository from 'domain/application/repositories/Trans
 import OutboxEventRepository, {
   OutboxEventRecord,
 } from 'domain/application/repositories/OutboxEventRepository';
-import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import AppPushUseCase, {
   OutboxEventEntity,
   OutboxEventType,
 } from 'domain/application/use-cases/app/push';
+import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 
 class InMemoryCultureRepository implements CultureRepository {
   items: Culture[] = [];
@@ -95,9 +95,7 @@ class InMemoryHarvestRepository implements HarvestRepository {
   }
 }
 
-class InMemoryTransactionCategoryRepository
-  implements TransactionCategoryRepository
-{
+class InMemoryTransactionCategoryRepository implements TransactionCategoryRepository {
   items: TransactionCategory[] = [];
 
   async save(category: TransactionCategory): Promise<void> {
@@ -215,9 +213,9 @@ describe('AppPushUseCase', () => {
   it('should throw when farmer does not exist', async () => {
     const { sut } = makeSut();
 
-    await expect(
-      sut.execute('non-existent', { outbox: [] }),
-    ).rejects.toThrow('Farmer non-existent not found');
+    await expect(sut.execute('non-existent', { outbox: [] })).rejects.toThrow(
+      'Farmer non-existent not found',
+    );
   });
 
   it('should throw on invalid JSON payload', async () => {
@@ -703,11 +701,7 @@ describe('AppPushUseCase', () => {
   });
 
   it('should throw when harvest for transaction is not found', async () => {
-    const {
-      sut,
-      farmerRepository,
-      transactionCategoryRepository,
-    } = makeSut();
+    const { sut, farmerRepository, transactionCategoryRepository } = makeSut();
 
     const farm = Farm.create({});
     const farmer = Farmer.create({
