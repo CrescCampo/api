@@ -16,6 +16,7 @@ async function bootstrap() {
   app.use(helmet());
   app.use(json({ limit: '100kb' }));
   app.use(urlencoded({ limit: '100kb', extended: true, parameterLimit: 100 }));
+  app.getHttpAdapter().getInstance().set('trust proxy', 'loopback');
   app.getHttpAdapter().getInstance().disable('x-powered-by');
 
   if (config.app.environment === Environment.PROD) {

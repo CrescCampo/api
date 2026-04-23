@@ -9,7 +9,14 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { IsEnum, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+} from 'class-validator';
 import type { Request } from 'express';
 import JwtAuthGuard from 'infra/auth/jwt-auth.guard';
 import TransactionType from 'domain/enterprise/enums/TransactionType';
@@ -38,6 +45,7 @@ class EditTransactionBodyDTO {
   })
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   description?: string;
 
   @ApiProperty({

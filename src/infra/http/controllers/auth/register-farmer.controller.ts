@@ -29,6 +29,7 @@ class RegisterFarmerBodyDTO {
     example: 'user@email.com',
   })
   @IsEmail()
+  @MaxLength(254)
   email: string;
 
   @ApiProperty({

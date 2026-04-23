@@ -17,7 +17,11 @@ import winstonConfig from './config/winston.config';
   imports: [
     WinstonModule.forRoot(winstonConfig),
     ThrottlerModule.forRoot([
-      { name: 'global', ttl: config.app.rateLimit.ttl, limit: config.app.rateLimit.limit },
+      {
+        name: 'global',
+        ttl: config.app.rateLimit.ttl,
+        limit: config.app.rateLimit.limit,
+      },
       { name: 'short', ttl: 60_000, limit: 5 },
     ]),
     DatabaseModule,

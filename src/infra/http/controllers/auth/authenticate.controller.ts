@@ -7,7 +7,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { IsEmail, IsString } from 'class-validator';
+import { IsEmail, IsString, MaxLength } from 'class-validator';
 import LoginFarmerByEmail from 'domain/application/use-cases/auth/login-farmer-by-email';
 import EmailIpThrottlerGuard from 'infra/auth/email-ip-throttler.guard';
 
@@ -17,6 +17,7 @@ class AuthenticateBodyDTO {
     example: 'user@email.com',
   })
   @IsEmail()
+  @MaxLength(254)
   email: string;
 
   @ApiProperty({
@@ -24,6 +25,7 @@ class AuthenticateBodyDTO {
     example: 'pass',
   })
   @IsString()
+  @MaxLength(72)
   password: string;
 }
 
