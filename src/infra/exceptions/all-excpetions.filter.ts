@@ -47,10 +47,13 @@ export default class AllExceptionsFilter implements ExceptionFilter {
     const errorResponse = this.getErrorResponse(error, request);
     const errorLog = this.getErrorLog(errorResponse, request, exception);
 
-    const logLevel = ErrorStatusMapper.isCriticalError(exception)
-      ? 'error'
-      : 'warn';
-    Logger[logLevel](JSON.stringify(errorLog), 'All Exception Filter');
+    const logMessage = JSON.stringify(errorLog);
+    const context = 'All Exception Filter';
+    if (ErrorStatusMapper.isCriticalError(exception)) {
+      Logger.error(logMessage, exception.stack, context);
+    } else {
+      Logger.warn(logMessage, context);
+    }
 
     response.status(error.statusCode).json(error);
   }

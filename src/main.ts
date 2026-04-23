@@ -15,12 +15,14 @@ async function bootstrap() {
   app.use(helmet());
   app.getHttpAdapter().getInstance().disable('x-powered-by');
 
-  app.enableCors({
-    origin: ['https://cresccampo.com.br', 'https://www.cresccampo.com.br'],
-    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
-    allowedHeaders: ['content-type', 'authorization'],
-    credentials: false,
-  });
+  if (config.app.environment === Environment.PROD) {
+    app.enableCors({
+      origin: ['https://cresccampo.com.br', 'https://www.cresccampo.com.br'],
+      methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+      allowedHeaders: ['content-type', 'authorization'],
+      credentials: false,
+    });
+  }
 
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
 
