@@ -75,8 +75,8 @@ export default class AuthenticateController {
 
   @Post('/login')
   @UseGuards(EmailIpThrottlerGuard)
-  @Throttle({ short: { ttl: 60_000, limit: 5 } })
-  @ApiOperation({ summary: 'Health check' })
+  @Throttle({ global: { ttl: 60_000, limit: 5 } })
+  @ApiOperation({ summary: 'Authenticate farmer' })
   @ApiBody({
     type: AuthenticateBodyDTO,
   })

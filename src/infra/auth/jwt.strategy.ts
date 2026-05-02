@@ -13,16 +13,16 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 
 class TokenPayload {
   @IsString()
-  id: string;
+  id!: string;
 
   @IsString()
-  farmId: string;
+  farmId!: string;
 
   @IsString()
-  name: string;
+  name!: string;
 
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsOptional()
   @IsString()
@@ -31,6 +31,9 @@ class TokenPayload {
   @IsOptional()
   @IsInt()
   iat?: number;
+
+  @IsInt()
+  exp!: number;
 }
 
 @Injectable()
