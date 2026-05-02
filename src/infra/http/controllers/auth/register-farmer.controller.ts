@@ -6,6 +6,7 @@ import {
   ApiProperty,
   ApiTags,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import {
   IsEmail,
   IsString,
@@ -57,6 +58,7 @@ export default class RegisterFarmerController {
   constructor(private readonly registerFarmerUseCase: RegisterUserUseCase) {}
 
   @Post('/register')
+  @Throttle({ global: { ttl: 60_000, limit: 5 } })
   @ApiOperation({ summary: 'Register a farmer' })
   @ApiBody({
     type: RegisterFarmerBodyDTO,

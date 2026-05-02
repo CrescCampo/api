@@ -17,8 +17,11 @@ import winstonConfig from './config/winston.config';
   imports: [
     WinstonModule.forRoot(winstonConfig),
     ThrottlerModule.forRoot([
-      { name: 'global', ttl: config.app.rateLimit.ttl, limit: config.app.rateLimit.limit },
-      { name: 'short', ttl: 60_000, limit: 5 },
+      {
+        name: 'global',
+        ttl: config.app.rateLimit.ttl,
+        limit: config.app.rateLimit.limit,
+      },
     ]),
     DatabaseModule,
     AuthModule,
@@ -29,7 +32,8 @@ import winstonConfig from './config/winston.config';
   providers: [
     { provide: APP_INTERCEPTOR, useClass: LoggerInterceptor },
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    ThrottlerGuard,
+    { provide: APP_GUARD, useExisting: ThrottlerGuard },
   ],
 })
 export default class AppModule {}
