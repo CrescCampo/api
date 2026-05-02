@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import {
   ApiBody,
   ApiOkResponse,
@@ -6,8 +6,10 @@ import {
   ApiProperty,
   ApiTags,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { IsEmail, IsString } from 'class-validator';
 import LoginFarmerByEmail from 'domain/application/use-cases/auth/login-farmer-by-email';
+import EmailIpThrottlerGuard from 'infra/auth/email-ip-throttler.guard';
 
 class AuthenticateBodyDTO {
   @ApiProperty({
@@ -70,7 +72,9 @@ export default class AuthenticateController {
   constructor(private readonly loginFarmerUseCase: LoginFarmerByEmail) {}
 
   @Post('/login')
-  @ApiOperation({ summary: 'Health check' })
+  @UseGuards(EmailIpThrottlerGuard)
+  @Throttle({ global: { ttl: 60_000, limit: 5 } })
+  @ApiOperation({ summary: 'Authenticate farmer' })
   @ApiBody({
     type: AuthenticateBodyDTO,
   })

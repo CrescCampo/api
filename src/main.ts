@@ -2,6 +2,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { WinstonModule } from 'nest-winston';
 import helmet from 'helmet';
+import { json, urlencoded } from 'express';
 import winstonConfig from 'infra/config/winston.config';
 import setSwagger from 'infra/http/swagger';
 import config from 'infra/config';
@@ -13,6 +14,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger });
 
   app.use(helmet());
+  app.use(json({ limit: '100kb' }));
+  app.use(urlencoded({ limit: '100kb', extended: true, parameterLimit: 100 }));
   app.getHttpAdapter().getInstance().disable('x-powered-by');
 
   if (config.app.environment === Environment.PROD) {

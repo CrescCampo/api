@@ -6,7 +6,14 @@ import {
   ApiProperty,
   ApiTags,
 } from '@nestjs/swagger';
-import { IsEmail, IsString } from 'class-validator';
+import { Throttle } from '@nestjs/throttler';
+import {
+  IsEmail,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 import RegisterUserUseCase from 'domain/application/use-cases/auth/register-farmer-by-email';
 
 class RegisterFarmerBodyDTO {
@@ -15,6 +22,7 @@ class RegisterFarmerBodyDTO {
     example: 'Maria Clara',
   })
   @IsString()
+  @MaxLength(100)
   name: string;
 
   @ApiProperty({
@@ -26,9 +34,13 @@ class RegisterFarmerBodyDTO {
 
   @ApiProperty({
     type: String,
-    example: 'pass',
+    example: 'senha@Segura1',
   })
   @IsString()
+  @MinLength(10)
+  @MaxLength(72)
+  @Matches(/[A-Za-z]/, { message: 'password must contain a letter' })
+  @Matches(/\d|[^\w\s]/, { message: 'password must contain a number or symbol' })
   password: string;
 }
 
@@ -46,6 +58,7 @@ export default class RegisterFarmerController {
   constructor(private readonly registerFarmerUseCase: RegisterUserUseCase) {}
 
   @Post('/register')
+  @Throttle({ global: { ttl: 60_000, limit: 5 } })
   @ApiOperation({ summary: 'Register a farmer' })
   @ApiBody({
     type: RegisterFarmerBodyDTO,
