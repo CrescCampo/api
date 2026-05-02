@@ -8,7 +8,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsString, Max, Min } from 'class-validator';
+import { IsEnum, IsInt, IsString, Max, MaxLength, Min } from 'class-validator';
 import SendFeedbackUseCase from 'domain/application/use-cases/feedbacks/send-feedback';
 import FeedbackCategory from 'domain/enterprise/enums/FeedbackCategory';
 import JwtAuthGuard from 'infra/auth/jwt-auth.guard';
@@ -36,6 +36,7 @@ class SendFeedbackBodyDTO {
     example: 'Otima entrega e produtos frescos.',
   })
   @IsString()
+  @MaxLength(500)
   description: string;
 
   @ApiProperty({

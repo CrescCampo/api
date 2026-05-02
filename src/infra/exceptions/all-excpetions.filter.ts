@@ -37,7 +37,7 @@ function redactBody(b: unknown) {
 
 @Catch()
 export default class AllExceptionsFilter implements ExceptionFilter {
-  catch(exception: Error, host: ArgumentsHost) {
+  catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
@@ -49,7 +49,10 @@ export default class AllExceptionsFilter implements ExceptionFilter {
 
     const logMessage = JSON.stringify(errorLog);
     const context = 'All Exception Filter';
-    if (ErrorStatusMapper.isCriticalError(exception)) {
+    if (
+      exception instanceof Error &&
+      ErrorStatusMapper.isCriticalError(exception)
+    ) {
       Logger.error(logMessage, exception.stack, context);
     } else {
       Logger.warn(logMessage, context);
@@ -58,9 +61,12 @@ export default class AllExceptionsFilter implements ExceptionFilter {
     response.status(error.statusCode).json(error);
   }
 
-  private getHttpException(exception: Error) {
+  private getHttpException(exception: unknown) {
     if (exception instanceof HttpException) {
-      const errorResponse = exception.getResponse() as any;
+      const errorResponse = exception.getResponse() as {
+        error?: string;
+        message?: string | string[];
+      };
       return {
         statusCode: exception.getStatus(),
         error: errorResponse.error ? errorResponse.error : exception.name,
@@ -70,18 +76,20 @@ export default class AllExceptionsFilter implements ExceptionFilter {
       };
     }
 
-    const statusCode = ErrorStatusMapper.getStatusCode(exception);
-    const errorName = ErrorStatusMapper.getErrorName(exception);
+    const err =
+      exception instanceof Error ? exception : new Error(String(exception));
+    const statusCode = ErrorStatusMapper.getStatusCode(err);
+    const errorName = ErrorStatusMapper.getErrorName(err);
 
     return {
       statusCode,
       error: errorName,
-      message: exception.message || 'An error occurred',
+      message: err.message || 'An error occurred',
     };
   }
 
   private getErrorResponse = (
-    error: { statusCode: number; error: string; message: string },
+    error: { statusCode: number; error: string; message: string | string[] },
     request: Request,
   ) => ({
     statusCode: error.statusCode,
@@ -95,12 +103,16 @@ export default class AllExceptionsFilter implements ExceptionFilter {
   private getErrorLog = (
     errorResponse: { statusCode: number; error: string; timeStamp: Date },
     request: Request,
-    exception: Error,
-  ) => ({
+    exception: unknown,
+  ): Record<string, unknown> => ({
     path: request.url,
     method: request.method,
     headers: pickSafeHeaders(request.headers),
     body: redactBody(request.body),
-    error: { message: exception.message, stack: exception.stack },
+    error: {
+      message:
+        exception instanceof Error ? exception.message : String(exception),
+      stack: exception instanceof Error ? exception.stack : undefined,
+    },
   });
 }

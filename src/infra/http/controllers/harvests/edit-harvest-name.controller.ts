@@ -9,7 +9,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { IsString, MinLength } from 'class-validator';
+import { IsString, MaxLength, MinLength } from 'class-validator';
 import type { Request } from 'express';
 import JwtAuthGuard from 'infra/auth/jwt-auth.guard';
 import EditHarvestName from 'domain/application/use-cases/harvests/edit-harvest-name';
@@ -27,6 +27,7 @@ class EditHarvestNameBodyDTO {
   })
   @IsString()
   @MinLength(1)
+  @MaxLength(80)
   name: string;
 }
 

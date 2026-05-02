@@ -4,11 +4,13 @@ import WrongCredentialsError from 'domain/application/errors/auth/WrongCredentia
 import Farm from 'domain/enterprise/entities/Farm';
 import Farmer from 'domain/enterprise/entities/Farmer';
 import LoginFarmerByEmail from 'domain/application/use-cases/auth/login-farmer-by-email';
+import HashGenerator from 'domain/application/cryptography/hash-generator';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 
 let inMemoryFarmerRepository: InMemoryFarmerRepository;
 let hashComparer: HashComparer;
 let encrypter: Encrypter;
+let hashGenerator: HashGenerator;
 let sut: LoginFarmerByEmail;
 
 class FakeHashComparer implements HashComparer {
@@ -26,14 +28,23 @@ class FakeEncrypter implements Encrypter {
   }
 }
 
+class FakeHashGenerator implements HashGenerator {
+  async hash(plain: string): Promise<string> {
+    return `hashed-${plain}`;
+  }
+}
+
 describe('LoginFarmerByEmail', () => {
   beforeEach(() => {
     inMemoryFarmerRepository = new InMemoryFarmerRepository();
     hashComparer = new FakeHashComparer();
     encrypter = new FakeEncrypter();
+    hashGenerator = new FakeHashGenerator();
+
     sut = new LoginFarmerByEmail(
       inMemoryFarmerRepository,
       hashComparer,
+      hashGenerator,
       encrypter,
     );
   });

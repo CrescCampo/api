@@ -18,7 +18,6 @@ export default class LoggerInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     if (config.app.environment === Environment.DEV) {
       const now = Date.now();
-      // this.logRequest(context.switchToHttp().getRequest());
       return next.handle().pipe(
         tap(data => {
           const delay = Date.now() - now;
@@ -28,19 +27,6 @@ export default class LoggerInterceptor implements NestInterceptor {
     }
     return next.handle();
   }
-
-  // private logRequest(req: Request) {
-  //   this.logger.info({
-  //     type: 'REQUEST',
-  //     headers: req.headers,
-  //     method: req.method,
-  //     route: req.route.path,
-  //     body: req.body,
-  //     params: req.params,
-  //     query: req.query,
-  //     from: req.ip,
-  //   });
-  // }
 
   private getDataType(data: any) {
     const type = typeof data;
