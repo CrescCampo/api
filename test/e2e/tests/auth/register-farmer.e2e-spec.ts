@@ -33,7 +33,7 @@ describe('Register Farmer Controller (e2e)', () => {
     const uniqueUser = {
       name: 'Farmer Defaults',
       email: `defaults.${Date.now()}@exemplo.com`,
-      password: 'senha-123',
+      password: 'senha-segura-123',
     };
 
     await request(app.getHttpServer()).post('/auth/register').send(uniqueUser);
