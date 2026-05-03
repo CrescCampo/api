@@ -6,6 +6,7 @@ import Transaction from 'domain/enterprise/entities/Transaction';
 import TransactionCategory from 'domain/enterprise/entities/TransactionCategory';
 import TransactionType from 'domain/enterprise/enums/TransactionType';
 import AppPullUseCase from 'domain/application/use-cases/app/pull';
+import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFoundError';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryCultureRepository from '../../repositories/InMemoryCultureRepository';
 import InMemoryHarvestRepository from '../../repositories/InMemoryHarvestRepository';
@@ -36,9 +37,9 @@ describe('AppPullUseCase', () => {
     );
   });
 
-  it('should throw when farmer does not exist', async () => {
-    await expect(sut.execute('non-existent')).rejects.toThrow(
-      'Farmer non-existent not found',
+  it('should throw FarmerNotFoundError when farmer does not exist', async () => {
+    await expect(sut.execute('non-existent')).rejects.toBeInstanceOf(
+      FarmerNotFoundError,
     );
   });
 

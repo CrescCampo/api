@@ -3,6 +3,7 @@ import Farmer from 'domain/enterprise/entities/Farmer';
 import Harvest from 'domain/enterprise/entities/Harvest';
 import Culture from 'domain/enterprise/entities/Culture';
 import ListHarvestsByFarm from 'domain/application/use-cases/harvests/list-harvests-by-farm';
+import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFoundError';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryHarvestRepository from '../../repositories/InMemoryHarvestRepository';
 
@@ -20,10 +21,10 @@ describe('ListHarvestsByFarm', () => {
     );
   });
 
-  it('should throw when farmer does not exist', async () => {
-    await expect(sut.execute({ userId: 'non-existent' })).rejects.toThrow(
-      'Farmer non-existent not found',
-    );
+  it('should throw FarmerNotFoundError when farmer does not exist', async () => {
+    await expect(
+      sut.execute({ userId: 'non-existent' }),
+    ).rejects.toBeInstanceOf(FarmerNotFoundError);
   });
 
   it('should return empty list when no harvests exist', async () => {

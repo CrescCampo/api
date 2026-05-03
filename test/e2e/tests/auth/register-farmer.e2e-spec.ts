@@ -91,4 +91,33 @@ describe('Register Farmer Controller (e2e)', () => {
     expect(response.status).toBe(400);
     expect(response.body).toHaveProperty('message');
   });
+
+  it.each([
+    {
+      label: 'menor que 10 chars',
+      password: 'curta1',
+    },
+    {
+      label: 'sem letra',
+      password: '1234567890',
+    },
+    {
+      label: 'sem número ou símbolo',
+      password: 'abcdefghijk',
+    },
+  ])(
+    '[POST] /auth/register — deve rejeitar senha fraca: $label (400)',
+    async ({ password }) => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({
+          name: 'Senha Fraca',
+          email: `weak.${Date.now()}.${Math.random()}@exemplo.com`,
+          password,
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('message');
+    },
+  );
 });

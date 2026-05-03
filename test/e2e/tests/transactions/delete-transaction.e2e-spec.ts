@@ -74,4 +74,18 @@ describe('Delete Transaction Controller (e2e)', () => {
     expect(response.status).toBe(404);
     expect(response.body.message).toBe('Transaction not found');
   });
+
+  it('[DELETE] /transactions/:id — deve retornar 404 ao deletar transação de outro usuário', async () => {
+    const otherToken = await createAndAuthenticateUser(app, {
+      email: 'cross-tenant-del-tx@teste.com',
+    });
+    const { transaction } = await seedFullDataSet(app, otherToken);
+
+    const response = await request(app.getHttpServer())
+      .delete(`/transactions/${transaction.id}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe('Transaction not found');
+  });
 });

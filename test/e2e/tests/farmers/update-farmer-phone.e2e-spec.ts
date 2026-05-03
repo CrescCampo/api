@@ -73,4 +73,21 @@ describe('Update Farmer Phone Controller (e2e)', () => {
 
     expect(response.status).toBe(400);
   });
+
+  it('[PATCH] /farmers/phone — deve aceitar atualizar com o mesmo número (200)', async () => {
+    const samePhone = '+5511977777777';
+
+    const first = await request(app.getHttpServer())
+      .patch('/farmers/phone')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ phone: samePhone });
+    expect(first.status).toBe(200);
+
+    const second = await request(app.getHttpServer())
+      .patch('/farmers/phone')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ phone: samePhone });
+    expect(second.status).toBe(200);
+    expect(second.body).toHaveProperty('farmerId');
+  });
 });

@@ -6,6 +6,7 @@ import Transaction from 'domain/enterprise/entities/Transaction';
 import TransactionCategory from 'domain/enterprise/entities/TransactionCategory';
 import TransactionType from 'domain/enterprise/enums/TransactionType';
 import ListTransactionsByFarm from 'domain/application/use-cases/transactions/list-transactions-by-farm';
+import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFoundError';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryTransactionRepository from '../../repositories/InMemoryTransactionRepository';
 
@@ -23,10 +24,10 @@ describe('ListTransactionsByFarm', () => {
     );
   });
 
-  it('should throw when farmer does not exist', async () => {
-    await expect(sut.execute({ userId: 'non-existent' })).rejects.toThrow(
-      'Farmer non-existent not found',
-    );
+  it('should throw FarmerNotFoundError when farmer does not exist', async () => {
+    await expect(
+      sut.execute({ userId: 'non-existent' }),
+    ).rejects.toBeInstanceOf(FarmerNotFoundError);
   });
 
   it('should return empty list when no transactions exist', async () => {

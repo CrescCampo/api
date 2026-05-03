@@ -6,6 +6,8 @@ import Transaction from 'domain/enterprise/entities/Transaction';
 import TransactionCategory from 'domain/enterprise/entities/TransactionCategory';
 import TransactionType from 'domain/enterprise/enums/TransactionType';
 import ListTransactionsByHarvest from 'domain/application/use-cases/transactions/list-transactions-by-harvest';
+import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFoundError';
+import HarvestNotFoundError from 'domain/application/errors/harvest/HarvestNotFoundError';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryHarvestRepository from '../../repositories/InMemoryHarvestRepository';
 import InMemoryTransactionRepository from '../../repositories/InMemoryTransactionRepository';
@@ -27,13 +29,13 @@ describe('ListTransactionsByHarvest', () => {
     );
   });
 
-  it('should throw when farmer does not exist', async () => {
+  it('should throw FarmerNotFoundError when farmer does not exist', async () => {
     await expect(
       sut.execute({ userId: 'non-existent', harvestId: 'harvest-id' }),
-    ).rejects.toThrow('Farmer non-existent not found');
+    ).rejects.toBeInstanceOf(FarmerNotFoundError);
   });
 
-  it('should throw when harvest does not exist', async () => {
+  it('should throw HarvestNotFoundError when harvest does not exist', async () => {
     const farm = Farm.create({});
     const farmer = Farmer.create({
       name: 'João',
@@ -46,10 +48,10 @@ describe('ListTransactionsByHarvest', () => {
 
     await expect(
       sut.execute({ userId: farmer.id, harvestId: 'non-existent' }),
-    ).rejects.toThrow('Harvest non-existent not found for farmer');
+    ).rejects.toBeInstanceOf(HarvestNotFoundError);
   });
 
-  it('should throw when harvest belongs to another farm', async () => {
+  it('should throw HarvestNotFoundError when harvest belongs to another farm', async () => {
     const farm1 = Farm.create({});
     const farm2 = Farm.create({});
     const farmer = Farmer.create({
@@ -71,7 +73,7 @@ describe('ListTransactionsByHarvest', () => {
 
     await expect(
       sut.execute({ userId: farmer.id, harvestId: harvest.id }),
-    ).rejects.toThrow(`Harvest ${harvest.id} not found for farmer`);
+    ).rejects.toBeInstanceOf(HarvestNotFoundError);
   });
 
   it('should return empty list when no transactions exist for the harvest', async () => {

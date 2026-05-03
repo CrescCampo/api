@@ -85,4 +85,59 @@ describe('Edit Harvest Name Controller (e2e)', () => {
 
     expect(response.status).toBe(400);
   });
+
+  it('[PATCH] /harvests/:id/name — deve aceitar nome de 1 caractere (200)', async () => {
+    const culture = await seedCulture(app, token, { name: 'Min' });
+    const harvest = await seedHarvest(app, token, culture.id);
+
+    const response = await request(app.getHttpServer())
+      .patch(`/harvests/${harvest.id}/name`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'A' });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('harvestId', harvest.id);
+  });
+
+  it('[PATCH] /harvests/:id/name — deve aceitar nome de 80 caracteres (200)', async () => {
+    const culture = await seedCulture(app, token, { name: 'Max' });
+    const harvest = await seedHarvest(app, token, culture.id);
+    const name80 = 'A'.repeat(80);
+
+    const response = await request(app.getHttpServer())
+      .patch(`/harvests/${harvest.id}/name`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: name80 });
+
+    expect(response.status).toBe(200);
+  });
+
+  it('[PATCH] /harvests/:id/name — deve rejeitar nome de 81 caracteres (400)', async () => {
+    const culture = await seedCulture(app, token, { name: 'Over' });
+    const harvest = await seedHarvest(app, token, culture.id);
+    const name81 = 'A'.repeat(81);
+
+    const response = await request(app.getHttpServer())
+      .patch(`/harvests/${harvest.id}/name`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: name81 });
+
+    expect(response.status).toBe(400);
+  });
+
+  it('[PATCH] /harvests/:id/name — deve retornar 404 ao editar harvest de outro usuário', async () => {
+    const otherToken = await createAndAuthenticateUser(app, {
+      email: 'cross-tenant-edit-harvest@teste.com',
+    });
+    const culture = await seedCulture(app, otherToken, { name: 'Outro' });
+    const otherHarvest = await seedHarvest(app, otherToken, culture.id);
+
+    const response = await request(app.getHttpServer())
+      .patch(`/harvests/${otherHarvest.id}/name`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Tentativa cross-tenant' });
+
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe('Harvest not found');
+  });
 });

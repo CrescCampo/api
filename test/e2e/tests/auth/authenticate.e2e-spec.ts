@@ -1,10 +1,15 @@
 import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
+import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import TestAppFactory from '../../helpers/test-app-factory';
 import { cleanDatabase } from '../../setup/clean-database';
 import { makeUser } from '../../factories/make-user';
 
 const USER = makeUser({ name: 'Farmer Auth' });
+const DISABLED_USER = makeUser({
+  name: 'Farmer Disabled',
+  email: `disabled.${Date.now()}@exemplo.com`,
+});
 
 describe('Authenticate Controller (e2e)', () => {
   let app: INestApplication;
@@ -13,6 +18,16 @@ describe('Authenticate Controller (e2e)', () => {
     await cleanDatabase();
     app = await TestAppFactory.create();
     await request(app.getHttpServer()).post('/auth/register').send(USER);
+    await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(DISABLED_USER);
+
+    const farmerRepository = app.get(FarmerRepository);
+    const farmer = await farmerRepository.findByEmail(DISABLED_USER.email);
+    if (farmer) {
+      farmer.disable();
+      await farmerRepository.save(farmer);
+    }
   });
 
   afterAll(async () => {
@@ -72,5 +87,16 @@ describe('Authenticate Controller (e2e)', () => {
       .send({ email: 'invalido', password: 'qualquer' });
 
     expect(response.status).toBe(400);
+  });
+
+  it('[POST] /auth/login — deve rejeitar farmer desabilitado (401)', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({
+        email: DISABLED_USER.email,
+        password: DISABLED_USER.password,
+      });
+
+    expect(response.status).toBe(401);
   });
 });

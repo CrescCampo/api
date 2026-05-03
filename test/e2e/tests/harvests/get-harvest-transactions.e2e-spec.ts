@@ -64,12 +64,28 @@ describe('Get Harvest Transactions Controller (e2e)', () => {
     expect(response.status).toBe(401);
   });
 
-  it('[GET] /harvests/:harvestId/transactions — deve rejeitar harvest ID inexistente (500)', async () => {
+  it('[GET] /harvests/:harvestId/transactions — deve rejeitar harvest ID inexistente (404)', async () => {
     const response = await request(app.getHttpServer())
       .get('/harvests/00000000-0000-0000-0000-000000000000/transactions')
       .set('Authorization', `Bearer ${token}`);
 
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(404);
+  });
+
+  it('[GET] /harvests/:harvestId/transactions — deve retornar 404 ao acessar harvest de outro usuário', async () => {
+    const otherToken = await createAndAuthenticateUser(app, {
+      email: 'cross-tenant-htx@teste.com',
+    });
+    const culture = await seedCulture(app, otherToken, {
+      name: 'CrossTenant',
+    });
+    const otherHarvest = await seedHarvest(app, otherToken, culture.id);
+
+    const response = await request(app.getHttpServer())
+      .get(`/harvests/${otherHarvest.id}/transactions`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(404);
   });
 
   it('[GET] /harvests/:harvestId/transactions — deve rejeitar page=0 (400)', async () => {
