@@ -1,6 +1,5 @@
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
 import {
-  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiOkResponse,
   ApiOperation,
@@ -226,12 +225,13 @@ export default class PullController {
   @UseGuards(JwtAuthGuard)
   @Get('/pull')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Pull app changes since a timestamp' })
+  @ApiOperation({
+    summary: 'Pull current app state for the authenticated farmer',
+  })
   @ApiOkResponse({
-    description: 'Changes pulled successfully',
+    description: 'App state pulled successfully',
     type: PullResponseDTO,
   })
-  @ApiBadRequestResponse({ description: 'Invalid since query param' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   async handle(@Req() req: AuthenticatedRequest) {
     return this.appPullUseCase.execute(req.user.id);
