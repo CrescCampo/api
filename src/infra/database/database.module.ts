@@ -7,6 +7,7 @@ import TransactionCategoryRepository from 'domain/application/repositories/Trans
 import TransactionRepository from 'domain/application/repositories/TransactionRepository';
 import OutboxEventRepository from 'domain/application/repositories/OutboxEventRepository';
 import FeedbackRepository from 'domain/application/repositories/FeedbackRepository';
+import UnitOfWork from 'domain/application/unit-of-work/UnitOfWork';
 import DrizzleService from './drizzle/drizzle.service';
 import DrizzleFarmRepository from './drizzle/repositories/farm.repository';
 import DrizzleFarmerRepository from './drizzle/repositories/farmer.repository';
@@ -16,6 +17,7 @@ import DrizzleTransactionCategoryRepository from './drizzle/repositories/transac
 import DrizzleTransactionRepository from './drizzle/repositories/transaction.repository';
 import DrizzleOutboxEventRepository from './drizzle/repositories/outbox-event.repository';
 import DrizzleFeedbackRepository from './drizzle/repositories/feedback.repository';
+import DrizzleUnitOfWork from './drizzle/unit-of-work/drizzle-unit-of-work';
 
 @Module({
   providers: [
@@ -68,6 +70,10 @@ import DrizzleFeedbackRepository from './drizzle/repositories/feedback.repositor
         new DrizzleFeedbackRepository(drizzle.connection),
       inject: [DrizzleService],
     },
+    {
+      provide: UnitOfWork,
+      useClass: DrizzleUnitOfWork,
+    },
   ],
   exports: [
     DrizzleService,
@@ -79,6 +85,7 @@ import DrizzleFeedbackRepository from './drizzle/repositories/feedback.repositor
     TransactionRepository,
     OutboxEventRepository,
     FeedbackRepository,
+    UnitOfWork,
   ],
 })
 export default class DatabaseModule {}
