@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import HarvestRepository from 'domain/application/repositories/HarvestRepository';
+import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFoundError';
 import type { PaginationParams } from 'core/pagination-params';
 
 export interface HarvestDTO {
@@ -37,7 +38,7 @@ export default class ListHarvestsByFarm {
     const farmer = await this.farmerRepository.findById(input.userId);
 
     if (!farmer) {
-      throw new Error(`Farmer ${input.userId} not found`);
+      throw new FarmerNotFoundError();
     }
 
     const page = input.page && input.page > 0 ? input.page : 1;

@@ -3,6 +3,8 @@ import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import HarvestRepository from 'domain/application/repositories/HarvestRepository';
 import TransactionRepository from 'domain/application/repositories/TransactionRepository';
 import TransactionType from 'domain/enterprise/enums/TransactionType';
+import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFoundError';
+import HarvestNotFoundError from 'domain/application/errors/harvest/HarvestNotFoundError';
 import type { PaginationParams } from 'core/pagination-params';
 
 export interface TransactionDTO {
@@ -39,15 +41,13 @@ export default class ListTransactionsByHarvest {
     const farmer = await this.farmerRepository.findById(input.userId);
 
     if (!farmer) {
-      throw new Error(`Farmer ${input.userId} not found`);
+      throw new FarmerNotFoundError();
     }
 
     const harvest = await this.harvestRepository.findById(input.harvestId);
 
     if (!harvest || harvest.farmId !== farmer.farmId) {
-      throw new Error(
-        `Harvest ${input.harvestId} not found for farmer ${input.userId}`,
-      );
+      throw new HarvestNotFoundError();
     }
 
     const page = input.page && input.page > 0 ? input.page : 1;

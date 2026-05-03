@@ -5,6 +5,7 @@ import HarvestRepository from 'domain/application/repositories/HarvestRepository
 import TransactionCategoryRepository from 'domain/application/repositories/TransactionCategoryRepository';
 import TransactionRepository from 'domain/application/repositories/TransactionRepository';
 import TransactionType from 'domain/enterprise/enums/TransactionType';
+import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFoundError';
 import type { PaginationParams } from 'core/pagination-params';
 
 export interface TransactionDTO {
@@ -64,7 +65,7 @@ export default class AppPullUseCase {
     const farmer = await this.farmerRepository.findById(userId);
 
     if (!farmer) {
-      throw new Error(`Farmer ${userId} not found`);
+      throw new FarmerNotFoundError();
     }
 
     const pageSize = 10;
