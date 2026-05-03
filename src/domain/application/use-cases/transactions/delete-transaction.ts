@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import FarmerRepository from 'domain/application/repositories/FarmerRepository';
-import TransactionRepository from 'domain/application/repositories/TransactionRepository';
-import HarvestRepository from 'domain/application/repositories/HarvestRepository';
+import UnitOfWork from 'domain/application/unit-of-work/UnitOfWork';
 import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFoundError';
 import TransactionNotFoundError from 'domain/application/errors/transaction/TransactionNotFoundError';
 
@@ -18,8 +17,7 @@ export interface Output {
 export default class DeleteTransaction {
   constructor(
     private readonly farmerRepository: FarmerRepository,
-    private readonly transactionRepository: TransactionRepository,
-    private readonly harvestRepository: HarvestRepository,
+    private readonly unitOfWork: UnitOfWork,
   ) {}
 
   async execute(input: Input): Promise<Output> {
@@ -29,7 +27,9 @@ export default class DeleteTransaction {
       throw new FarmerNotFoundError();
     }
 
-    const transaction = await this.transactionRepository.findById(
+    await using tx = await this.unitOfWork.begin();
+
+    const transaction = await tx.repositories.transactions.findById(
       input.transactionId,
     );
 
@@ -37,7 +37,7 @@ export default class DeleteTransaction {
       throw new TransactionNotFoundError();
     }
 
-    const harvest = await this.harvestRepository.findById(
+    const harvest = await tx.repositories.harvests.findById(
       transaction.harvestId,
     );
 
@@ -47,8 +47,10 @@ export default class DeleteTransaction {
 
     harvest.reverseTransaction(transaction.type, transaction.amount);
 
-    await this.transactionRepository.delete(transaction.id);
-    await this.harvestRepository.save(harvest);
+    await tx.repositories.transactions.delete(transaction.id);
+    await tx.repositories.harvests.save(harvest);
+
+    await tx.commit();
 
     return { transactionId: transaction.id };
   }

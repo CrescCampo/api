@@ -11,10 +11,17 @@ import DeleteTransaction from 'domain/application/use-cases/transactions/delete-
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryTransactionRepository from '../../repositories/InMemoryTransactionRepository';
 import InMemoryHarvestRepository from '../../repositories/InMemoryHarvestRepository';
+import InMemoryCultureRepository from '../../repositories/InMemoryCultureRepository';
+import InMemoryFarmRepository from '../../repositories/InMemoryFarmRepository';
+import InMemoryFeedbackRepository from '../../repositories/InMemoryFeedbackRepository';
+import InMemoryOutboxEventRepository from '../../repositories/InMemoryOutboxEventRepository';
+import InMemoryTransactionCategoryRepository from '../../repositories/InMemoryTransactionCategoryRepository';
+import InMemoryUnitOfWork from '../../unit-of-work/InMemoryUnitOfWork';
 
 let inMemoryFarmerRepository: InMemoryFarmerRepository;
 let inMemoryTransactionRepository: InMemoryTransactionRepository;
 let inMemoryHarvestRepository: InMemoryHarvestRepository;
+let unitOfWork: InMemoryUnitOfWork;
 let sut: DeleteTransaction;
 
 describe('DeleteTransaction', () => {
@@ -22,20 +29,29 @@ describe('DeleteTransaction', () => {
     inMemoryFarmerRepository = new InMemoryFarmerRepository();
     inMemoryTransactionRepository = new InMemoryTransactionRepository();
     inMemoryHarvestRepository = new InMemoryHarvestRepository();
-    sut = new DeleteTransaction(
-      inMemoryFarmerRepository,
-      inMemoryTransactionRepository,
-      inMemoryHarvestRepository,
-    );
+    unitOfWork = new InMemoryUnitOfWork({
+      cultures: new InMemoryCultureRepository(),
+      farmers: inMemoryFarmerRepository,
+      farms: new InMemoryFarmRepository(),
+      feedbacks: new InMemoryFeedbackRepository(),
+      harvests: inMemoryHarvestRepository,
+      outboxEvents: new InMemoryOutboxEventRepository(),
+      transactionCategories: new InMemoryTransactionCategoryRepository(),
+      transactions: inMemoryTransactionRepository,
+    });
+    sut = new DeleteTransaction(inMemoryFarmerRepository, unitOfWork);
   });
 
-  it('should throw FarmerNotFoundError when farmer does not exist', async () => {
+  it('should throw FarmerNotFoundError without opening a transaction', async () => {
     await expect(
       sut.execute({ userId: 'non-existent', transactionId: 'tx-id' }),
     ).rejects.toBeInstanceOf(FarmerNotFoundError);
+
+    expect(unitOfWork.commitCount).toBe(0);
+    expect(unitOfWork.rollbackCount).toBe(0);
   });
 
-  it('should throw TransactionNotFoundError when transaction does not exist', async () => {
+  it('should rollback when transaction does not exist', async () => {
     const farm = Farm.create({});
     const farmer = Farmer.create({
       name: 'João',
@@ -49,9 +65,12 @@ describe('DeleteTransaction', () => {
     await expect(
       sut.execute({ userId: farmer.id, transactionId: 'non-existent' }),
     ).rejects.toBeInstanceOf(TransactionNotFoundError);
+
+    expect(unitOfWork.commitCount).toBe(0);
+    expect(unitOfWork.rollbackCount).toBe(1);
   });
 
-  it('should throw TransactionNotFoundError when transaction belongs to another farm', async () => {
+  it('should rollback when transaction belongs to another farm', async () => {
     const farm1 = Farm.create({});
     const farm2 = Farm.create({});
     const farmer = Farmer.create({
@@ -89,6 +108,9 @@ describe('DeleteTransaction', () => {
     await expect(
       sut.execute({ userId: farmer.id, transactionId: transaction.id }),
     ).rejects.toBeInstanceOf(TransactionNotFoundError);
+
+    expect(unitOfWork.commitCount).toBe(0);
+    expect(unitOfWork.rollbackCount).toBe(1);
   });
 
   it('should delete an expense transaction and reverse harvest totals', async () => {
@@ -133,6 +155,8 @@ describe('DeleteTransaction', () => {
     expect(result.transactionId).toBe(transaction.id);
     expect(inMemoryTransactionRepository.items).toHaveLength(0);
     expect(inMemoryHarvestRepository.items[0].expenses).toBe(0);
+    expect(unitOfWork.commitCount).toBe(1);
+    expect(unitOfWork.rollbackCount).toBe(0);
   });
 
   it('should delete a revenue transaction and reverse harvest totals', async () => {
@@ -175,5 +199,7 @@ describe('DeleteTransaction', () => {
     });
 
     expect(inMemoryHarvestRepository.items[0].revenue).toBe(0);
+    expect(unitOfWork.commitCount).toBe(1);
+    expect(unitOfWork.rollbackCount).toBe(0);
   });
 });
