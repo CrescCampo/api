@@ -41,7 +41,9 @@ class RegisterFarmerBodyDTO {
   @MinLength(10)
   @MaxLength(72)
   @Matches(/[A-Za-z]/, { message: 'password must contain a letter' })
-  @Matches(/\d|[^\w\s]/, { message: 'password must contain a number or symbol' })
+  @Matches(/\d|[^\w\s]/, {
+    message: 'password must contain a number or symbol',
+  })
   password: string;
 }
 
