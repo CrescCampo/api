@@ -1,13 +1,13 @@
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import TransactionCategoryRepository from 'domain/application/repositories/TransactionCategoryRepository';
 import TransactionCategory from 'domain/enterprise/entities/TransactionCategory';
 import { Injectable } from '@nestjs/common';
 import { and, eq, gte, sql } from 'drizzle-orm';
 import TransactionCategoryModel from '../models/TransactionCategory';
+import type { DrizzleConnection } from '../types';
 
 @Injectable()
 export default class DrizzleTransactionCategoryRepository implements TransactionCategoryRepository {
-  constructor(private readonly db: NodePgDatabase<Record<string, never>>) {}
+  constructor(private readonly db: DrizzleConnection) {}
 
   async save(category: TransactionCategory): Promise<void> {
     await this.db

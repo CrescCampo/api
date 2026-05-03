@@ -1,4 +1,3 @@
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import HarvestRepository from 'domain/application/repositories/HarvestRepository';
 import Harvest from 'domain/enterprise/entities/Harvest';
 import Culture from 'domain/enterprise/entities/Culture';
@@ -6,10 +5,11 @@ import { Injectable } from '@nestjs/common';
 import { and, desc, eq, gte, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import HarvestModel from '../models/Harvest';
 import CultureModel from '../models/Culture';
+import type { DrizzleConnection } from '../types';
 
 @Injectable()
 export default class DrizzleHarvestRepository implements HarvestRepository {
-  constructor(private readonly db: NodePgDatabase<Record<string, never>>) {}
+  constructor(private readonly db: DrizzleConnection) {}
 
   async save(harvest: Harvest): Promise<void> {
     await this.db

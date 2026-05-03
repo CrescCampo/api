@@ -1,13 +1,13 @@
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import CultureRepository from 'domain/application/repositories/CultureRepository';
 import Culture from 'domain/enterprise/entities/Culture';
 import { Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import CultureModel from '../models/Culture';
+import type { DrizzleConnection } from '../types';
 
 @Injectable()
 export default class DrizzleCultureRepository implements CultureRepository {
-  constructor(private readonly db: NodePgDatabase<Record<string, never>>) {}
+  constructor(private readonly db: DrizzleConnection) {}
 
   async save(culture: Culture): Promise<void> {
     await this.db

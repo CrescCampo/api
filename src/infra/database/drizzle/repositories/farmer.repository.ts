@@ -1,13 +1,13 @@
 import { eq, inArray } from 'drizzle-orm';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import Farmer from 'domain/enterprise/entities/Farmer';
 import { Injectable } from '@nestjs/common';
 import FarmerModel from '../models/Farmer';
+import type { DrizzleConnection } from '../types';
 
 @Injectable()
 export default class DrizzleFarmerRepository implements FarmerRepository {
-  constructor(private readonly db: NodePgDatabase<Record<string, never>>) {}
+  constructor(private readonly db: DrizzleConnection) {}
 
   async save(farmer: Farmer): Promise<void> {
     await this.db

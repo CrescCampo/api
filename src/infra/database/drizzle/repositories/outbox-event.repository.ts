@@ -1,14 +1,14 @@
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import OutboxEventRepository, {
   OutboxEventRecord,
 } from 'domain/application/repositories/OutboxEventRepository';
 import { Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import OutboxEventModel from '../models/OutboxEvent';
+import type { DrizzleConnection } from '../types';
 
 @Injectable()
 export default class DrizzleOutboxEventRepository implements OutboxEventRepository {
-  constructor(private readonly db: NodePgDatabase<Record<string, never>>) {}
+  constructor(private readonly db: DrizzleConnection) {}
 
   async exists(id: string): Promise<boolean> {
     const [row] = await this.db
