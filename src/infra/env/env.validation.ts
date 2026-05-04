@@ -6,6 +6,7 @@ import {
   IsEnum,
   IsInt,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   Max,
@@ -67,8 +68,8 @@ export class EnvVariables {
   OPENAI_API_KEY: string;
 
   @IsOptional()
-  @IsString()
-  JWT_EXPIRES_IN: string = '7d';
+  @IsNumber()
+  JWT_EXPIRES_IN: number = 60 * 60 * 24 * 7;
 
   @IsOptional()
   @IsInt()

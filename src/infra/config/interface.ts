@@ -12,7 +12,7 @@ export interface Config {
   jwt: {
     privateKeyBase64: string;
     publicKeyBase64: string;
-    expiresIn: string;
+    expiresIn: number;
   };
   drizzle: {
     postgresUser: string;
