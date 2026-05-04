@@ -3,6 +3,7 @@
 /node_modules
 /build
 dist
+/db
 
 # Logs
 npm-debug.log*
