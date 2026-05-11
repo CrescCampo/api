@@ -50,10 +50,6 @@ export default class ErrorStatusMapper {
   }
 
   static isCriticalError(error: Error): boolean {
-    if (this.isDomainError(error)) {
-      return false;
-    }
-
-    return true;
+    return !this.isDomainError(error);
   }
 }

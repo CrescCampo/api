@@ -4,7 +4,11 @@ import { Pool } from 'pg';
 import { resolve } from 'path';
 import TestDatabase from '../helpers/test-database';
 
-if (!process.env._E2E_INITIALIZED) {
+export default async function setupE2E(): Promise<void> {
+  if (process.env._E2E_INITIALIZED) {
+    return;
+  }
+
   await TestDatabase.start();
 
   const pool = new Pool({
@@ -25,3 +29,7 @@ if (!process.env._E2E_INITIALIZED) {
 
   process.env._E2E_INITIALIZED = 'true';
 }
+
+void (async () => {
+  await setupE2E();
+})();

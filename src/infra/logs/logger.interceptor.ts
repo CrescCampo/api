@@ -36,7 +36,7 @@ export default class LoggerInterceptor implements NestInterceptor {
     return type;
   }
 
-  private logResponse(res: Response, data: any, delay: Number) {
+  private logResponse(res: Response, data: any, delay: number) {
     const { statusCode } = res;
     const dataType = this.getDataType(data);
     this.logger.info({

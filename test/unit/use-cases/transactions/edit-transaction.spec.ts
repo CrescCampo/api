@@ -25,6 +25,12 @@ class InMemoryTransactionCategoryRepository implements TransactionCategoryReposi
     this.items.push(category);
   }
 
+  async saveMany(categories: TransactionCategory[]): Promise<void> {
+    for (const category of categories) {
+      await this.save(category);
+    }
+  }
+
   async findById(id: string): Promise<TransactionCategory | null> {
     return this.items.find(item => item.id === id) ?? null;
   }
