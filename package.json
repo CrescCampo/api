@@ -37,7 +37,11 @@
     "test:load:sync:balanced": "tsx test/load/infra/runner.ts --scenario=balanced --script=mobile-sync",
     "test:load:feedback:balanced": "tsx test/load/infra/runner.ts --scenario=balanced --script=feedback-burst",
     "test:load:peak": "tsx test/load/infra/runner.ts --scenario=single --script=peak-traffic",
-    "test:load:peak:balanced": "tsx test/load/infra/runner.ts --scenario=balanced --script=peak-traffic"
+    "test:load:peak:balanced": "tsx test/load/infra/runner.ts --scenario=balanced --script=peak-traffic",
+    "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
+    "audit:prod": "npm audit --omit=dev --audit-level=high",
+    "duplication": "jscpd",
+    "quality:gate": "npm run lint && npm run typecheck && npm run duplication && npm run test:unit:ci && npm run test:e2e && npm run audit:prod"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -85,7 +89,9 @@
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-sonarjs": "^4.0.3",
     "globals": "^16.0.0",
+    "jscpd": "^4.1.0",
     "source-map-support": "^0.5.21",
     "supertest": "^7.2.2",
     "ts-node": "^10.9.2",

@@ -35,7 +35,13 @@ export default defineConfig({
     coverage: {
       reportsDirectory: 'coverage/unit',
       include: ['src/domain/application/use-cases/**/*.ts'],
-      reporter: ['text', 'html'],
+      reporter: ['text', 'html', 'lcov', 'json-summary'],
+      thresholds: {
+        statements: 80,
+        branches: 75,
+        functions: 80,
+        lines: 80,
+      },
     },
   },
 });

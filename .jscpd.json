@@ -1,0 +1,17 @@
+{
+  "path": ["src"],
+  "ignore": [
+    "**/*.spec.ts",
+    "**/*.e2e-spec.ts",
+    "**/migrations/**",
+    "**/*.d.ts"
+  ],
+  "format": ["typescript"],
+  "minTokens": 50,
+  "minLines": 5,
+  "threshold": 10,
+  "reporters": ["consoleFull", "html", "json"],
+  "output": "./coverage/jscpd",
+  "absolute": false,
+  "gitignore": true
+}
