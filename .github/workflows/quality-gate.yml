@@ -5,10 +5,6 @@ on:
   push:
     branches: [main]
 
-defaults:
-  run:
-    working-directory: api
-
 jobs:
   static-checks:
     name: Lint + Typecheck + Duplication + Audit
