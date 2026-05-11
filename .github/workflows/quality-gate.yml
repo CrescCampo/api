@@ -2,10 +2,8 @@ name: Quality Gate
 
 on:
   pull_request:
-    paths: ['api/**']
   push:
     branches: [main]
-    paths: ['api/**']
 
 defaults:
   run:
