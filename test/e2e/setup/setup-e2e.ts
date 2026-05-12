@@ -30,4 +30,5 @@ export default async function setupE2E(): Promise<void> {
   process.env._E2E_MIGRATED = 'true';
 }
 
+// @ts-expect-error TLA blocks vitest setup; CJS typecheck rejects, runtime works.
 await setupE2E();
