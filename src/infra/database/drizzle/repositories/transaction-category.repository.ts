@@ -1,13 +1,18 @@
 import TransactionCategoryRepository from 'domain/application/repositories/TransactionCategoryRepository';
 import TransactionCategory from 'domain/enterprise/entities/TransactionCategory';
 import { Injectable } from '@nestjs/common';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { and, eq, gte, sql } from 'drizzle-orm';
 import TransactionCategoryModel from '../models/TransactionCategory';
-import type { DrizzleConnection } from '../types';
+import type { AppDrizzleAdapter, DrizzleConnection } from '../types';
 
 @Injectable()
 export default class DrizzleTransactionCategoryRepository implements TransactionCategoryRepository {
-  constructor(private readonly db: DrizzleConnection) {}
+  constructor(private readonly txHost: TransactionHost<AppDrizzleAdapter>) {}
+
+  private get db(): DrizzleConnection {
+    return this.txHost.tx;
+  }
 
   async save(category: TransactionCategory): Promise<void> {
     await this.db

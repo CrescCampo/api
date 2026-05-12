@@ -1,10 +1,15 @@
 import { Module } from '@nestjs/common';
 
 import AuthModule from 'infra/auth/auth.module';
-import DatabaseModule from 'infra/database/database.module';
+import DatabaseModule, {
+  DRIZZLE_CONNECTION,
+} from 'infra/database/database.module';
 import { APP_INTERCEPTOR, APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { WinstonModule } from 'nest-winston';
+import { ClsModule } from 'nestjs-cls';
+import { ClsPluginTransactional } from '@nestjs-cls/transactional';
+import { TransactionalAdapterDrizzleOrm } from '@nestjs-cls/transactional-adapter-drizzle-orm';
 import HttpModule from './http/http.module';
 import CryptographyModule from './cryptography/cryptography.module';
 import WhatsappProcessorModule from './whatsapp-processor/whatsapp-processor.module';
@@ -24,6 +29,16 @@ import winstonConfig from './config/winston.config';
       },
     ]),
     DatabaseModule,
+    ClsModule.forRoot({
+      plugins: [
+        new ClsPluginTransactional({
+          imports: [DatabaseModule],
+          adapter: new TransactionalAdapterDrizzleOrm({
+            drizzleInstanceToken: DRIZZLE_CONNECTION,
+          }),
+        }),
+      ],
+    }),
     AuthModule,
     HttpModule,
     CryptographyModule,

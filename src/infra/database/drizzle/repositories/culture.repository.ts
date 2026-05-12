@@ -1,13 +1,18 @@
 import CultureRepository from 'domain/application/repositories/CultureRepository';
 import Culture from 'domain/enterprise/entities/Culture';
 import { Injectable } from '@nestjs/common';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { eq } from 'drizzle-orm';
 import CultureModel from '../models/Culture';
-import type { DrizzleConnection } from '../types';
+import type { AppDrizzleAdapter, DrizzleConnection } from '../types';
 
 @Injectable()
 export default class DrizzleCultureRepository implements CultureRepository {
-  constructor(private readonly db: DrizzleConnection) {}
+  constructor(private readonly txHost: TransactionHost<AppDrizzleAdapter>) {}
+
+  private get db(): DrizzleConnection {
+    return this.txHost.tx;
+  }
 
   async save(culture: Culture): Promise<void> {
     await this.db

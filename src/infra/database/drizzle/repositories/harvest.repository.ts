@@ -2,14 +2,19 @@ import HarvestRepository from 'domain/application/repositories/HarvestRepository
 import Harvest from 'domain/enterprise/entities/Harvest';
 import Culture from 'domain/enterprise/entities/Culture';
 import { Injectable } from '@nestjs/common';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { and, desc, eq, gte, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import HarvestModel from '../models/Harvest';
 import CultureModel from '../models/Culture';
-import type { DrizzleConnection } from '../types';
+import type { AppDrizzleAdapter, DrizzleConnection } from '../types';
 
 @Injectable()
 export default class DrizzleHarvestRepository implements HarvestRepository {
-  constructor(private readonly db: DrizzleConnection) {}
+  constructor(private readonly txHost: TransactionHost<AppDrizzleAdapter>) {}
+
+  private get db(): DrizzleConnection {
+    return this.txHost.tx;
+  }
 
   async save(harvest: Harvest): Promise<void> {
     await this.db

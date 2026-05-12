@@ -1,10 +1,5 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
-import {
-  ApiBody,
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import LoginFarmerByEmail from 'domain/application/use-cases/auth/login-farmer-by-email';
 import EmailIpThrottlerGuard from 'infra/auth/email-ip-throttler.guard';

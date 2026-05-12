@@ -1,12 +1,17 @@
 import FeedbackRepository from 'domain/application/repositories/FeedbackRepository';
 import Feedback from 'domain/enterprise/entities/Feedback';
 import { Injectable } from '@nestjs/common';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import FeedbackModel from '../models/Feedback';
-import type { DrizzleConnection } from '../types';
+import type { AppDrizzleAdapter, DrizzleConnection } from '../types';
 
 @Injectable()
 export default class DrizzleFeedbackRepository implements FeedbackRepository {
-  constructor(private readonly db: DrizzleConnection) {}
+  constructor(private readonly txHost: TransactionHost<AppDrizzleAdapter>) {}
+
+  private get db(): DrizzleConnection {
+    return this.txHost.tx;
+  }
 
   async save(feedback: Feedback): Promise<void> {
     await this.db

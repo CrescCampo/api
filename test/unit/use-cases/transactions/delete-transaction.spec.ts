@@ -11,11 +11,6 @@ import DeleteTransaction from 'domain/application/use-cases/transactions/delete-
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryTransactionRepository from '../../repositories/InMemoryTransactionRepository';
 import InMemoryHarvestRepository from '../../repositories/InMemoryHarvestRepository';
-import InMemoryCultureRepository from '../../repositories/InMemoryCultureRepository';
-import InMemoryFarmRepository from '../../repositories/InMemoryFarmRepository';
-import InMemoryFeedbackRepository from '../../repositories/InMemoryFeedbackRepository';
-import InMemoryOutboxEventRepository from '../../repositories/InMemoryOutboxEventRepository';
-import InMemoryTransactionCategoryRepository from '../../repositories/InMemoryTransactionCategoryRepository';
 import InMemoryUnitOfWork from '../../unit-of-work/InMemoryUnitOfWork';
 
 let inMemoryFarmerRepository: InMemoryFarmerRepository;
@@ -29,17 +24,13 @@ describe('DeleteTransaction', () => {
     inMemoryFarmerRepository = new InMemoryFarmerRepository();
     inMemoryTransactionRepository = new InMemoryTransactionRepository();
     inMemoryHarvestRepository = new InMemoryHarvestRepository();
-    unitOfWork = new InMemoryUnitOfWork({
-      cultures: new InMemoryCultureRepository(),
-      farmers: inMemoryFarmerRepository,
-      farms: new InMemoryFarmRepository(),
-      feedbacks: new InMemoryFeedbackRepository(),
-      harvests: inMemoryHarvestRepository,
-      outboxEvents: new InMemoryOutboxEventRepository(),
-      transactionCategories: new InMemoryTransactionCategoryRepository(),
-      transactions: inMemoryTransactionRepository,
-    });
-    sut = new DeleteTransaction(inMemoryFarmerRepository, unitOfWork);
+    unitOfWork = new InMemoryUnitOfWork();
+    sut = new DeleteTransaction(
+      inMemoryFarmerRepository,
+      inMemoryTransactionRepository,
+      inMemoryHarvestRepository,
+      unitOfWork,
+    );
   });
 
   it('should throw FarmerNotFoundError without opening a transaction', async () => {

@@ -19,64 +19,32 @@ import DrizzleOutboxEventRepository from './drizzle/repositories/outbox-event.re
 import DrizzleFeedbackRepository from './drizzle/repositories/feedback.repository';
 import DrizzleUnitOfWork from './drizzle/unit-of-work/drizzle-unit-of-work';
 
+export const DRIZZLE_CONNECTION = Symbol('DRIZZLE_CONNECTION');
+
 @Module({
   providers: [
     DrizzleService,
     {
-      provide: FarmRepository,
-      useFactory: (drizzle: DrizzleService) =>
-        new DrizzleFarmRepository(drizzle.connection),
+      provide: DRIZZLE_CONNECTION,
+      useFactory: (drizzle: DrizzleService) => drizzle.connection,
       inject: [DrizzleService],
     },
-    {
-      provide: FarmerRepository,
-      useFactory: (drizzle: DrizzleService) =>
-        new DrizzleFarmerRepository(drizzle.connection),
-      inject: [DrizzleService],
-    },
-    {
-      provide: CultureRepository,
-      useFactory: (drizzle: DrizzleService) =>
-        new DrizzleCultureRepository(drizzle.connection),
-      inject: [DrizzleService],
-    },
-    {
-      provide: HarvestRepository,
-      useFactory: (drizzle: DrizzleService) =>
-        new DrizzleHarvestRepository(drizzle.connection),
-      inject: [DrizzleService],
-    },
+    { provide: FarmRepository, useClass: DrizzleFarmRepository },
+    { provide: FarmerRepository, useClass: DrizzleFarmerRepository },
+    { provide: CultureRepository, useClass: DrizzleCultureRepository },
+    { provide: HarvestRepository, useClass: DrizzleHarvestRepository },
     {
       provide: TransactionCategoryRepository,
-      useFactory: (drizzle: DrizzleService) =>
-        new DrizzleTransactionCategoryRepository(drizzle.connection),
-      inject: [DrizzleService],
+      useClass: DrizzleTransactionCategoryRepository,
     },
-    {
-      provide: TransactionRepository,
-      useFactory: (drizzle: DrizzleService) =>
-        new DrizzleTransactionRepository(drizzle.connection),
-      inject: [DrizzleService],
-    },
-    {
-      provide: OutboxEventRepository,
-      useFactory: (drizzle: DrizzleService) =>
-        new DrizzleOutboxEventRepository(drizzle.connection),
-      inject: [DrizzleService],
-    },
-    {
-      provide: FeedbackRepository,
-      useFactory: (drizzle: DrizzleService) =>
-        new DrizzleFeedbackRepository(drizzle.connection),
-      inject: [DrizzleService],
-    },
-    {
-      provide: UnitOfWork,
-      useClass: DrizzleUnitOfWork,
-    },
+    { provide: TransactionRepository, useClass: DrizzleTransactionRepository },
+    { provide: OutboxEventRepository, useClass: DrizzleOutboxEventRepository },
+    { provide: FeedbackRepository, useClass: DrizzleFeedbackRepository },
+    { provide: UnitOfWork, useClass: DrizzleUnitOfWork },
   ],
   exports: [
     DrizzleService,
+    DRIZZLE_CONNECTION,
     FarmRepository,
     FarmerRepository,
     CultureRepository,
