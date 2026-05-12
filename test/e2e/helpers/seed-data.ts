@@ -6,11 +6,13 @@ import makeOutboxEvent from '../factories/make-outbox-event';
 export interface SeedCulture {
   id: string;
   name: string;
+  [key: string]: unknown;
 }
 
 export interface SeedTransactionCategory {
   id: string;
   name: string;
+  [key: string]: unknown;
 }
 
 export interface SeedHarvest {
@@ -21,6 +23,7 @@ export interface SeedHarvest {
   endDate?: number;
   revenue: number;
   expenses: number;
+  [key: string]: unknown;
 }
 
 export interface SeedTransaction {
@@ -31,6 +34,7 @@ export interface SeedTransaction {
   amount: number;
   categoryId: string;
   date: number;
+  [key: string]: unknown;
 }
 
 export async function seedCulture(

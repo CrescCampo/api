@@ -42,6 +42,34 @@ npm run start:dev
 | `npm run migrate` | Aplica migrations |
 | `npm run studio` | Abre Drizzle Studio |
 
+## Quality Gate
+
+O projeto possui um quality gate automatizado que roda em PRs e pushes para `main` (workflow `.github/workflows/quality-gate.yml`). Os mesmos checks podem ser rodados localmente:
+
+```bash
+npm run quality:gate
+```
+
+Esse comando executa, em sequência:
+
+| Etapa | Comando individual | Critério de falha |
+|-------|--------------------|-------------------|
+| Lint | `npm run lint` | qualquer erro do ESLint (inclui `sonarjs` e complexidade ciclomática > 15) |
+| Typecheck | `npm run typecheck` | `tsc --noEmit` com erro |
+| Duplicação | `npm run duplication` | mais de 3% de linhas duplicadas em `src/` (jscpd) |
+| Testes unitários + coverage | `npm run test:unit:ci` | testes vermelhos ou coverage < 80%/75%/80%/80% (statements/branches/functions/lines) em use-cases |
+| Testes E2E + coverage | `npm run test:e2e` | testes vermelhos ou coverage < 70%/60%/70%/70% em controllers |
+| Audit de produção | `npm run audit:prod` | CVE high+ em dependências de produção |
+
+**Não inclui** testes de carga (k6) — rodam manualmente via `npm run test:load:*`.
+
+Relatórios gerados localmente:
+
+- `coverage/unit/index.html` — coverage unitário
+- `coverage/e2e/index.html` — coverage E2E
+- `coverage/jscpd/html/index.html` — duplicação
+- `test-reports/e2e/index.html` — resultado dos testes E2E
+
 ## Testes
 
 O projeto possui três níveis de testes automatizados, todos executáveis via linha de comando (CI/CD friendly):

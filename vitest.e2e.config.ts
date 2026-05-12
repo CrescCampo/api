@@ -39,7 +39,13 @@ export default defineConfig({
     coverage: {
       reportsDirectory: 'coverage/e2e',
       include: ['src/infra/http/controllers/**/*.ts'],
-      reporter: ['text', 'html'],
+      reporter: ['text', 'html', 'lcov', 'json-summary'],
+      thresholds: {
+        statements: 70,
+        branches: 60,
+        functions: 70,
+        lines: 70,
+      },
     },
   },
 });
