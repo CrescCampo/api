@@ -15,7 +15,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: api/package-lock.json
+          cache-dependency-path: package-lock.json
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
@@ -25,7 +25,7 @@ jobs:
         if: always()
         with:
           name: jscpd-report
-          path: api/coverage/jscpd
+          path: coverage/jscpd
 
   unit-tests:
     name: Unit Tests + Coverage
@@ -36,14 +36,14 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: api/package-lock.json
+          cache-dependency-path: package-lock.json
       - run: npm ci
       - run: npm run test:unit:ci
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: unit-coverage
-          path: api/coverage/unit
+          path: coverage/unit
 
   e2e-tests:
     name: E2E Tests + Coverage
@@ -70,7 +70,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: api/package-lock.json
+          cache-dependency-path: package-lock.json
       - run: npm ci
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
@@ -78,5 +78,5 @@ jobs:
         with:
           name: e2e-reports
           path: |
-            api/coverage/e2e
-            api/test-reports/e2e
+            coverage/e2e
+            test-reports/e2e
