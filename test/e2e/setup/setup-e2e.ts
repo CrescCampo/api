@@ -5,11 +5,11 @@ import { resolve } from 'path';
 import TestDatabase from '../helpers/test-database';
 
 export default async function setupE2E(): Promise<void> {
-  if (process.env._E2E_INITIALIZED) {
+  await TestDatabase.start();
+
+  if (process.env._E2E_MIGRATED) {
     return;
   }
-
-  await TestDatabase.start();
 
   const pool = new Pool({
     host: process.env.POSTGRES_HOST,
@@ -27,9 +27,7 @@ export default async function setupE2E(): Promise<void> {
 
   await pool.end();
 
-  process.env._E2E_INITIALIZED = 'true';
+  process.env._E2E_MIGRATED = 'true';
 }
 
-void (async () => {
-  await setupE2E();
-})();
+await setupE2E();
