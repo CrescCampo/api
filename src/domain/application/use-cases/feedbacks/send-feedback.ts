@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFoundError';
 import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import FeedbackRepository from 'domain/application/repositories/FeedbackRepository';
+import UnitOfWork from 'domain/application/unit-of-work/UnitOfWork';
 import Feedback from 'domain/enterprise/entities/Feedback';
 import FeedbackCategory from 'domain/enterprise/enums/FeedbackCategory';
 
@@ -21,6 +22,7 @@ export default class SendFeedbackUseCase {
   constructor(
     private readonly farmerRepository: FarmerRepository,
     private readonly feedbackRepository: FeedbackRepository,
+    private readonly unitOfWork: UnitOfWork,
   ) {}
 
   async execute(input: Input): Promise<Output> {
@@ -37,7 +39,9 @@ export default class SendFeedbackUseCase {
       category: input.category,
     });
 
-    await this.feedbackRepository.save(feedback);
+    await this.unitOfWork.run(async () => {
+      await this.feedbackRepository.save(feedback);
+    });
 
     return {
       feedbackId: feedback.id,

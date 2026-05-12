@@ -6,11 +6,13 @@ import Farmer from 'domain/enterprise/entities/Farmer';
 import LoginFarmerByEmail from 'domain/application/use-cases/auth/login-farmer-by-email';
 import HashGenerator from 'domain/application/cryptography/hash-generator';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
+import InMemoryUnitOfWork from '../../unit-of-work/InMemoryUnitOfWork';
 
 let inMemoryFarmerRepository: InMemoryFarmerRepository;
 let hashComparer: HashComparer;
 let encrypter: Encrypter;
 let hashGenerator: HashGenerator;
+let unitOfWork: InMemoryUnitOfWork;
 let sut: LoginFarmerByEmail;
 
 class FakeHashComparer implements HashComparer {
@@ -40,12 +42,14 @@ describe('LoginFarmerByEmail', () => {
     hashComparer = new FakeHashComparer();
     encrypter = new FakeEncrypter();
     hashGenerator = new FakeHashGenerator();
+    unitOfWork = new InMemoryUnitOfWork();
 
     sut = new LoginFarmerByEmail(
       inMemoryFarmerRepository,
       hashComparer,
       hashGenerator,
       encrypter,
+      unitOfWork,
     );
   });
 

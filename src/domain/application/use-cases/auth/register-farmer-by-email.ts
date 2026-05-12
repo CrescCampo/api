@@ -4,6 +4,7 @@ import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import FarmRepository from 'domain/application/repositories/FarmRepository';
 import CultureRepository from 'domain/application/repositories/CultureRepository';
 import TransactionCategoryRepository from 'domain/application/repositories/TransactionCategoryRepository';
+import UnitOfWork from 'domain/application/unit-of-work/UnitOfWork';
 import Farm from 'domain/enterprise/entities/Farm';
 import Farmer from 'domain/enterprise/entities/Farmer';
 import Culture from 'domain/enterprise/entities/Culture';
@@ -39,6 +40,7 @@ export default class RegisterUserUseCase {
     private readonly hashGenerator: HashGenerator,
     private readonly cultureRepository: CultureRepository,
     private readonly transactionCategoryRepository: TransactionCategoryRepository,
+    private readonly unitOfWork: UnitOfWork,
   ) {}
 
   async execute(input: Input): Promise<Output> {
@@ -48,32 +50,38 @@ export default class RegisterUserUseCase {
       throw new UserAlreadyExistsError();
     }
 
-    const farm = Farm.create({});
+    const hashedPassword = await this.hashGenerator.hash(input.password);
 
-    await this.farmRepository.save(farm);
+    return this.unitOfWork.run(async () => {
+      const farm = Farm.create({});
 
-    const defaultCategories = DEFAULT_TRANSACTION_CATEGORIES.map(name =>
-      TransactionCategory.create({ name, farmId: farm.id }),
-    );
+      await this.farmRepository.save(farm);
 
-    await Promise.all([
-      ...DEFAULT_CULTURES.map(name =>
-        this.cultureRepository.save(Culture.create({ name, farmId: farm.id })),
-      ),
-      this.transactionCategoryRepository.saveMany(defaultCategories),
-    ]);
+      const defaultCategories = DEFAULT_TRANSACTION_CATEGORIES.map(name =>
+        TransactionCategory.create({ name, farmId: farm.id }),
+      );
 
-    const newFarmer = Farmer.create({
-      name: input.name,
-      email: input.email,
-      farmId: farm.id,
-      password: await this.hashGenerator.hash(input.password),
+      await Promise.all([
+        ...DEFAULT_CULTURES.map(name =>
+          this.cultureRepository.save(
+            Culture.create({ name, farmId: farm.id }),
+          ),
+        ),
+        this.transactionCategoryRepository.saveMany(defaultCategories),
+      ]);
+
+      const newFarmer = Farmer.create({
+        name: input.name,
+        email: input.email,
+        farmId: farm.id,
+        password: hashedPassword,
+      });
+
+      await this.farmerRepository.save(newFarmer);
+
+      return {
+        userId: newFarmer.id,
+      };
     });
-
-    await this.farmerRepository.save(newFarmer);
-
-    return {
-      userId: newFarmer.id,
-    };
   }
 }

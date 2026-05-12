@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFoundError';
 import WhatsAppGateway from 'domain/application/gateways/whatsapp-gateway';
+import UnitOfWork from 'domain/application/unit-of-work/UnitOfWork';
 
 interface UpdateFarmerPhoneRequest {
   farmerId: string;
@@ -15,6 +16,7 @@ export default class UpdateFarmerPhone {
   constructor(
     private readonly farmerRepository: FarmerRepository,
     private readonly whatsAppGateway: WhatsAppGateway,
+    private readonly unitOfWork: UnitOfWork,
   ) {}
 
   async execute({ farmerId, phone }: UpdateFarmerPhoneRequest) {
@@ -28,7 +30,9 @@ export default class UpdateFarmerPhone {
 
     farmer.phone = phone;
 
-    await this.farmerRepository.save(farmer);
+    await this.unitOfWork.run(async () => {
+      await this.farmerRepository.save(farmer);
+    });
 
     if (isNewPhone) {
       const phoneNumber = phone.replace('+', '');

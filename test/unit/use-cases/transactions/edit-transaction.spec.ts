@@ -12,6 +12,7 @@ import EditTransaction from 'domain/application/use-cases/transactions/edit-tran
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryTransactionRepository from '../../repositories/InMemoryTransactionRepository';
 import InMemoryHarvestRepository from '../../repositories/InMemoryHarvestRepository';
+import InMemoryUnitOfWork from '../../unit-of-work/InMemoryUnitOfWork';
 
 class InMemoryTransactionCategoryRepository implements TransactionCategoryRepository {
   items: TransactionCategory[] = [];
@@ -48,6 +49,7 @@ let inMemoryFarmerRepository: InMemoryFarmerRepository;
 let inMemoryTransactionRepository: InMemoryTransactionRepository;
 let inMemoryHarvestRepository: InMemoryHarvestRepository;
 let inMemoryTransactionCategoryRepository: InMemoryTransactionCategoryRepository;
+let unitOfWork: InMemoryUnitOfWork;
 let sut: EditTransaction;
 
 let farm: ReturnType<typeof Farm.create>;
@@ -62,11 +64,13 @@ describe('EditTransaction', () => {
     inMemoryHarvestRepository = new InMemoryHarvestRepository();
     inMemoryTransactionCategoryRepository =
       new InMemoryTransactionCategoryRepository();
+    unitOfWork = new InMemoryUnitOfWork();
     sut = new EditTransaction(
       inMemoryFarmerRepository,
       inMemoryTransactionRepository,
       inMemoryHarvestRepository,
       inMemoryTransactionCategoryRepository,
+      unitOfWork,
     );
 
     farm = Farm.create({});

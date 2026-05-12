@@ -5,18 +5,22 @@ import FeedbackCategory from 'domain/enterprise/enums/FeedbackCategory';
 import SendFeedbackUseCase from 'domain/application/use-cases/feedbacks/send-feedback';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryFeedbackRepository from '../../repositories/InMemoryFeedbackRepository';
+import InMemoryUnitOfWork from '../../unit-of-work/InMemoryUnitOfWork';
 
 let inMemoryFarmerRepository: InMemoryFarmerRepository;
 let inMemoryFeedbackRepository: InMemoryFeedbackRepository;
+let unitOfWork: InMemoryUnitOfWork;
 let sut: SendFeedbackUseCase;
 
 describe('SendFeedbackUseCase', () => {
   beforeEach(() => {
     inMemoryFarmerRepository = new InMemoryFarmerRepository();
     inMemoryFeedbackRepository = new InMemoryFeedbackRepository();
+    unitOfWork = new InMemoryUnitOfWork();
     sut = new SendFeedbackUseCase(
       inMemoryFarmerRepository,
       inMemoryFeedbackRepository,
+      unitOfWork,
     );
   });
 

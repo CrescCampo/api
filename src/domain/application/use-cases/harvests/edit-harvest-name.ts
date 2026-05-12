@@ -3,6 +3,7 @@ import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import HarvestRepository from 'domain/application/repositories/HarvestRepository';
 import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFoundError';
 import HarvestNotFoundError from 'domain/application/errors/harvest/HarvestNotFoundError';
+import UnitOfWork from 'domain/application/unit-of-work/UnitOfWork';
 
 export interface Input {
   userId: string;
@@ -19,6 +20,7 @@ export default class EditHarvestName {
   constructor(
     private readonly farmerRepository: FarmerRepository,
     private readonly harvestRepository: HarvestRepository,
+    private readonly unitOfWork: UnitOfWork,
   ) {}
 
   async execute(input: Input): Promise<Output> {
@@ -28,16 +30,18 @@ export default class EditHarvestName {
       throw new FarmerNotFoundError();
     }
 
-    const harvest = await this.harvestRepository.findById(input.harvestId);
+    return this.unitOfWork.run(async () => {
+      const harvest = await this.harvestRepository.findById(input.harvestId);
 
-    if (!harvest || harvest.farmId !== farmer.farmId) {
-      throw new HarvestNotFoundError();
-    }
+      if (!harvest || harvest.farmId !== farmer.farmId) {
+        throw new HarvestNotFoundError();
+      }
 
-    harvest.name = input.name;
+      harvest.name = input.name;
 
-    await this.harvestRepository.save(harvest);
+      await this.harvestRepository.save(harvest);
 
-    return { harvestId: harvest.id };
+      return { harvestId: harvest.id };
+    });
   }
 }

@@ -4,6 +4,7 @@ import HashComparer from 'domain/application/cryptography/hash-comparer';
 import HashGenerator from 'domain/application/cryptography/hash-generator';
 import WrongCredentialsError from 'domain/application/errors/auth/WrongCredentialsError';
 import FarmerRepository from 'domain/application/repositories/FarmerRepository';
+import UnitOfWork from 'domain/application/unit-of-work/UnitOfWork';
 
 export interface Input {
   email: string;
@@ -26,6 +27,7 @@ export default class LoginFarmerByEmail {
     private readonly hashComparer: HashComparer,
     private readonly hashGenerator: HashGenerator,
     private readonly encrypter: Encrypter,
+    private readonly unitOfWork: UnitOfWork,
   ) {}
 
   async execute(input: Input): Promise<Output> {
@@ -54,7 +56,9 @@ export default class LoginFarmerByEmail {
       farmer.password = await this.hashGenerator.hash(input.password);
     }
 
-    await this.farmerRepository.save(farmer);
+    await this.unitOfWork.run(async () => {
+      await this.farmerRepository.save(farmer);
+    });
 
     const token = await this.encrypter.encrypt({
       farmId: farmer.farmId,

@@ -7,12 +7,14 @@ import InMemoryFarmRepository from '../../repositories/InMemoryFarmRepository';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryCultureRepository from '../../repositories/InMemoryCultureRepository';
 import InMemoryTransactionCategoryRepository from '../../repositories/InMemoryTransactionCategoryRepository';
+import InMemoryUnitOfWork from '../../unit-of-work/InMemoryUnitOfWork';
 
 let inMemoryFarmerRepository: InMemoryFarmerRepository;
 let inMemoryFarmRepository: InMemoryFarmRepository;
 let inMemoryCultureRepository: InMemoryCultureRepository;
 let inMemoryTransactionCategoryRepository: InMemoryTransactionCategoryRepository;
 let hashGenerator: HashGenerator;
+let unitOfWork: InMemoryUnitOfWork;
 let sut: RegisterUserUseCase;
 
 class FakeHashGenerator implements HashGenerator {
@@ -29,6 +31,7 @@ describe('RegisterUserUseCase', () => {
     inMemoryTransactionCategoryRepository =
       new InMemoryTransactionCategoryRepository();
     hashGenerator = new FakeHashGenerator();
+    unitOfWork = new InMemoryUnitOfWork();
 
     sut = new RegisterUserUseCase(
       inMemoryFarmerRepository,
@@ -36,6 +39,7 @@ describe('RegisterUserUseCase', () => {
       hashGenerator,
       inMemoryCultureRepository,
       inMemoryTransactionCategoryRepository,
+      unitOfWork,
     );
   });
 

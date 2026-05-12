@@ -3,18 +3,25 @@ import Farm from 'domain/enterprise/entities/Farm';
 import Farmer from 'domain/enterprise/entities/Farmer';
 import UpdateFarmerPhone from 'domain/application/use-cases/farmers/update-farmer-phone';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
+import InMemoryUnitOfWork from '../../unit-of-work/InMemoryUnitOfWork';
 
 const fakeWhatsAppGateway = {
   sendMessage: vi.fn().mockResolvedValue({ id: 'msg-id', status: 'pending' }),
 };
 
 let inMemoryFarmerRepository;
+let unitOfWork: InMemoryUnitOfWork;
 let sut;
 
 describe('UpdateFarmerPhone', () => {
   beforeEach(() => {
     inMemoryFarmerRepository = new InMemoryFarmerRepository();
-    sut = new UpdateFarmerPhone(inMemoryFarmerRepository, fakeWhatsAppGateway);
+    unitOfWork = new InMemoryUnitOfWork();
+    sut = new UpdateFarmerPhone(
+      inMemoryFarmerRepository,
+      fakeWhatsAppGateway,
+      unitOfWork,
+    );
     vi.clearAllMocks();
   });
 

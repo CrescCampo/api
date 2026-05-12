@@ -17,6 +17,7 @@ import AppPushUseCase, {
   OutboxEventType,
 } from 'domain/application/use-cases/app/push';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
+import InMemoryUnitOfWork from '../../unit-of-work/InMemoryUnitOfWork';
 
 class InMemoryCultureRepository implements CultureRepository {
   items: Culture[] = [];
@@ -188,6 +189,7 @@ function makeSut() {
     new InMemoryTransactionCategoryRepository();
   const transactionRepository = new InMemoryTransactionRepository();
   const outboxEventRepository = new InMemoryOutboxEventRepository();
+  const unitOfWork = new InMemoryUnitOfWork();
 
   const sut = new AppPushUseCase(
     farmerRepository,
@@ -196,6 +198,7 @@ function makeSut() {
     transactionCategoryRepository,
     transactionRepository,
     outboxEventRepository,
+    unitOfWork,
   );
 
   return {
@@ -206,6 +209,7 @@ function makeSut() {
     transactionCategoryRepository,
     transactionRepository,
     outboxEventRepository,
+    unitOfWork,
   };
 }
 

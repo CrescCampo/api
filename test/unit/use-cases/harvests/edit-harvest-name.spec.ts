@@ -7,18 +7,22 @@ import HarvestNotFoundError from 'domain/application/errors/harvest/HarvestNotFo
 import EditHarvestName from 'domain/application/use-cases/harvests/edit-harvest-name';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryHarvestRepository from '../../repositories/InMemoryHarvestRepository';
+import InMemoryUnitOfWork from '../../unit-of-work/InMemoryUnitOfWork';
 
 let inMemoryFarmerRepository: InMemoryFarmerRepository;
 let inMemoryHarvestRepository: InMemoryHarvestRepository;
+let unitOfWork: InMemoryUnitOfWork;
 let sut: EditHarvestName;
 
 describe('EditHarvestName', () => {
   beforeEach(() => {
     inMemoryFarmerRepository = new InMemoryFarmerRepository();
     inMemoryHarvestRepository = new InMemoryHarvestRepository();
+    unitOfWork = new InMemoryUnitOfWork();
     sut = new EditHarvestName(
       inMemoryFarmerRepository,
       inMemoryHarvestRepository,
+      unitOfWork,
     );
   });
 
