@@ -5,39 +5,20 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiProperty,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { IsString, MaxLength, MinLength } from 'class-validator';
 import type { Request } from 'express';
 import JwtAuthGuard from 'infra/auth/jwt-auth.guard';
 import EditHarvestName from 'domain/application/use-cases/harvests/edit-harvest-name';
+import EditHarvestNameRequestDTO from 'infra/dtos/harvests/EditHarvestNameRequestDTO';
+import EditHarvestNameResponseDTO from 'infra/dtos/harvests/EditHarvestNameResponseDTO';
 
 type AuthenticatedRequest = Request & {
   user: {
     id: string;
   };
 };
-
-class EditHarvestNameBodyDTO {
-  @ApiProperty({
-    type: String,
-    example: 'Safra 2025',
-  })
-  @IsString()
-  @MinLength(1)
-  @MaxLength(80)
-  name: string;
-}
-
-class EditHarvestNameResponseDTO {
-  @ApiProperty({
-    type: String,
-    example: 'harvest-uuid',
-  })
-  harvestId: string;
-}
 
 @Controller('harvests')
 @ApiTags('Harvests')
@@ -48,7 +29,7 @@ export default class EditHarvestNameController {
   @ApiBearerAuth()
   @Patch(':id/name')
   @ApiOperation({ summary: 'Edit harvest name' })
-  @ApiBody({ type: EditHarvestNameBodyDTO })
+  @ApiBody({ type: EditHarvestNameRequestDTO })
   @ApiOkResponse({
     description: 'Harvest name updated successfully',
     type: EditHarvestNameResponseDTO,
@@ -57,7 +38,7 @@ export default class EditHarvestNameController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   async handle(
     @Param('id') id: string,
-    @Body() body: EditHarvestNameBodyDTO,
+    @Body() body: EditHarvestNameRequestDTO,
     @Req() req: AuthenticatedRequest,
   ) {
     return this.editHarvestName.execute({

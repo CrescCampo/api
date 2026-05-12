@@ -5,133 +5,16 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiParam,
-  ApiProperty,
   ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString, Min } from 'class-validator';
-import { Type } from 'class-transformer';
 import type { Request } from 'express';
 import JwtAuthGuard from 'infra/auth/jwt-auth.guard';
-import TransactionType from 'domain/enterprise/enums/TransactionType';
 import ListTransactionsByHarvest from 'domain/application/use-cases/transactions/list-transactions-by-harvest';
-
-class HarvestParamDTO {
-  @ApiProperty({
-    type: String,
-    example: 'harvest-uuid',
-  })
-  @IsString()
-  harvestId: string;
-}
-
-class PaginationQueryDTO {
-  @ApiProperty({
-    type: Number,
-    required: false,
-    example: 1,
-  })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  page?: number;
-
-  @ApiProperty({
-    type: Number,
-    required: false,
-    example: 10,
-  })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  pageSize?: number;
-}
-
-class TransactionPaginationMetaDTO {
-  @ApiProperty({
-    type: Number,
-    example: 1,
-  })
-  currentPage: number;
-
-  @ApiProperty({
-    type: Number,
-    example: 10,
-  })
-  items: number;
-
-  @ApiProperty({
-    type: Number,
-    example: 120,
-  })
-  totalItems: number;
-}
-
-class TransactionPaginationDTO {
-  @ApiProperty({
-    type: () => TransactionPaginationMetaDTO,
-  })
-  meta: TransactionPaginationMetaDTO;
-}
-
-class TransactionDTO {
-  @ApiProperty({
-    type: String,
-    example: 'transaction-uuid',
-  })
-  id: string;
-
-  @ApiProperty({
-    type: String,
-    example: 'harvest-uuid',
-  })
-  harvestId: string;
-
-  @ApiProperty({
-    enum: TransactionType,
-    example: TransactionType.EXPENSE,
-  })
-  type: TransactionType;
-
-  @ApiProperty({
-    type: String,
-    example: 'Seeds',
-  })
-  description: string;
-
-  @ApiProperty({
-    type: Number,
-    example: 120.5,
-  })
-  amount: number;
-
-  @ApiProperty({
-    type: String,
-    example: 'category-uuid',
-  })
-  categoryId: string;
-
-  @ApiProperty({
-    type: Number,
-    example: 1715270400000,
-  })
-  date: number;
-}
-
-class TransactionsResponseDTO {
-  @ApiProperty({
-    type: [TransactionDTO],
-  })
-  transactions: TransactionDTO[];
-
-  @ApiProperty({
-    type: () => TransactionPaginationDTO,
-  })
-  pagination: TransactionPaginationDTO;
-}
+import GetHarvestTransactionsParamDTO from 'infra/dtos/harvests/GetHarvestTransactionsParamDTO';
+import GetHarvestTransactionsQueryDTO from 'infra/dtos/harvests/GetHarvestTransactionsQueryDTO';
+import GetHarvestTransactionsResponseDTO from 'infra/dtos/harvests/GetHarvestTransactionsResponseDTO';
 
 type AuthenticatedRequest = Request & {
   user: {
@@ -157,14 +40,14 @@ export default class GetHarvestTransactionsController {
   @ApiQuery({ name: 'pageSize', required: false, type: Number })
   @ApiOkResponse({
     description: 'Transactions fetched successfully',
-    type: TransactionsResponseDTO,
+    type: GetHarvestTransactionsResponseDTO,
   })
   @ApiBadRequestResponse({ description: 'Invalid pagination query params' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   async handle(
     @Req() req: AuthenticatedRequest,
-    @Param() params: HarvestParamDTO,
-    @Query() query: PaginationQueryDTO,
+    @Param() params: GetHarvestTransactionsParamDTO,
+    @Query() query: GetHarvestTransactionsQueryDTO,
   ) {
     return this.listTransactionsByHarvest.execute({
       userId: req.user.id,

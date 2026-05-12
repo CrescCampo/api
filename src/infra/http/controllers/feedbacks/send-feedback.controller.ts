@@ -4,56 +4,19 @@ import {
   ApiBody,
   ApiCreatedResponse,
   ApiOperation,
-  ApiProperty,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsString, Max, MaxLength, Min } from 'class-validator';
 import SendFeedbackUseCase from 'domain/application/use-cases/feedbacks/send-feedback';
-import FeedbackCategory from 'domain/enterprise/enums/FeedbackCategory';
 import JwtAuthGuard from 'infra/auth/jwt-auth.guard';
+import SendFeedbackRequestDTO from 'infra/dtos/feedbacks/SendFeedbackRequestDTO';
+import SendFeedbackResponseDTO from 'infra/dtos/feedbacks/SendFeedbackResponseDTO';
 
 type AuthenticatedRequest = Request & {
   user: {
     id: string;
   };
 };
-
-class SendFeedbackBodyDTO {
-  @ApiProperty({
-    type: Number,
-    example: 5,
-    minimum: 0,
-    maximum: 5,
-  })
-  @IsInt()
-  @Min(0)
-  @Max(5)
-  rating: number;
-
-  @ApiProperty({
-    type: String,
-    example: 'Otima entrega e produtos frescos.',
-  })
-  @IsString()
-  @MaxLength(500)
-  description: string;
-
-  @ApiProperty({
-    enum: FeedbackCategory,
-    example: FeedbackCategory.DELIVERY,
-  })
-  @IsEnum(FeedbackCategory)
-  category: FeedbackCategory;
-}
-
-class SendFeedbackResponseDTO {
-  @ApiProperty({
-    type: String,
-    example: 'feedback-uuid',
-  })
-  feedbackId: string;
-}
 
 @Controller('feedbacks')
 @ApiTags('Feedbacks')
@@ -65,13 +28,13 @@ export default class SendFeedbackController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @Post()
   @ApiOperation({ summary: 'Send a feedback' })
-  @ApiBody({ type: SendFeedbackBodyDTO })
+  @ApiBody({ type: SendFeedbackRequestDTO })
   @ApiCreatedResponse({
     description: 'Feedback sent successfully',
     type: SendFeedbackResponseDTO,
   })
   async handle(
-    @Body() body: SendFeedbackBodyDTO,
+    @Body() body: SendFeedbackRequestDTO,
     @Req() req: AuthenticatedRequest,
   ) {
     const { rating, description, category } = body;

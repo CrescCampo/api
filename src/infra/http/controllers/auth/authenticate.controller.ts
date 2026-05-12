@@ -3,70 +3,13 @@ import {
   ApiBody,
   ApiOkResponse,
   ApiOperation,
-  ApiProperty,
   ApiTags,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { IsEmail, IsString, MaxLength } from 'class-validator';
 import LoginFarmerByEmail from 'domain/application/use-cases/auth/login-farmer-by-email';
 import EmailIpThrottlerGuard from 'infra/auth/email-ip-throttler.guard';
-
-class AuthenticateBodyDTO {
-  @ApiProperty({
-    type: String,
-    example: 'user@email.com',
-  })
-  @IsEmail()
-  @MaxLength(254)
-  email: string;
-
-  @ApiProperty({
-    type: String,
-    example: 'pass',
-  })
-  @IsString()
-  @MaxLength(72)
-  password: string;
-}
-
-class AuthenticateResponseDTO {
-  @ApiProperty({
-    type: String,
-    example: 'user-uuid',
-  })
-  userId: string;
-
-  @ApiProperty({
-    type: String,
-    example: 'token',
-  })
-  token: string;
-
-  @ApiProperty({
-    type: String,
-    example: 'Maria Clara',
-  })
-  name: string;
-
-  @ApiProperty({
-    type: String,
-    example: 'user@email.com',
-  })
-  email: string;
-
-  @ApiProperty({
-    type: String,
-    example: '+5511999999999',
-    nullable: true,
-  })
-  phone: string | null;
-
-  @ApiProperty({
-    type: String,
-    example: 'farm-uuid',
-  })
-  farmId: string;
-}
+import AuthenticateRequestDTO from 'infra/dtos/auth/AuthenticateRequestDTO';
+import AuthenticateResponseDTO from 'infra/dtos/auth/AuthenticateResponseDTO';
 
 @Controller('auth')
 @ApiTags('Auth')
@@ -78,13 +21,13 @@ export default class AuthenticateController {
   @Throttle({ global: { ttl: 60_000, limit: 5 } })
   @ApiOperation({ summary: 'Authenticate farmer' })
   @ApiBody({
-    type: AuthenticateBodyDTO,
+    type: AuthenticateRequestDTO,
   })
   @ApiOkResponse({
     description: 'Farmer Logged Successfully',
     type: AuthenticateResponseDTO,
   })
-  async handle(@Body() body: AuthenticateBodyDTO) {
+  async handle(@Body() body: AuthenticateRequestDTO) {
     const { email, password } = body;
 
     const result = await this.loginFarmerUseCase.execute({ email, password });

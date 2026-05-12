@@ -4,27 +4,19 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiProperty,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import type { Request } from 'express';
 import JwtAuthGuard from 'infra/auth/jwt-auth.guard';
 import DeleteTransaction from 'domain/application/use-cases/transactions/delete-transaction';
+import DeleteTransactionResponseDTO from 'infra/dtos/transactions/DeleteTransactionResponseDTO';
 
 type AuthenticatedRequest = Request & {
   user: {
     id: string;
   };
 };
-
-class DeleteTransactionResponseDTO {
-  @ApiProperty({
-    type: String,
-    example: 'transaction-uuid',
-  })
-  transactionId: string;
-}
 
 @Controller('transactions')
 @ApiTags('Transactions')
