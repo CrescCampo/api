@@ -4,6 +4,7 @@ import RegisterUserUseCase from 'domain/application/use-cases/auth/register-farm
 import CryptographyModule from 'infra/cryptography/cryptography.module';
 import DatabaseModule from 'infra/database/database.module';
 import GatewaysModule from 'infra/gateways/gateways.module';
+import TracingModule from 'infra/tracing/tracing.module';
 import AppPushUseCase from 'domain/application/use-cases/app/push';
 import AppPullUseCase from 'domain/application/use-cases/app/pull';
 import ListHarvestsByFarm from 'domain/application/use-cases/harvests/list-harvests-by-farm';
@@ -29,7 +30,7 @@ import SendFeedbackController from './controllers/feedbacks/send-feedback.contro
 import UpdateFarmerPhoneController from './controllers/farmers/update-farmer-phone.controller';
 
 @Module({
-  imports: [DatabaseModule, CryptographyModule, GatewaysModule],
+  imports: [DatabaseModule, CryptographyModule, GatewaysModule, TracingModule],
   controllers: [
     HealthCheckController,
     PushController,
