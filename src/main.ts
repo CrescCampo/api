@@ -1,3 +1,5 @@
+import './infra/monitoring/otel';
+
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { WinstonModule } from 'nest-winston';
