@@ -1,13 +1,10 @@
 pipeline {
     agent any
 
-    // Variáveis desativadas temporariamente
-    // Aguardando decisão do grupo sobre conta Docker Hub
-    //
-    // environment {
-    //     DOCKER_IMAGE = 'DECIDIR_EM_GRUPO'
-    //     DOCKER_TAG = "${env.BUILD_NUMBER}"
-    // }
+    environment {
+        DOCKER_IMAGE = 'kauamoreirabatista/cresccampo-api'
+        DOCKER_TAG = "${env.BUILD_NUMBER}"
+    }
 
     stages {
         stage('Testes') {
@@ -29,24 +26,20 @@ pipeline {
             }
         }
 
-        // Stage desativado temporariamente
-        // Aguardando decisão do grupo sobre conta Docker Hub
-        // Responsabilidade: outro membro do grupo
-        //
-        // stage('Docker Build e Push') {
-        //     steps {
-        //         withCredentials([usernamePassword(
-        //             credentialsId: 'dockerhub-credentials',
-        //             usernameVariable: 'DOCKER_USER',
-        //             passwordVariable: 'DOCKER_PASS'
-        //         )]) {
-        //             sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-        //             sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} -t ${DOCKER_IMAGE}:latest ."
-        //             sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
-        //             sh "docker push ${DOCKER_IMAGE}:latest"
-        //         }
-        //     }
-        // }
+        stage('Docker Build e Push') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-credentials',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} -t ${DOCKER_IMAGE}:latest ."
+                    sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                    sh "docker push ${DOCKER_IMAGE}:latest"
+                }
+            }
+        }
     }
 
     post {
