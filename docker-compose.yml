@@ -1,4 +1,14 @@
 services:
+  api:
+    container_name: cresccampo-api
+    image: kauamoreirabatista/cresccampo-api:latest
+    ports:
+      - 3000:3000
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+
   postgres:
     container_name: cresccampo-postgres
     image: postgres:16.11-alpine3.23
@@ -10,3 +20,33 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASS}
       - POSTGRES_DB=${POSTGRES_DB_NAME}
+
+  jenkins:
+    container_name: cresccampo-jenkins
+    build:
+      context: .
+      dockerfile: Dockerfile.jenkins
+    user: root
+    ports:
+      - 8080:8080
+      - 50000:50000
+    volumes:
+      - jenkins_data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+      - TESTCONTAINERS_RYUK_DISABLED=true
+
+  jaeger:
+    container_name: jaeger
+    image: jaegertracing/jaeger:latest
+    ports:
+      - 16686:16686
+      - 4317:4317
+      - 4318:4318
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+
+volumes:
+  jenkins_data:
