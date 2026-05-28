@@ -11,6 +11,7 @@ interface FarmerProps {
   updatedAt: Date | null;
   lastLogin: Date | null;
   farmId: string;
+  tokenVersion: number;
 }
 
 export default class Farmer extends Entity<FarmerProps> {
@@ -51,6 +52,10 @@ export default class Farmer extends Entity<FarmerProps> {
     this.#touch();
   }
 
+  get tokenVersion() {
+    return this.props.tokenVersion;
+  }
+
   get phone() {
     return this.props.phone;
   }
@@ -82,7 +87,12 @@ export default class Farmer extends Entity<FarmerProps> {
   static create(
     props: Optional<
       FarmerProps,
-      'disabled' | 'createdAt' | 'updatedAt' | 'lastLogin' | 'phone'
+      | 'disabled'
+      | 'createdAt'
+      | 'updatedAt'
+      | 'lastLogin'
+      | 'phone'
+      | 'tokenVersion'
     >,
     id?: string,
   ) {
@@ -94,6 +104,7 @@ export default class Farmer extends Entity<FarmerProps> {
         createdAt: props.createdAt ?? new Date(),
         updatedAt: props.updatedAt ?? null,
         lastLogin: props.lastLogin ?? null,
+        tokenVersion: props.tokenVersion ?? 0,
       },
       id,
     );

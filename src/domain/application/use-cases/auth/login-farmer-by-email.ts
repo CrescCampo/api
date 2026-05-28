@@ -66,6 +66,7 @@ export default class LoginFarmerByEmail {
       email: farmer.email,
       name: farmer.name,
       phone: farmer.phone,
+      tv: farmer.tokenVersion,
     });
 
     return {

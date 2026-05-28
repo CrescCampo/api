@@ -34,6 +34,9 @@ class TokenPayload {
 
   @IsInt()
   exp!: number;
+
+  @IsInt()
+  tv!: number;
 }
 
 @Injectable()

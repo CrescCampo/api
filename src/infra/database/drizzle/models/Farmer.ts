@@ -1,5 +1,12 @@
 import { relations } from 'drizzle-orm';
-import { date, text, pgTable, boolean, index } from 'drizzle-orm/pg-core';
+import {
+  date,
+  text,
+  pgTable,
+  boolean,
+  index,
+  integer,
+} from 'drizzle-orm/pg-core';
 import FarmModel from './Farm';
 import FeedbackModel from './Feedback';
 
@@ -16,6 +23,7 @@ export const FarmerModel = pgTable(
     createdAt: date({ mode: 'date' }),
     updatedAt: date({ mode: 'date' }),
     lastLogin: date({ mode: 'date' }),
+    tokenVersion: integer().default(0).notNull(),
   },
   table => [index('farmer_email_idx').on(table.email)],
 );

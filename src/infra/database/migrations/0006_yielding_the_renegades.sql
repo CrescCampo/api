@@ -1,0 +1,1 @@
+ALTER TABLE "farmers" ALTER COLUMN "token_version" SET NOT NULL;
