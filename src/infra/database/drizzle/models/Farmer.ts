@@ -9,6 +9,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import FarmModel from './Farm';
 import FeedbackModel from './Feedback';
+import RefreshToken from './RefreshToken';
 
 export const FarmerModel = pgTable(
   'farmers',
@@ -34,6 +35,7 @@ export const FarmerRelations = relations(FarmerModel, ({ one, many }) => ({
     references: [FarmModel.id],
   }),
   feedbacks: many(FeedbackModel),
+  refreshTokens: many(RefreshToken),
 }));
 
 export default FarmerModel;
