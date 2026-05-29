@@ -6,7 +6,7 @@ const RefreshTokenModel = pgTable(
   'refresh_tokens',
   {
     id: text().primaryKey().notNull().unique(),
-    hash: text().notNull().unique().notNull(),
+    hash: text().notNull().unique(),
     expiresAt: date({ mode: 'date' }).notNull(),
     revokedAt: date({ mode: 'date' }),
     createdAt: date({ mode: 'date' }).notNull(),
