@@ -117,6 +117,7 @@ describe('LoginFarmerByEmail', () => {
       email: farmer.email,
       name: farmer.name,
       phone: null,
+      tv: farmer.tokenVersion,
     });
   });
 });

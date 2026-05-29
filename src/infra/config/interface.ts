@@ -34,4 +34,8 @@ export interface Config {
   openai: {
     apiKey: string;
   };
+  resetPassword: {
+    passwordResetUrl: (token: string) => string;
+    passwordResetTokenTtlInMinutes: number;
+  };
 }

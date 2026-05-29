@@ -15,6 +15,7 @@ import EditTransaction from 'domain/application/use-cases/transactions/edit-tran
 import EditHarvestName from 'domain/application/use-cases/harvests/edit-harvest-name';
 import SendFeedbackUseCase from 'domain/application/use-cases/feedbacks/send-feedback';
 import UpdateFarmerPhone from 'domain/application/use-cases/farmers/update-farmer-phone';
+import PasswordResetChangeUseCase from 'domain/application/use-cases/farmers/request-password-reset';
 import HealthCheckController from './controllers/health/health-check.controller';
 import AuthenticateController from './controllers/auth/authenticate.controller';
 import RegisterFarmerController from './controllers/auth/register-farmer.controller';
@@ -28,6 +29,7 @@ import EditTransactionController from './controllers/transactions/edit-transacti
 import EditHarvestNameController from './controllers/harvests/edit-harvest-name.controller';
 import SendFeedbackController from './controllers/feedbacks/send-feedback.controller';
 import UpdateFarmerPhoneController from './controllers/farmers/update-farmer-phone.controller';
+import RequestPasswordResetController from './controllers/farmers/request-password-reset.controller';
 
 @Module({
   imports: [DatabaseModule, CryptographyModule, GatewaysModule, TracingModule],
@@ -45,6 +47,7 @@ import UpdateFarmerPhoneController from './controllers/farmers/update-farmer-pho
     EditHarvestNameController,
     SendFeedbackController,
     UpdateFarmerPhoneController,
+    RequestPasswordResetController,
   ],
   providers: [
     LoginFarmerByEmail,
@@ -59,6 +62,7 @@ import UpdateFarmerPhoneController from './controllers/farmers/update-farmer-pho
     EditHarvestName,
     SendFeedbackUseCase,
     UpdateFarmerPhone,
+    PasswordResetChangeUseCase,
   ],
 })
 export default class HttpModule {}
