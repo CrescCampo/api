@@ -27,7 +27,7 @@ export default class PasswordResetChangeUseCase {
   async execute(input: PasswordResetChangeUseCaseInput): Promise<void> {
     const farmer = await this.farmerRepository.findByEmail(input.email);
 
-    if (!farmer) {
+    if (!farmer || farmer.disabled) {
       return;
     }
 
