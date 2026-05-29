@@ -17,7 +17,47 @@ interface RefreshTokenProps {
 }
 
 export default class RefreshToken extends Entity<RefreshTokenProps> {
-  static issue(
+  get hash() {
+    return this.props.hash;
+  }
+
+  get expiresAt() {
+    return this.props.expiresAt;
+  }
+
+  get revokedAt() {
+    return this.props.revokedAt;
+  }
+
+  get createdAt() {
+    return this.props.createdAt;
+  }
+
+  get lastUsedAt() {
+    return this.props.lastUsedAt;
+  }
+
+  get farmerId() {
+    return this.props.farmerId;
+  }
+
+  get replacedById() {
+    return this.props.replacedById;
+  }
+
+  get familyId() {
+    return this.props.familyId;
+  }
+
+  get userAgent() {
+    return this.props.userAgent;
+  }
+
+  get ipAddress() {
+    return this.props.ipAddress;
+  }
+
+  static create(
     props: Optional<
       RefreshTokenProps,
       | 'familyId'

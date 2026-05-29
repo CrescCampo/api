@@ -50,6 +50,13 @@
       "when": 1779931270065,
       "tag": "0006_yielding_the_renegades",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1780016444298,
+      "tag": "0007_previous_warlock",
+      "breakpoints": true
     }
   ]
 }
