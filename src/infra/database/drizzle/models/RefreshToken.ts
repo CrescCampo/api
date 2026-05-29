@@ -26,7 +26,7 @@ const RefreshTokenModel = pgTable(
 export const RefreshTokenRelations = relations(
   RefreshTokenModel,
   ({ one }) => ({
-    farm: one(FarmerModel, {
+    farmer: one(FarmerModel, {
       fields: [RefreshTokenModel.farmerId],
       references: [FarmerModel.id],
     }),
