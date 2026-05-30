@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import LoginFarmerByEmail from 'domain/application/use-cases/auth/login-farmer-by-email';
+import RefreshTokenUseCase from 'domain/application/use-cases/auth/refresh-token';
 import RegisterUserUseCase from 'domain/application/use-cases/auth/register-farmer-by-email';
 import CryptographyModule from 'infra/cryptography/cryptography.module';
 import DatabaseModule from 'infra/database/database.module';
@@ -19,6 +20,7 @@ import PasswordResetChangeUseCase from 'domain/application/use-cases/farmers/req
 import HealthCheckController from './controllers/health/health-check.controller';
 import AuthenticateController from './controllers/auth/authenticate.controller';
 import RegisterFarmerController from './controllers/auth/register-farmer.controller';
+import RefreshTokenController from './controllers/auth/refresh-token.controller';
 import PushController from './controllers/app/push.controller';
 import PullController from './controllers/app/pull.controller';
 import GetHarvestsController from './controllers/harvests/get-harvests.controller';
@@ -39,6 +41,7 @@ import RequestPasswordResetController from './controllers/farmers/request-passwo
     PullController,
     AuthenticateController,
     RegisterFarmerController,
+    RefreshTokenController,
     GetHarvestsController,
     GetHarvestTransactionsController,
     GetTransactionsController,
@@ -51,6 +54,7 @@ import RequestPasswordResetController from './controllers/farmers/request-passwo
   ],
   providers: [
     LoginFarmerByEmail,
+    RefreshTokenUseCase,
     RegisterUserUseCase,
     AppPushUseCase,
     AppPullUseCase,

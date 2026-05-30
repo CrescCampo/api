@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import RefreshTokenRepository from 'domain/application/repositories/RefreshTokenRepository';
 import RefreshToken from 'domain/enterprise/entities/RefreshToken';
@@ -6,6 +7,7 @@ import { AppDrizzleAdapter, DrizzleConnection } from '../types';
 import DrizzleRefreshTokenMapper from '../mappers/DrizzleRefreshTokenMapper';
 import RefreshTokenModel from '../models/RefreshToken';
 
+@Injectable()
 export default class DrizzleRefreshTokenRepository implements RefreshTokenRepository {
   constructor(private readonly txHost: TransactionHost<AppDrizzleAdapter>) {}
 
@@ -40,5 +42,26 @@ export default class DrizzleRefreshTokenRepository implements RefreshTokenReposi
     }
 
     return DrizzleRefreshTokenMapper.toDomain(row);
+  }
+
+  async findByHash(hash: string): Promise<RefreshToken | null> {
+    const [row] = await this.db
+      .select()
+      .from(RefreshTokenModel)
+      .where(eq(RefreshTokenModel.hash, hash))
+      .limit(1);
+
+    if (!row) {
+      return null;
+    }
+
+    return DrizzleRefreshTokenMapper.toDomain(row);
+  }
+
+  async revokeFamily(familyId: string): Promise<void> {
+    await this.db
+      .update(RefreshTokenModel)
+      .set({ revokedAt: new Date() })
+      .where(eq(RefreshTokenModel.familyId, familyId));
   }
 }

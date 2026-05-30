@@ -8,6 +8,7 @@ import TransactionRepository from 'domain/application/repositories/TransactionRe
 import OutboxEventRepository from 'domain/application/repositories/OutboxEventRepository';
 import FeedbackRepository from 'domain/application/repositories/FeedbackRepository';
 import PasswordResetTokenRepository from 'domain/application/repositories/PasswordResetTokenRepository';
+import RefreshTokenRepository from 'domain/application/repositories/RefreshTokenRepository';
 import UnitOfWork from 'domain/application/unit-of-work/UnitOfWork';
 import DrizzleService from './drizzle/drizzle.service';
 import DrizzleFarmRepository from './drizzle/repositories/farm.repository';
@@ -19,6 +20,7 @@ import DrizzleTransactionRepository from './drizzle/repositories/transaction.rep
 import DrizzleOutboxEventRepository from './drizzle/repositories/outbox-event.repository';
 import DrizzleFeedbackRepository from './drizzle/repositories/feedback.repository';
 import DrizzlePasswordResetTokenRepository from './drizzle/repositories/password-reset-token.repository';
+import DrizzleRefreshTokenRepository from './drizzle/repositories/refreshToken.repository';
 import DrizzleUnitOfWork from './drizzle/unit-of-work/drizzle-unit-of-work';
 
 export const DRIZZLE_CONNECTION = Symbol('DRIZZLE_CONNECTION');
@@ -46,6 +48,10 @@ export const DRIZZLE_CONNECTION = Symbol('DRIZZLE_CONNECTION');
       provide: PasswordResetTokenRepository,
       useClass: DrizzlePasswordResetTokenRepository,
     },
+    {
+      provide: RefreshTokenRepository,
+      useClass: DrizzleRefreshTokenRepository,
+    },
     { provide: UnitOfWork, useClass: DrizzleUnitOfWork },
   ],
   exports: [
@@ -60,6 +66,7 @@ export const DRIZZLE_CONNECTION = Symbol('DRIZZLE_CONNECTION');
     OutboxEventRepository,
     FeedbackRepository,
     PasswordResetTokenRepository,
+    RefreshTokenRepository,
     UnitOfWork,
   ],
 })

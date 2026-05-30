@@ -11,7 +11,11 @@ import InMemoryUnitOfWork from '../../unit-of-work/InMemoryUnitOfWork';
 
 class FakeTokenGenerator implements TokenGenerator {
   async generate(): Promise<{ plain: string; hash: string }> {
-    return { plain: 'plain-token', hash: 'hashed-plain-token' };
+    return { plain: 'plain-token', hash: this.hash('plain-token') };
+  }
+
+  hash(plain: string): string {
+    return `hashed-${plain}`;
   }
 }
 
