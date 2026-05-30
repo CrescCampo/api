@@ -40,7 +40,7 @@ const config: Config = {
   },
   resetPassword: {
     passwordResetUrl: (token: string) =>
-      `https://api.cresccampo.com.br/password/request-change?token=${token}`,
+      `https://cresccampo.com.br/redefinir-senha?token=${token}`,
     passwordResetTokenTtlInMinutes: 30,
     resendTemplateAlias: 'reset-password',
   },
