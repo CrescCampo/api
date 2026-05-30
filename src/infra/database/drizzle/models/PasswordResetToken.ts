@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm';
-import { date, index, integer, pgTable, text } from 'drizzle-orm/pg-core';
+import { index, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import FarmerModel from './Farmer';
 
 const PasswordResetTokenModel = pgTable(
@@ -9,9 +9,9 @@ const PasswordResetTokenModel = pgTable(
     farmerId: text().notNull(),
     tokenHash: text().notNull().unique(),
     ttlMinutes: integer().notNull(),
-    expiresAt: date({ mode: 'date' }).notNull(),
-    usedAt: date({ mode: 'date' }),
-    createdAt: date({ mode: 'date' }).notNull(),
+    expiresAt: timestamp({ withTimezone: true }).notNull(),
+    usedAt: timestamp({ withTimezone: true }),
+    createdAt: timestamp({ withTimezone: true }).notNull(),
     requestIp: text(),
     userAgent: text(),
   },

@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm';
-import { text, pgTable, date, index } from 'drizzle-orm/pg-core';
+import { text, pgTable, index, timestamp } from 'drizzle-orm/pg-core';
 import FarmerModel from './Farmer';
 
 const RefreshTokenModel = pgTable(
@@ -7,10 +7,10 @@ const RefreshTokenModel = pgTable(
   {
     id: text().primaryKey().notNull().unique(),
     hash: text().notNull().unique(),
-    expiresAt: date({ mode: 'date' }).notNull(),
-    revokedAt: date({ mode: 'date' }),
-    createdAt: date({ mode: 'date' }).notNull(),
-    lastUsedAt: date({ mode: 'date' }),
+    expiresAt: timestamp({ withTimezone: true }).notNull(),
+    revokedAt: timestamp({ withTimezone: true }),
+    createdAt: timestamp({ withTimezone: true }).notNull(),
+    lastUsedAt: timestamp({ withTimezone: true }),
     farmerId: text().notNull(),
     replacedById: text(),
     familyId: text().notNull(),
