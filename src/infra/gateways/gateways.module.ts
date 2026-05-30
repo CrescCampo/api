@@ -1,11 +1,9 @@
 import { Module } from '@nestjs/common';
-import ConfigGateway from 'domain/application/gateways/config-gateway';
-import EmailGateway from 'domain/application/gateways/email-gateway';
+import ResetPasswordEmailSender from 'domain/application/email/reset-password-email-sender';
 import WhatsAppGateway from 'domain/application/gateways/whatsapp-gateway';
 import config from 'infra/config';
-import InfraConfigGateway from 'infra/config/gateway';
+import ResendEmailService from 'infra/email/resend-email-service';
 import { Resend } from 'resend';
-import ResendEmailGateway from './resend-email-gateway';
 import WhatsAppHttpGateway from './whatsapp-http-gateway';
 
 @Module({
@@ -15,9 +13,8 @@ import WhatsAppHttpGateway from './whatsapp-http-gateway';
       useFactory: () => new Resend(config.resend.apiKey),
     },
     { provide: WhatsAppGateway, useClass: WhatsAppHttpGateway },
-    { provide: EmailGateway, useClass: ResendEmailGateway },
-    { provide: ConfigGateway, useClass: InfraConfigGateway },
+    { provide: ResetPasswordEmailSender, useClass: ResendEmailService },
   ],
-  exports: [WhatsAppGateway, EmailGateway, ConfigGateway],
+  exports: [WhatsAppGateway, ResetPasswordEmailSender],
 })
 export default class GatewaysModule {}

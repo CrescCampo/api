@@ -1,22 +1,21 @@
 import { Injectable, Logger } from '@nestjs/common';
-import EmailGateway, {
+import ResetPasswordEmailSender, {
   SendResetPasswordEmailInput,
-} from 'domain/application/gateways/email-gateway';
+} from 'domain/application/email/reset-password-email-sender';
 import config from 'infra/config';
 import { Resend } from 'resend';
 
 @Injectable()
-export default class ResendEmailGateway extends EmailGateway {
-  private readonly logger = new Logger(ResendEmailGateway.name);
+export default class ResendEmailService implements ResetPasswordEmailSender {
+  private readonly logger = new Logger(ResendEmailService.name);
 
-  constructor(private readonly resend: Resend) {
-    super();
-  }
+  constructor(private readonly resend: Resend) {}
 
   async sendResetPasswordEmail(
     input: SendResetPasswordEmailInput,
   ): Promise<void> {
-    const { to, resetPasswordPageLink, name } = input;
+    const { to, token, name } = input;
+    const resetPasswordPageLink = config.resetPassword.passwordResetUrl(token);
     const { error } = await this.resend.emails.send({
       to,
       template: {

@@ -1,10 +1,10 @@
 export interface SendResetPasswordEmailInput {
-  resetPasswordPageLink: string;
+  token: string;
   to: string;
   name: string;
 }
 
-export default abstract class EmailGateway {
+export default abstract class ResetPasswordEmailSender {
   abstract sendResetPasswordEmail(
     input: SendResetPasswordEmailInput,
   ): Promise<void>;

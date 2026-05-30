@@ -39,7 +39,6 @@ export interface Config {
   };
   resetPassword: {
     passwordResetUrl: (token: string) => string;
-    passwordResetTokenTtlInMinutes: number;
     resendTemplateAlias: string;
   };
 }

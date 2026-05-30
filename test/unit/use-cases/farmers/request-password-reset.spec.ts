@@ -1,7 +1,6 @@
-import ConfigGateway from 'domain/application/gateways/config-gateway';
-import EmailGateway, {
+import ResetPasswordEmailSender, {
   SendResetPasswordEmailInput,
-} from 'domain/application/gateways/email-gateway';
+} from 'domain/application/email/reset-password-email-sender';
 import TokenGenerator from 'domain/application/cryptography/token-generator';
 import PasswordResetChangeUseCase from 'domain/application/use-cases/farmers/request-password-reset';
 import Farm from 'domain/enterprise/entities/Farm';
@@ -16,17 +15,7 @@ class FakeTokenGenerator implements TokenGenerator {
   }
 }
 
-class FakeConfigGateway implements ConfigGateway {
-  get() {
-    return {
-      passwordResetUrl: (token: string) =>
-        `https://app.example.com/reset?token=${token}`,
-      passwordResetTokenTtlInMinutes: 45,
-    };
-  }
-}
-
-class FakeEmailGateway implements EmailGateway {
+class FakeResetPasswordEmailSender implements ResetPasswordEmailSender {
   calls: SendResetPasswordEmailInput[] = [];
 
   async sendResetPasswordEmail(
@@ -40,8 +29,7 @@ let farmerRepository: InMemoryFarmerRepository;
 let passwordResetTokenRepository: InMemoryPasswordResetTokenRepository;
 let unitOfWork: InMemoryUnitOfWork;
 let tokenGenerator: FakeTokenGenerator;
-let configGateway: FakeConfigGateway;
-let emailGateway: FakeEmailGateway;
+let emailSender: FakeResetPasswordEmailSender;
 let sut: PasswordResetChangeUseCase;
 
 describe('PasswordResetChangeUseCase', () => {
@@ -50,16 +38,14 @@ describe('PasswordResetChangeUseCase', () => {
     passwordResetTokenRepository = new InMemoryPasswordResetTokenRepository();
     unitOfWork = new InMemoryUnitOfWork();
     tokenGenerator = new FakeTokenGenerator();
-    configGateway = new FakeConfigGateway();
-    emailGateway = new FakeEmailGateway();
+    emailSender = new FakeResetPasswordEmailSender();
 
     sut = new PasswordResetChangeUseCase(
       farmerRepository,
       unitOfWork,
       tokenGenerator,
       passwordResetTokenRepository,
-      configGateway,
-      emailGateway,
+      emailSender,
     );
   });
 
@@ -71,11 +57,11 @@ describe('PasswordResetChangeUseCase', () => {
     });
 
     expect(passwordResetTokenRepository.items).toHaveLength(0);
-    expect(emailGateway.calls).toHaveLength(0);
+    expect(emailSender.calls).toHaveLength(0);
     expect(unitOfWork.commitCount).toBe(0);
   });
 
-  it('should persist a token with the hashed value and ttl from config', async () => {
+  it('should persist a token with the hashed value and default ttl', async () => {
     const farm = Farm.create({});
     const farmer = Farmer.create({
       name: 'Joao',
@@ -95,14 +81,14 @@ describe('PasswordResetChangeUseCase', () => {
     const stored = passwordResetTokenRepository.items[0];
     expect(stored.farmerId).toBe(farmer.id);
     expect(stored.tokenHash).toBe('hashed-plain-token');
-    expect(stored.ttlMinutes).toBe(45);
+    expect(stored.ttlMinutes).toBe(30);
     expect(stored.requestIp).toBe('ip-stub');
     expect(stored.userAgent).toBe('jest-agent');
     expect(stored.usedAt).toBeNull();
     expect(stored.expiresAt.getTime()).toBeGreaterThan(Date.now());
   });
 
-  it('should send the reset email with the link, recipient and first name', async () => {
+  it('should send the reset email with the plain token, recipient and first name', async () => {
     const farm = Farm.create({});
     const farmer = Farmer.create({
       name: 'Maria',
@@ -118,9 +104,9 @@ describe('PasswordResetChangeUseCase', () => {
       requestIp: 'ip-stub',
     });
 
-    expect(emailGateway.calls).toHaveLength(1);
-    expect(emailGateway.calls[0]).toEqual({
-      resetPasswordPageLink: 'https://app.example.com/reset?token=plain-token',
+    expect(emailSender.calls).toHaveLength(1);
+    expect(emailSender.calls[0]).toEqual({
+      token: 'plain-token',
       to: 'maria@example.com',
       name: 'Maria',
     });
@@ -143,7 +129,7 @@ describe('PasswordResetChangeUseCase', () => {
       requestIp: 'ip-stub',
     });
 
-    expect(emailGateway.calls[0].name).toBe('Maria');
-    expect(emailGateway.calls[0].to).toBe('maria.silva@example.com');
+    expect(emailSender.calls[0].name).toBe('Maria');
+    expect(emailSender.calls[0].to).toBe('maria.silva@example.com');
   });
 });
