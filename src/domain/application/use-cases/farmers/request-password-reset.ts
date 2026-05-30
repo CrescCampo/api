@@ -49,6 +49,8 @@ export default class PasswordResetChangeUseCase {
 
       await this.emailGateway.sendResetPasswordEmail({
         resetPasswordPageLink: passwordResetUrl(plain),
+        to: input.email,
+        name: farmer.firstName,
       });
     });
   }

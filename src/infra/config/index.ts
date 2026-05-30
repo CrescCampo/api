@@ -35,10 +35,14 @@ const config: Config = {
   openai: {
     apiKey: envVars.OPENAI_API_KEY,
   },
+  resend: {
+    apiKey: envVars.RESEND_API_KEY,
+  },
   resetPassword: {
     passwordResetUrl: (token: string) =>
       `https://api.cresccampo.com.br/password/request-change?token=${token}`,
     passwordResetTokenTtlInMinutes: 30,
+    resendTemplateAlias: 'reset-password',
   },
 };
 

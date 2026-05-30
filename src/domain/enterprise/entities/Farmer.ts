@@ -65,6 +65,10 @@ export default class Farmer extends Entity<FarmerProps> {
     this.#touch();
   }
 
+  get firstName() {
+    return this.props.name.split(' ')[0];
+  }
+
   #touch() {
     this.props.updatedAt = new Date();
   }

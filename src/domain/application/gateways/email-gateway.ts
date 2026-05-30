@@ -1,9 +1,11 @@
-interface SendResetPasswordEmailInput {
+export interface SendResetPasswordEmailInput {
   resetPasswordPageLink: string;
+  to: string;
+  name: string;
 }
 
 export default abstract class EmailGateway {
   abstract sendResetPasswordEmail(
     input: SendResetPasswordEmailInput,
-  ): Promise<null>;
+  ): Promise<void>;
 }

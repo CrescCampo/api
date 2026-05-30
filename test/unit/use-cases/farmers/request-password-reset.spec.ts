@@ -1,5 +1,7 @@
 import ConfigGateway from 'domain/application/gateways/config-gateway';
-import EmailGateway from 'domain/application/gateways/email-gateway';
+import EmailGateway, {
+  SendResetPasswordEmailInput,
+} from 'domain/application/gateways/email-gateway';
 import TokenGenerator from 'domain/application/cryptography/token-generator';
 import PasswordResetChangeUseCase from 'domain/application/use-cases/farmers/request-password-reset';
 import Farm from 'domain/enterprise/entities/Farm';
@@ -25,13 +27,12 @@ class FakeConfigGateway implements ConfigGateway {
 }
 
 class FakeEmailGateway implements EmailGateway {
-  calls: { resetPasswordPageLink: string }[] = [];
+  calls: SendResetPasswordEmailInput[] = [];
 
-  async sendResetPasswordEmail(input: {
-    resetPasswordPageLink: string;
-  }): Promise<null> {
+  async sendResetPasswordEmail(
+    input: SendResetPasswordEmailInput,
+  ): Promise<void> {
     this.calls.push(input);
-    return null;
   }
 }
 
@@ -101,7 +102,7 @@ describe('PasswordResetChangeUseCase', () => {
     expect(stored.expiresAt.getTime()).toBeGreaterThan(Date.now());
   });
 
-  it('should send the reset email with the plain token in the link', async () => {
+  it('should send the reset email with the link, recipient and first name', async () => {
     const farm = Farm.create({});
     const farmer = Farmer.create({
       name: 'Maria',
@@ -118,9 +119,31 @@ describe('PasswordResetChangeUseCase', () => {
     });
 
     expect(emailGateway.calls).toHaveLength(1);
-    expect(emailGateway.calls[0].resetPasswordPageLink).toBe(
-      'https://app.example.com/reset?token=plain-token',
-    );
+    expect(emailGateway.calls[0]).toEqual({
+      resetPasswordPageLink: 'https://app.example.com/reset?token=plain-token',
+      to: 'maria@example.com',
+      name: 'Maria',
+    });
     expect(unitOfWork.commitCount).toBe(1);
+  });
+
+  it('should send only the first name when the farmer has a full name', async () => {
+    const farm = Farm.create({});
+    const farmer = Farmer.create({
+      name: 'Maria Silva',
+      email: 'maria.silva@example.com',
+      farmId: farm.id,
+      password: 'hashed-secret',
+    });
+    await farmerRepository.save(farmer);
+
+    await sut.execute({
+      email: 'maria.silva@example.com',
+      userAgent: 'jest-agent',
+      requestIp: 'ip-stub',
+    });
+
+    expect(emailGateway.calls[0].name).toBe('Maria');
+    expect(emailGateway.calls[0].to).toBe('maria.silva@example.com');
   });
 });
