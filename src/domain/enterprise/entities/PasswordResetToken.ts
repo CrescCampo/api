@@ -45,6 +45,23 @@ export default class PasswordResetToken extends Entity<PasswordResetTokenProps> 
     return this.props.userAgent;
   }
 
+  get isUsed() {
+    return this.props.usedAt !== null;
+  }
+
+  get isExpired() {
+    return this.props.expiresAt <= new Date();
+  }
+
+  get isUsable() {
+    return !this.isUsed && !this.isExpired;
+  }
+
+  markAsUsed() {
+    if (this.isUsed) return;
+    this.props.usedAt = new Date();
+  }
+
   static create(
     props: Optional<
       PasswordResetTokenProps,

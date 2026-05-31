@@ -15,6 +15,13 @@ export default class AuthenticateResponseDTO {
 
   @ApiProperty({
     type: String,
+    example: 'a1b2c3d4e5f6...',
+    description: 'Opaque refresh token used to rotate the access token',
+  })
+  refreshToken: string;
+
+  @ApiProperty({
+    type: String,
     example: 'Maria Clara',
   })
   name: string;

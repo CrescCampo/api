@@ -73,7 +73,7 @@ export class EnvVariables {
 
   @IsOptional()
   @IsNumber()
-  JWT_EXPIRES_IN: number = 60 * 60 * 24 * 7;
+  JWT_EXPIRES_IN: number = 60 * 15;
 
   @IsOptional()
   @IsInt()

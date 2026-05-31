@@ -1,5 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 import { UseCaseError } from 'core/use-case-error';
+import InvalidPasswordResetTokenError from 'domain/application/errors/auth/InvalidPasswordResetTokenError';
 import UserAlreadyExistsError from 'domain/application/errors/auth/UserAlreadyExistsError';
 import WrongCredentialsError from 'domain/application/errors/auth/WrongCredentialsError';
 import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFoundError';
@@ -10,6 +11,9 @@ export default class ErrorStatusMapper {
   private static readonly errorStatusMap = new Map<string, HttpStatus>([
     // 401 - Unauthorized (Authentication failed)
     [WrongCredentialsError.name, HttpStatus.UNAUTHORIZED],
+
+    // 400 - Bad Request (Invalid input / token)
+    [InvalidPasswordResetTokenError.name, HttpStatus.BAD_REQUEST],
 
     // 409 - Conflict (Resource already exists)
     [UserAlreadyExistsError.name, HttpStatus.CONFLICT],
