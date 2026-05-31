@@ -34,6 +34,12 @@ class TokenPayload {
 
   @IsInt()
   exp!: number;
+
+  @IsInt()
+  tv!: number;
+
+  @IsString()
+  sessionId!: string;
 }
 
 @Injectable()

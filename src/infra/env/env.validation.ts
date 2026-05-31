@@ -67,9 +67,13 @@ export class EnvVariables {
   @IsNotEmpty()
   OPENAI_API_KEY: string;
 
+  @IsString()
+  @IsNotEmpty()
+  RESEND_API_KEY: string;
+
   @IsOptional()
   @IsNumber()
-  JWT_EXPIRES_IN: number = 60 * 60 * 24 * 7;
+  JWT_EXPIRES_IN: number = 60 * 15;
 
   @IsOptional()
   @IsInt()

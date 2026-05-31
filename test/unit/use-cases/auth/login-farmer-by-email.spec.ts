@@ -5,13 +5,17 @@ import Farm from 'domain/enterprise/entities/Farm';
 import Farmer from 'domain/enterprise/entities/Farmer';
 import LoginFarmerByEmail from 'domain/application/use-cases/auth/login-farmer-by-email';
 import HashGenerator from 'domain/application/cryptography/hash-generator';
+import TokenGenerator from 'domain/application/cryptography/token-generator';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
+import InMemoryRefreshTokenRepository from '../../repositories/InMemoryRefreshTokenRepository';
 import InMemoryUnitOfWork from '../../unit-of-work/InMemoryUnitOfWork';
 
 let inMemoryFarmerRepository: InMemoryFarmerRepository;
 let hashComparer: HashComparer;
 let encrypter: Encrypter;
 let hashGenerator: HashGenerator;
+let tokenGenerator: TokenGenerator;
+let refreshTokenRepository: InMemoryRefreshTokenRepository;
 let unitOfWork: InMemoryUnitOfWork;
 let sut: LoginFarmerByEmail;
 
@@ -36,12 +40,24 @@ class FakeHashGenerator implements HashGenerator {
   }
 }
 
+class FakeTokenGenerator implements TokenGenerator {
+  async generate(): Promise<{ plain: string; hash: string }> {
+    return { plain: 'refresh-plain', hash: this.hash('refresh-plain') };
+  }
+
+  hash(plain: string): string {
+    return `hashed-${plain}`;
+  }
+}
+
 describe('LoginFarmerByEmail', () => {
   beforeEach(() => {
     inMemoryFarmerRepository = new InMemoryFarmerRepository();
     hashComparer = new FakeHashComparer();
     encrypter = new FakeEncrypter();
     hashGenerator = new FakeHashGenerator();
+    tokenGenerator = new FakeTokenGenerator();
+    refreshTokenRepository = new InMemoryRefreshTokenRepository();
     unitOfWork = new InMemoryUnitOfWork();
 
     sut = new LoginFarmerByEmail(
@@ -50,6 +66,8 @@ describe('LoginFarmerByEmail', () => {
       hashGenerator,
       encrypter,
       unitOfWork,
+      tokenGenerator,
+      refreshTokenRepository,
     );
   });
 
@@ -117,6 +135,8 @@ describe('LoginFarmerByEmail', () => {
       email: farmer.email,
       name: farmer.name,
       phone: null,
+      tv: farmer.tokenVersion,
+      sessionId: expect.any(String),
     });
   });
 });
