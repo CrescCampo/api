@@ -44,6 +44,7 @@
     "quality:gate": "npm run lint && npm run typecheck && npm run duplication && npm run test:unit:ci && npm run test:e2e && npm run audit:prod"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1062.0",
     "@nestjs-cls/transactional": "^3.2.0",
     "@nestjs-cls/transactional-adapter-drizzle-orm": "^1.2.3",
     "@nestjs/common": "^11.0.1",

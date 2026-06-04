@@ -34,6 +34,12 @@ export interface Config {
   openai: {
     apiKey: string;
   };
+  aws: {
+    region: string;
+    accessKeyId: string;
+    secretAccessKey: string;
+    s3Bucket: string;
+  };
   resend: {
     apiKey: string;
   };

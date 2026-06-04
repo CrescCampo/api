@@ -57,6 +57,13 @@
       "when": 1780147893486,
       "tag": "0007_left_lockjaw",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1780610227333,
+      "tag": "0008_flat_princess_powerful",
+      "breakpoints": true
     }
   ]
 }

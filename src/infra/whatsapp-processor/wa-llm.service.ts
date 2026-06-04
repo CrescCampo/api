@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import OpenAI from 'openai';
+import OpenAI, { toFile } from 'openai';
 import type {
   ChatCompletionMessageParam,
   ChatCompletionTool,
@@ -8,6 +8,7 @@ import type {
 import config from 'infra/config';
 
 const MODEL = 'gpt-4o-mini';
+const TRANSCRIPTION_MODEL = 'whisper-1';
 
 const tools: ChatCompletionTool[] = [
   {
@@ -127,6 +128,18 @@ export default class WaLlmService {
     messages: ChatCompletionMessageParam[],
   ): Promise<ChatCompletion> {
     return this.call(messages);
+  }
+
+  async transcribe(buffer: Buffer): Promise<string> {
+    const file = await toFile(buffer, 'audio.ogg', { type: 'audio/ogg' });
+
+    const transcription = await this.openai.audio.transcriptions.create({
+      model: TRANSCRIPTION_MODEL,
+      file,
+      language: 'pt',
+    });
+
+    return transcription.text;
   }
 
   private async call(

@@ -35,6 +35,12 @@ const config: Config = {
   openai: {
     apiKey: envVars.OPENAI_API_KEY,
   },
+  aws: {
+    region: envVars.AWS_REGION,
+    accessKeyId: envVars.AWS_ACCESS_KEY_ID,
+    secretAccessKey: envVars.AWS_SECRET_ACCESS_KEY,
+    s3Bucket: envVars.AWS_S3_BUCKET,
+  },
   resend: {
     apiKey: envVars.RESEND_API_KEY,
   },
