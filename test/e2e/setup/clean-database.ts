@@ -13,9 +13,17 @@ export async function cleanDatabase(): Promise<void> {
 
   const db = drizzle(pool, { casing: 'snake_case' });
 
-  await db.execute(
-    sql`TRUNCATE TABLE farmers, farms, feedbacks, harvests, transactions, cultures, transaction_categories, outbox_events RESTART IDENTITY CASCADE`,
+  const tables = await db.execute<{ tablename: string }>(
+    sql`SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename NOT LIKE '%drizzle%'`,
   );
+
+  const tableNames = tables.rows.map(row => `"${row.tablename}"`).join(', ');
+
+  if (tableNames) {
+    await db.execute(
+      sql.raw(`TRUNCATE TABLE ${tableNames} RESTART IDENTITY CASCADE`),
+    );
+  }
 
   await pool.end();
 }
