@@ -242,3 +242,43 @@ Este projeto utilizou ferramentas de inteligência artificial como apoio durante
 - **Claude (Anthropic)**: Auxílio na implementação de testes, configuração de infraestrutura de testes (Testcontainers, k6) e documentação.
 
 Todas as decisões de arquitetura, implementação e revisão de código foram realizadas pelos integrantes do grupo. O uso de IA foi limitado a assistência e aceleração do desenvolvimento.
+
+## Infraestrutura DevOps
+
+### Pré-requisitos
+- Docker
+- Docker Compose
+
+### Subir o ambiente completo
+
+```bash
+docker compose up --build -d
+```
+
+Isso sobe 4 containers:
+
+| Container | Imagem | Porta | Descrição |
+|---|---|---|---|
+| `cresccampo-api` | `kauamoreirabatista/cresccampo-api:latest` | `3000` | API REST |
+| `cresccampo-postgres` | `postgres:16.11-alpine3.23` | `5432` | Banco de dados |
+| `cresccampo-jenkins` | `Dockerfile.jenkins` (local) | `8080` | CI/CD |
+| `jaeger` | `jaegertracing/jaeger:latest` | `16686` | Rastreamento distribuído |
+
+### Acessar os serviços
+
+| Serviço | URL |
+|---|---|
+| API | `http://localhost:3000` |
+| Jenkins | `http://localhost:8080` |
+| Jaeger | `http://localhost:16686` |
+
+### Imagem no Docker Hub
+
+`https://hub.docker.com/r/kauamoreirabatista/cresccampo-api`
+
+### CI/CD com Jenkins
+
+Para configurar o Jenkins após subir os containers, consulte o [DevOps.md](./DevOps.md).
+
+
+
