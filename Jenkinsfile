@@ -14,7 +14,7 @@ pipeline {
             }
             post {
                 always {
-                    archiveArtifacts artifacts: 'test-results/e2e/Junit.xml', allowEmptyArchive: true
+                    archiveArtifacts artifacts: 'test-reports/e2e/results.xml', allowEmptyArchive: true
                 }
             }
         }
