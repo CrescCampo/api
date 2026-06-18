@@ -2,6 +2,9 @@ import UserAlreadyExistsError from 'domain/application/errors/auth/UserAlreadyEx
 import Farm from 'domain/enterprise/entities/Farm';
 import Farmer from 'domain/enterprise/entities/Farmer';
 import HashGenerator from 'domain/application/cryptography/hash-generator';
+import AccountCreatedNotifier, {
+  AccountCreatedNotification,
+} from 'domain/application/notifications/account-created-notifier';
 import RegisterUserUseCase from 'domain/application/use-cases/auth/register-farmer-by-email';
 import InMemoryFarmRepository from '../../repositories/InMemoryFarmRepository';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
@@ -10,6 +13,20 @@ import InMemoryTransactionCategoryRepository from '../../repositories/InMemoryTr
 import InMemoryUnitOfWork from '../../unit-of-work/InMemoryUnitOfWork';
 import NoopTracer from '../../tracing/NoopTracer';
 
+class FakeAccountCreatedNotifier implements AccountCreatedNotifier {
+  notifications: AccountCreatedNotification[] = [];
+
+  shouldFail = false;
+
+  async notifyAccountCreated(input: AccountCreatedNotification): Promise<void> {
+    this.notifications.push(input);
+
+    if (this.shouldFail) {
+      throw new Error('Discord is down');
+    }
+  }
+}
+
 let inMemoryFarmerRepository: InMemoryFarmerRepository;
 let inMemoryFarmRepository: InMemoryFarmRepository;
 let inMemoryCultureRepository: InMemoryCultureRepository;
@@ -17,6 +34,7 @@ let inMemoryTransactionCategoryRepository: InMemoryTransactionCategoryRepository
 let hashGenerator: HashGenerator;
 let unitOfWork: InMemoryUnitOfWork;
 let tracer: NoopTracer;
+let accountCreatedNotifier: FakeAccountCreatedNotifier;
 let sut: RegisterUserUseCase;
 
 class FakeHashGenerator implements HashGenerator {
@@ -35,6 +53,7 @@ describe('RegisterUserUseCase', () => {
     hashGenerator = new FakeHashGenerator();
     unitOfWork = new InMemoryUnitOfWork();
     tracer = new NoopTracer();
+    accountCreatedNotifier = new FakeAccountCreatedNotifier();
 
     sut = new RegisterUserUseCase(
       inMemoryFarmerRepository,
@@ -44,6 +63,7 @@ describe('RegisterUserUseCase', () => {
       inMemoryTransactionCategoryRepository,
       unitOfWork,
       tracer,
+      accountCreatedNotifier,
     );
   });
 
@@ -123,5 +143,31 @@ describe('RegisterUserUseCase', () => {
         'Combustível',
       ]),
     );
+  });
+
+  it('should notify that an account was created', async () => {
+    await sut.execute({
+      name: 'Joao Paulo',
+      email: 'joao@example.com',
+      password: 'secret',
+    });
+
+    expect(accountCreatedNotifier.notifications).toEqual([
+      { name: 'Joao Paulo', email: 'joao@example.com' },
+    ]);
+  });
+
+  it('should still create the account when the notification fails', async () => {
+    accountCreatedNotifier.shouldFail = true;
+
+    const result = await sut.execute({
+      name: 'Joao Paulo',
+      email: 'joao@example.com',
+      password: 'secret',
+    });
+
+    expect(result.userId).toBeTruthy();
+    expect(inMemoryFarmerRepository.items).toHaveLength(1);
+    expect(inMemoryFarmerRepository.items[0].id).toBe(result.userId);
   });
 });

@@ -4,6 +4,7 @@ import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import FarmRepository from 'domain/application/repositories/FarmRepository';
 import CultureRepository from 'domain/application/repositories/CultureRepository';
 import TransactionCategoryRepository from 'domain/application/repositories/TransactionCategoryRepository';
+import AccountCreatedNotifier from 'domain/application/notifications/account-created-notifier';
 import Tracer from 'domain/application/tracing/tracer';
 import UnitOfWork from 'domain/application/unit-of-work/UnitOfWork';
 import Farm from 'domain/enterprise/entities/Farm';
@@ -43,6 +44,7 @@ export default class RegisterUserUseCase {
     private readonly transactionCategoryRepository: TransactionCategoryRepository,
     private readonly unitOfWork: UnitOfWork,
     private readonly tracer: Tracer,
+    private readonly accountCreatedNotifier: AccountCreatedNotifier,
   ) {}
 
   async execute(input: Input): Promise<Output> {
@@ -57,7 +59,7 @@ export default class RegisterUserUseCase {
 
       const hashedPassword = await this.hashGenerator.hash(input.password);
 
-      return this.unitOfWork.run(async () => {
+      const result = await this.unitOfWork.run(async () => {
         const farm = Farm.create({});
 
         await this.farmRepository.save(farm);
@@ -93,6 +95,12 @@ export default class RegisterUserUseCase {
           userId: newFarmer.id,
         };
       });
+
+      this.accountCreatedNotifier
+        .notifyAccountCreated({ name: input.name, email: input.email })
+        .catch(() => undefined);
+
+      return result;
     });
   }
 }

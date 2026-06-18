@@ -71,6 +71,10 @@ export class EnvVariables {
   @IsNotEmpty()
   RESEND_API_KEY: string;
 
+  @IsOptional()
+  @IsString()
+  DISCORD_ACCOUNT_CREATED_WEBHOOK_URL?: string;
+
   @IsString()
   @IsNotEmpty()
   AWS_REGION: string;

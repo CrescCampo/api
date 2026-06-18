@@ -44,6 +44,9 @@ const config: Config = {
   resend: {
     apiKey: envVars.RESEND_API_KEY,
   },
+  discord: {
+    accountCreatedWebhookUrl: envVars.DISCORD_ACCOUNT_CREATED_WEBHOOK_URL ?? '',
+  },
   resetPassword: {
     passwordResetUrl: (token: string) =>
       `https://cresccampo.com.br/redefinir-senha?token=${token}`,

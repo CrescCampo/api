@@ -43,6 +43,9 @@ export interface Config {
   resend: {
     apiKey: string;
   };
+  discord: {
+    accountCreatedWebhookUrl: string;
+  };
   resetPassword: {
     passwordResetUrl: (token: string) => string;
     resendTemplateAlias: string;
