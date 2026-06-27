@@ -46,6 +46,9 @@ export interface Config {
   discord: {
     accountCreatedWebhookUrl: string;
   };
+  google: {
+    clientIds: string[];
+  };
   resetPassword: {
     passwordResetUrl: (token: string) => string;
     resendTemplateAlias: string;

@@ -22,6 +22,7 @@ export interface Output {
   email: string;
   phone: string | null;
   farmId: string;
+  hasPassword: boolean;
 }
 
 @Injectable()
@@ -39,7 +40,7 @@ export default class LoginFarmerByEmail {
   async execute(input: Input): Promise<Output> {
     const farmer = await this.farmerRepository.findByEmail(input.email);
 
-    if (!farmer) {
+    if (!farmer || farmer.password === null) {
       throw new WrongCredentialsError();
     }
 
@@ -92,6 +93,7 @@ export default class LoginFarmerByEmail {
       email: farmer.email,
       phone: farmer.phone,
       farmId: farmer.farmId,
+      hasPassword: farmer.hasPassword,
     };
   }
 }

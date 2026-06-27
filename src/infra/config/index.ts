@@ -47,6 +47,12 @@ const config: Config = {
   discord: {
     accountCreatedWebhookUrl: envVars.DISCORD_ACCOUNT_CREATED_WEBHOOK_URL ?? '',
   },
+  google: {
+    clientIds: (envVars.GOOGLE_CLIENT_IDS ?? '')
+      .split(',')
+      .map(id => id.trim())
+      .filter(Boolean),
+  },
   resetPassword: {
     passwordResetUrl: (token: string) =>
       `https://cresccampo.com.br/redefinir-senha?token=${token}`,

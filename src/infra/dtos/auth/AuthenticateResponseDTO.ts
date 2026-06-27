@@ -44,4 +44,11 @@ export default class AuthenticateResponseDTO {
     example: 'farm-uuid',
   })
   farmId: string;
+
+  @ApiProperty({
+    type: Boolean,
+    example: true,
+    description: 'Whether the account has a password set (vs Google-only)',
+  })
+  hasPassword: boolean;
 }

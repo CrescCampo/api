@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 import LoginFarmerByEmail from 'domain/application/use-cases/auth/login-farmer-by-email';
+import LoginFarmerWithGoogle from 'domain/application/use-cases/auth/login-farmer-with-google';
 import RefreshTokenUseCase from 'domain/application/use-cases/auth/refresh-token';
 import RegisterUserUseCase from 'domain/application/use-cases/auth/register-farmer-by-email';
+import FarmerProvisioner from 'domain/application/services/farmer-provisioner';
+import SetFarmerPassword from 'domain/application/use-cases/farmers/set-farmer-password';
 import CryptographyModule from 'infra/cryptography/cryptography.module';
 import DatabaseModule from 'infra/database/database.module';
 import GatewaysModule from 'infra/gateways/gateways.module';
@@ -20,6 +23,7 @@ import PasswordResetChangeUseCase from 'domain/application/use-cases/farmers/req
 import ResetPasswordUseCase from 'domain/application/use-cases/farmers/reset-password';
 import HealthCheckController from './controllers/health/health-check.controller';
 import AuthenticateController from './controllers/auth/authenticate.controller';
+import GoogleAuthController from './controllers/auth/google-auth.controller';
 import RegisterFarmerController from './controllers/auth/register-farmer.controller';
 import RefreshTokenController from './controllers/auth/refresh-token.controller';
 import PushController from './controllers/app/push.controller';
@@ -34,6 +38,7 @@ import SendFeedbackController from './controllers/feedbacks/send-feedback.contro
 import UpdateFarmerPhoneController from './controllers/farmers/update-farmer-phone.controller';
 import RequestPasswordResetController from './controllers/farmers/request-password-reset.controller';
 import ResetPasswordController from './controllers/farmers/reset-password.controller';
+import SetFarmerPasswordController from './controllers/farmers/set-farmer-password.controller';
 
 @Module({
   imports: [DatabaseModule, CryptographyModule, GatewaysModule, TracingModule],
@@ -42,6 +47,7 @@ import ResetPasswordController from './controllers/farmers/reset-password.contro
     PushController,
     PullController,
     AuthenticateController,
+    GoogleAuthController,
     RegisterFarmerController,
     RefreshTokenController,
     GetHarvestsController,
@@ -54,11 +60,15 @@ import ResetPasswordController from './controllers/farmers/reset-password.contro
     UpdateFarmerPhoneController,
     RequestPasswordResetController,
     ResetPasswordController,
+    SetFarmerPasswordController,
   ],
   providers: [
     LoginFarmerByEmail,
+    LoginFarmerWithGoogle,
     RefreshTokenUseCase,
     RegisterUserUseCase,
+    FarmerProvisioner,
+    SetFarmerPassword,
     AppPushUseCase,
     AppPullUseCase,
     ListHarvestsByFarm,

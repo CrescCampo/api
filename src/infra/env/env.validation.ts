@@ -75,6 +75,10 @@ export class EnvVariables {
   @IsString()
   DISCORD_ACCOUNT_CREATED_WEBHOOK_URL?: string;
 
+  @IsOptional()
+  @IsString()
+  GOOGLE_CLIENT_IDS?: string;
+
   @IsString()
   @IsNotEmpty()
   AWS_REGION: string;
