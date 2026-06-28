@@ -73,6 +73,7 @@
     "class-validator": "^0.14.2",
     "dotenv": "^16.6.1",
     "drizzle-orm": "^0.45.1",
+    "google-auth-library": "^10.9.0",
     "helmet": "^8.1.0",
     "nest-winston": "^1.10.2",
     "nestjs-cls": "^6.2.0",

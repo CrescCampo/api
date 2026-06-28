@@ -6,6 +6,7 @@ import AccountCreatedNotifier, {
   AccountCreatedNotification,
 } from 'domain/application/notifications/account-created-notifier';
 import RegisterUserUseCase from 'domain/application/use-cases/auth/register-farmer-by-email';
+import FarmerProvisioner from 'domain/application/services/farmer-provisioner';
 import InMemoryFarmRepository from '../../repositories/InMemoryFarmRepository';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryCultureRepository from '../../repositories/InMemoryCultureRepository';
@@ -55,12 +56,17 @@ describe('RegisterUserUseCase', () => {
     tracer = new NoopTracer();
     accountCreatedNotifier = new FakeAccountCreatedNotifier();
 
-    sut = new RegisterUserUseCase(
+    const farmerProvisioner = new FarmerProvisioner(
       inMemoryFarmerRepository,
       inMemoryFarmRepository,
-      hashGenerator,
       inMemoryCultureRepository,
       inMemoryTransactionCategoryRepository,
+    );
+
+    sut = new RegisterUserUseCase(
+      inMemoryFarmerRepository,
+      farmerProvisioner,
+      hashGenerator,
       unitOfWork,
       tracer,
       accountCreatedNotifier,

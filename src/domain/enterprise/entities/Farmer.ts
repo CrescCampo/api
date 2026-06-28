@@ -4,7 +4,8 @@ import { Optional } from 'core/optional';
 interface FarmerProps {
   name: string;
   email: string;
-  password: string;
+  password: string | null;
+  googleId: string | null;
   phone: string | null;
   disabled: boolean;
   createdAt: Date;
@@ -47,8 +48,21 @@ export default class Farmer extends Entity<FarmerProps> {
     return this.props.password;
   }
 
-  set password(hash: string) {
+  set password(hash: string | null) {
     this.props.password = hash;
+    this.#touch();
+  }
+
+  get hasPassword() {
+    return this.props.password !== null;
+  }
+
+  get googleId() {
+    return this.props.googleId;
+  }
+
+  linkGoogle(googleId: string) {
+    this.props.googleId = googleId;
     this.#touch();
   }
 
@@ -97,12 +111,16 @@ export default class Farmer extends Entity<FarmerProps> {
       | 'lastLogin'
       | 'phone'
       | 'tokenVersion'
+      | 'password'
+      | 'googleId'
     >,
     id?: string,
   ) {
     const farmer = new Farmer(
       {
         ...props,
+        password: props.password ?? null,
+        googleId: props.googleId ?? null,
         phone: props.phone ?? null,
         disabled: props.disabled !== undefined ? props.disabled : false,
         createdAt: props.createdAt ?? new Date(),

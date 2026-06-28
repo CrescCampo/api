@@ -16,7 +16,15 @@ const SAFE_HEADERS = [
   'content-length',
   'accept',
 ];
-const SENSITIVE_BODY_FIELDS = ['password', 'token', 'refreshToken', 'apiKey'];
+const SENSITIVE_BODY_FIELDS = [
+  'password',
+  'currentPassword',
+  'newPassword',
+  'token',
+  'refreshToken',
+  'idToken',
+  'apiKey',
+];
 
 function pickSafeHeaders(h: Request['headers']) {
   return Object.fromEntries(

@@ -1,28 +1,11 @@
 import HashGenerator from 'domain/application/cryptography/hash-generator';
 import UserAlreadyExistsError from 'domain/application/errors/auth/UserAlreadyExistsError';
 import FarmerRepository from 'domain/application/repositories/FarmerRepository';
-import FarmRepository from 'domain/application/repositories/FarmRepository';
-import CultureRepository from 'domain/application/repositories/CultureRepository';
-import TransactionCategoryRepository from 'domain/application/repositories/TransactionCategoryRepository';
+import FarmerProvisioner from 'domain/application/services/farmer-provisioner';
 import AccountCreatedNotifier from 'domain/application/notifications/account-created-notifier';
 import Tracer from 'domain/application/tracing/tracer';
 import UnitOfWork from 'domain/application/unit-of-work/UnitOfWork';
-import Farm from 'domain/enterprise/entities/Farm';
-import Farmer from 'domain/enterprise/entities/Farmer';
-import Culture from 'domain/enterprise/entities/Culture';
-import TransactionCategory from 'domain/enterprise/entities/TransactionCategory';
 import { Injectable } from '@nestjs/common';
-
-const DEFAULT_CULTURES = ['Morango', 'Mandioca', 'Café', 'Pimentão'];
-
-const DEFAULT_TRANSACTION_CATEGORIES = [
-  'Venda de Produtos',
-  'Insumos e Defensivos',
-  'Sementes e Mudas',
-  'Mão de Obra',
-  'Equipamentos e Manutenção',
-  'Combustível',
-];
 
 export interface Input {
   name: string;
@@ -38,10 +21,8 @@ export interface Output {
 export default class RegisterUserUseCase {
   constructor(
     private readonly farmerRepository: FarmerRepository,
-    private readonly farmRepository: FarmRepository,
+    private readonly farmerProvisioner: FarmerProvisioner,
     private readonly hashGenerator: HashGenerator,
-    private readonly cultureRepository: CultureRepository,
-    private readonly transactionCategoryRepository: TransactionCategoryRepository,
     private readonly unitOfWork: UnitOfWork,
     private readonly tracer: Tracer,
     private readonly accountCreatedNotifier: AccountCreatedNotifier,
@@ -60,39 +41,19 @@ export default class RegisterUserUseCase {
       const hashedPassword = await this.hashGenerator.hash(input.password);
 
       const result = await this.unitOfWork.run(async () => {
-        const farm = Farm.create({});
-
-        await this.farmRepository.save(farm);
-
-        const defaultCategories = DEFAULT_TRANSACTION_CATEGORIES.map(name =>
-          TransactionCategory.create({ name, farmId: farm.id }),
-        );
-
-        await Promise.all([
-          ...DEFAULT_CULTURES.map(name =>
-            this.cultureRepository.save(
-              Culture.create({ name, farmId: farm.id }),
-            ),
-          ),
-          this.transactionCategoryRepository.saveMany(defaultCategories),
-        ]);
-
-        const newFarmer = Farmer.create({
+        const farmer = await this.farmerProvisioner.provision({
           name: input.name,
           email: input.email,
-          farmId: farm.id,
           password: hashedPassword,
         });
 
-        await this.farmerRepository.save(newFarmer);
-
         span.setAttributes({
-          'account.user_id': newFarmer.id,
-          'account.farm_id': farm.id,
+          'account.user_id': farmer.id,
+          'account.farm_id': farmer.farmId,
         });
 
         return {
-          userId: newFarmer.id,
+          userId: farmer.id,
         };
       });
 

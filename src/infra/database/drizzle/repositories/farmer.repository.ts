@@ -6,12 +6,33 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import FarmerModel from '../models/Farmer';
 import type { AppDrizzleAdapter, DrizzleConnection } from '../types';
 
+type FarmerRow = typeof FarmerModel.$inferSelect;
+
 @Injectable()
 export default class DrizzleFarmerRepository implements FarmerRepository {
   constructor(private readonly txHost: TransactionHost<AppDrizzleAdapter>) {}
 
   private get db(): DrizzleConnection {
     return this.txHost.tx;
+  }
+
+  private toDomain(row: FarmerRow): Farmer {
+    return Farmer.create(
+      {
+        name: row.name,
+        email: row.email,
+        password: row.password ?? null,
+        googleId: row.googleId ?? null,
+        phone: row.phone ?? null,
+        disabled: row.disabled,
+        createdAt: row.createdAt ?? new Date(),
+        updatedAt: row.updatedAt ?? null,
+        lastLogin: row.lastLogin ?? null,
+        farmId: row.farmId,
+        tokenVersion: row.tokenVersion,
+      },
+      row.id,
+    );
   }
 
   async save(farmer: Farmer): Promise<void> {
@@ -23,6 +44,7 @@ export default class DrizzleFarmerRepository implements FarmerRepository {
         name: farmer.name,
         email: farmer.email,
         password: farmer.password,
+        googleId: farmer.googleId,
         phone: farmer.phone,
         disabled: farmer.disabled,
         createdAt: farmer.createdAt,
@@ -37,6 +59,7 @@ export default class DrizzleFarmerRepository implements FarmerRepository {
           name: farmer.name,
           email: farmer.email,
           password: farmer.password,
+          googleId: farmer.googleId,
           phone: farmer.phone,
           disabled: farmer.disabled,
           updatedAt: farmer.updatedAt,
@@ -53,25 +76,17 @@ export default class DrizzleFarmerRepository implements FarmerRepository {
       .where(eq(FarmerModel.email, email))
       .limit(1);
 
-    if (!row) {
-      return null;
-    }
+    return row ? this.toDomain(row) : null;
+  }
 
-    return Farmer.create(
-      {
-        name: row.name,
-        email: row.email,
-        password: row.password,
-        phone: row.phone ?? null,
-        disabled: row.disabled,
-        createdAt: row.createdAt ?? new Date(),
-        updatedAt: row.updatedAt ?? null,
-        lastLogin: row.lastLogin ?? null,
-        farmId: row.farmId,
-        tokenVersion: row.tokenVersion,
-      },
-      row.id,
-    );
+  async findByGoogleId(googleId: string): Promise<Farmer | null> {
+    const [row] = await this.db
+      .select()
+      .from(FarmerModel)
+      .where(eq(FarmerModel.googleId, googleId))
+      .limit(1);
+
+    return row ? this.toDomain(row) : null;
   }
 
   async findById(id: string): Promise<Farmer | null> {
@@ -81,25 +96,7 @@ export default class DrizzleFarmerRepository implements FarmerRepository {
       .where(eq(FarmerModel.id, id))
       .limit(1);
 
-    if (!row) {
-      return null;
-    }
-
-    return Farmer.create(
-      {
-        name: row.name,
-        email: row.email,
-        password: row.password,
-        phone: row.phone ?? null,
-        disabled: row.disabled,
-        createdAt: row.createdAt ?? new Date(),
-        updatedAt: row.updatedAt ?? null,
-        lastLogin: row.lastLogin ?? null,
-        farmId: row.farmId,
-        tokenVersion: row.tokenVersion,
-      },
-      row.id,
-    );
+    return row ? this.toDomain(row) : null;
   }
 
   async findByPhone(phone: string): Promise<Farmer | null> {
@@ -112,39 +109,18 @@ export default class DrizzleFarmerRepository implements FarmerRepository {
       .where(inArray(FarmerModel.phone, candidates))
       .limit(1);
 
-    if (!row) {
-      return null;
-    }
-
-    return Farmer.create(
-      {
-        name: row.name,
-        email: row.email,
-        password: row.password,
-        phone: row.phone ?? null,
-        disabled: row.disabled,
-        createdAt: row.createdAt ?? new Date(),
-        updatedAt: row.updatedAt ?? null,
-        lastLogin: row.lastLogin ?? null,
-        farmId: row.farmId,
-        tokenVersion: row.tokenVersion,
-      },
-      row.id,
-    );
+    return row ? this.toDomain(row) : null;
   }
 
   private brazilianPhoneVariants(phone: string): string[] {
     const variants = [phone];
 
-    // Brazilian numbers: +55 + 2-digit area code + 8 or 9 digit number
     const match = phone.match(/^\+55(\d{2})(\d+)$/);
     if (match) {
       const [, areaCode, number] = match;
       if (number.length === 8) {
-        // Add the 9th digit
         variants.push(`+55${areaCode}9${number}`);
       } else if (number.length === 9 && number.startsWith('9')) {
-        // Remove the 9th digit
         variants.push(`+55${areaCode}${number.slice(1)}`);
       }
     }

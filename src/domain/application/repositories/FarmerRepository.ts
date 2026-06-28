@@ -5,6 +5,8 @@ export default abstract class FarmerRepository {
 
   abstract findByEmail(email: string): Promise<Farmer | null>;
 
+  abstract findByGoogleId(googleId: string): Promise<Farmer | null>;
+
   abstract findById(id: string): Promise<Farmer | null>;
 
   abstract findByPhone(phone: string): Promise<Farmer | null>;
