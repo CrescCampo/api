@@ -4,7 +4,7 @@ import TransactionCategory from 'domain/enterprise/entities/TransactionCategory'
 import TransactionType from 'domain/enterprise/enums/TransactionType';
 import { Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
-import { and, desc, eq, gte, or, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, lt, or, sql } from 'drizzle-orm';
 import TransactionModel from '../models/Transaction';
 import TransactionCategoryModel from '../models/TransactionCategory';
 import TransactionTombstoneModel from '../models/TransactionTombstone';
@@ -92,6 +92,12 @@ export default class DrizzleTransactionRepository implements TransactionReposito
       );
 
     return rows.map(row => row.id);
+  }
+
+  async purgeDeletedBefore(cutoff: Date): Promise<void> {
+    await this.db
+      .delete(TransactionTombstoneModel)
+      .where(lt(TransactionTombstoneModel.deletedAt, cutoff));
   }
 
   async findByFarmIdSince(farmId: string, since: Date): Promise<Transaction[]> {

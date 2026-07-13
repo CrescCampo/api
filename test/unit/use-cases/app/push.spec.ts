@@ -152,6 +152,10 @@ class InMemoryTransactionRepository implements TransactionRepository {
     return [];
   }
 
+  purgeDeletedBefore(): Promise<void> {
+    return Promise.resolve();
+  }
+
   async findByFarmIdRecent(): Promise<Transaction[]> {
     return [];
   }

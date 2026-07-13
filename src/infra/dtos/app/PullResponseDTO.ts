@@ -7,6 +7,13 @@ import PullTransactionDTO from 'infra/dtos/app/PullTransactionDTO';
 
 export default class PullResponseDTO {
   @ApiProperty({
+    enum: ['full', 'delta'],
+    description:
+      'full: snapshot window (replace local state); delta: changes since the "since" query param (merge into local state). A stale "since" (older than the tombstone retention) falls back to full.',
+  })
+  mode: 'full' | 'delta';
+
+  @ApiProperty({
     type: [PullCultureDTO],
   })
   cultures: PullCultureDTO[];

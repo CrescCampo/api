@@ -3,7 +3,9 @@ import CultureRepository from 'domain/application/repositories/CultureRepository
 import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import HarvestRepository from 'domain/application/repositories/HarvestRepository';
 import TransactionCategoryRepository from 'domain/application/repositories/TransactionCategoryRepository';
-import TransactionRepository from 'domain/application/repositories/TransactionRepository';
+import TransactionRepository, {
+  TRANSACTION_TOMBSTONE_RETENTION_MS,
+} from 'domain/application/repositories/TransactionRepository';
 import TransactionType from 'domain/enterprise/enums/TransactionType';
 import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFoundError';
 import Culture from 'domain/enterprise/entities/Culture';
@@ -42,7 +44,10 @@ export interface HarvestDTO {
   expenses: number;
 }
 
+export type PullMode = 'full' | 'delta';
+
 export interface Output {
+  mode: PullMode;
   cultures: CultureDTO[];
   activeHarvests: HarvestDTO[];
   recentHarvests: HarvestDTO[];
@@ -118,8 +123,11 @@ export default class AppPullUseCase {
     }
 
     const { farmId } = farmer;
+    const sinceWithinRetention =
+      since !== undefined &&
+      since >= serverTime - TRANSACTION_TOMBSTONE_RETENTION_MS;
 
-    if (since !== undefined) {
+    if (sinceWithinRetention) {
       return this.pullChangesSince(farmId, since, serverTime);
     }
 
@@ -154,6 +162,7 @@ export default class AppPullUseCase {
     const { totalRevenue, totalExpenses } = harvestTotals;
 
     return {
+      mode: 'full',
       cultures: cultures.map(toCultureDTO),
       activeHarvests: activeHarvests.map(toHarvestDTO),
       recentHarvests: recentHarvests.map(toHarvestDTO),
@@ -203,6 +212,7 @@ export default class AppPullUseCase {
     const { totalRevenue, totalExpenses } = harvestTotals;
 
     return {
+      mode: 'delta',
       cultures: cultures.map(toCultureDTO),
       activeHarvests: activeHarvests.map(toHarvestDTO),
       recentHarvests: [],

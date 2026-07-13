@@ -62,15 +62,29 @@ describe('Pull Controller (e2e)', () => {
   it('[GET] /app/pull?since — deve retornar apenas mudanças e serverTime (200)', async () => {
     const response = await request(app.getHttpServer())
       .get('/app/pull')
-      .query({ since: 1 })
+      .query({ since: Date.now() - 60_000 })
       .set('Authorization', `Bearer ${token}`);
 
     expect(response.status).toBe(200);
+    expect(response.body.mode).toBe('delta');
     expect(typeof response.body.serverTime).toBe('number');
     expect(response.body.changedHarvests.length).toBeGreaterThanOrEqual(1);
     expect(response.body.changedTransactions.length).toBeGreaterThanOrEqual(1);
     expect(response.body.recentHarvests).toEqual([]);
     expect(response.body.transactions).toEqual([]);
+  });
+
+  it('[GET] /app/pull?since muito antigo — deve retornar pull completo com mode full (200)', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/app/pull')
+      .query({ since: 1 })
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.mode).toBe('full');
+    expect(response.body.recentHarvests.length).toBeGreaterThanOrEqual(1);
+    expect(response.body.changedHarvests).toEqual([]);
+    expect(response.body.changedTransactions).toEqual([]);
   });
 
   it('[GET] /app/pull?since futuro — deve retornar deltas vazios (200)', async () => {
@@ -80,6 +94,7 @@ describe('Pull Controller (e2e)', () => {
       .set('Authorization', `Bearer ${token}`);
 
     expect(response.status).toBe(200);
+    expect(response.body.mode).toBe('delta');
     expect(response.body.changedHarvests).toEqual([]);
     expect(response.body.changedTransactions).toEqual([]);
   });
@@ -97,7 +112,7 @@ describe('Pull Controller (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .get('/app/pull')
-      .query({ since: 1 })
+      .query({ since: Date.now() - 60_000 })
       .set('Authorization', `Bearer ${token}`);
 
     expect(response.status).toBe(200);
@@ -114,6 +129,7 @@ describe('Pull Controller (e2e)', () => {
       .set('Authorization', `Bearer ${token}`);
 
     expect(response.status).toBe(200);
+    expect(response.body.mode).toBe('full');
     expect(response.body.recentHarvests.length).toBeGreaterThanOrEqual(1);
     expect(response.body.changedHarvests).toEqual([]);
   });

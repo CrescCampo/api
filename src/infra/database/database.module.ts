@@ -22,6 +22,7 @@ import DrizzleFeedbackRepository from './drizzle/repositories/feedback.repositor
 import DrizzlePasswordResetTokenRepository from './drizzle/repositories/password-reset-token.repository';
 import DrizzleRefreshTokenRepository from './drizzle/repositories/refreshToken.repository';
 import DrizzleUnitOfWork from './drizzle/unit-of-work/drizzle-unit-of-work';
+import TombstonePurgeService from './tombstone-purge.service';
 
 export const DRIZZLE_CONNECTION = Symbol('DRIZZLE_CONNECTION');
 
@@ -53,6 +54,7 @@ export const DRIZZLE_CONNECTION = Symbol('DRIZZLE_CONNECTION');
       useClass: DrizzleRefreshTokenRepository,
     },
     { provide: UnitOfWork, useClass: DrizzleUnitOfWork },
+    TombstonePurgeService,
   ],
   exports: [
     DrizzleService,

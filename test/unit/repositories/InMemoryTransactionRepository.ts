@@ -55,6 +55,11 @@ export default class InMemoryTransactionRepository implements TransactionReposit
     return Promise.resolve(ids);
   }
 
+  purgeDeletedBefore(cutoff: Date): Promise<void> {
+    this.tombstones = this.tombstones.filter(item => item.deletedAt >= cutoff);
+    return Promise.resolve();
+  }
+
   findByFarmIdRecent(farmId: string, limit: number): Promise<Transaction[]> {
     const transactions = this.items
       .filter(item => item.category.farmId === farmId)

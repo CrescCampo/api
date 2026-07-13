@@ -6,6 +6,7 @@ import Transaction from 'domain/enterprise/entities/Transaction';
 import TransactionCategory from 'domain/enterprise/entities/TransactionCategory';
 import TransactionType from 'domain/enterprise/enums/TransactionType';
 import AppPullUseCase from 'domain/application/use-cases/app/pull';
+import { TRANSACTION_TOMBSTONE_RETENTION_MS } from 'domain/application/repositories/TransactionRepository';
 import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFoundError';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryCultureRepository from '../../repositories/InMemoryCultureRepository';
@@ -356,9 +357,10 @@ describe('AppPullUseCase', () => {
       farmId: farm.id,
     });
 
-    const oldDate = new Date('2025-01-01T00:00:00.000Z');
-    const since = new Date('2025-06-01T00:00:00.000Z').getTime();
-    const newDate = new Date('2025-07-01T00:00:00.000Z');
+    const now = Date.now();
+    const oldDate = new Date(now - 7 * 24 * 60 * 60 * 1000);
+    const since = now - 60 * 60 * 1000;
+    const newDate = new Date(now);
 
     const oldHarvest = Harvest.create({
       name: 'Safra Antiga',
@@ -404,6 +406,7 @@ describe('AppPullUseCase', () => {
 
     const result = await sut.execute(farmer.id, since);
 
+    expect(result.mode).toBe('delta');
     expect(result.changedHarvests).toHaveLength(1);
     expect(result.changedHarvests[0].id).toBe(newHarvest.id);
     expect(result.changedTransactions).toHaveLength(1);
@@ -428,9 +431,10 @@ describe('AppPullUseCase', () => {
     });
     const culture = Culture.create({ name: 'Soja', farmId: farm.id });
 
-    const oldDate = new Date('2025-01-01T00:00:00.000Z');
-    const since = new Date('2025-06-01T00:00:00.000Z').getTime();
-    const updateDate = new Date('2025-07-01T00:00:00.000Z');
+    const now = Date.now();
+    const oldDate = new Date(now - 7 * 24 * 60 * 60 * 1000);
+    const since = now - 60 * 60 * 1000;
+    const updateDate = new Date(now);
 
     const harvest = Harvest.create({
       name: 'Safra Antiga',
@@ -451,6 +455,36 @@ describe('AppPullUseCase', () => {
     expect(result.changedHarvests[0].id).toBe(harvest.id);
     expect(result.changedHarvests[0].revenue).toBe(500);
     expect(result.totalRevenue).toBe(500);
+  });
+
+  it('should fall back to a full pull when since is older than the tombstone retention', async () => {
+    const farm = Farm.create({});
+    const farmer = Farmer.create({
+      name: 'João',
+      email: 'joao@example.com',
+      farmId: farm.id,
+      password: 'hashed',
+    });
+    const culture = Culture.create({ name: 'Soja', farmId: farm.id });
+    const harvest = Harvest.create({
+      name: 'Safra 2025',
+      culture,
+      startDate: new Date(),
+      farmId: farm.id,
+    });
+
+    await inMemoryFarmerRepository.save(farmer);
+    await inMemoryHarvestRepository.save(harvest);
+
+    const staleSince =
+      Date.now() - TRANSACTION_TOMBSTONE_RETENTION_MS - 24 * 60 * 60 * 1000;
+    const result = await sut.execute(farmer.id, staleSince);
+
+    expect(result.mode).toBe('full');
+    expect(result.recentHarvests).toHaveLength(1);
+    expect(result.changedHarvests).toHaveLength(0);
+    expect(result.changedTransactions).toHaveLength(0);
+    expect(result.deletedTransactionIds).toHaveLength(0);
   });
 
   it('should return deleted transaction ids in delta pulls', async () => {
@@ -478,7 +512,7 @@ describe('AppPullUseCase', () => {
     await inMemoryTransactionRepository.save(transaction);
     await inMemoryTransactionRepository.delete(transaction.id, farm.id);
 
-    const since = new Date('2025-06-01T00:00:00.000Z').getTime();
+    const since = Date.now() - 60 * 60 * 1000;
     const deltaResult = await sut.execute(farmer.id, since);
 
     expect(deltaResult.deletedTransactionIds).toEqual([transaction.id]);
@@ -501,8 +535,9 @@ describe('AppPullUseCase', () => {
       farmId: farm.id,
     });
 
-    const oldDate = new Date('2025-01-01T00:00:00.000Z');
-    const since = new Date('2025-06-01T00:00:00.000Z').getTime();
+    const now = Date.now();
+    const oldDate = new Date(now - 7 * 24 * 60 * 60 * 1000);
+    const since = now - 60 * 60 * 1000;
 
     const transaction = Transaction.create({
       harvestId: 'harvest-id-1',
