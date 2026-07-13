@@ -50,7 +50,7 @@ export default class DeleteTransaction {
 
       harvest.reverseTransaction(transaction.type, transaction.amount);
 
-      await this.transactionRepository.delete(transaction.id);
+      await this.transactionRepository.delete(transaction.id, farmer.farmId);
       await this.harvestRepository.save(harvest);
 
       return { transactionId: transaction.id };

@@ -84,6 +84,29 @@ describe('Pull Controller (e2e)', () => {
     expect(response.body.changedTransactions).toEqual([]);
   });
 
+  it('[GET] /app/pull?since — deve incluir ids de transações excluídas (200)', async () => {
+    const fullPull = await request(app.getHttpServer())
+      .get('/app/pull')
+      .set('Authorization', `Bearer ${token}`);
+    const transactionId = fullPull.body.transactions[0].id;
+
+    await request(app.getHttpServer())
+      .delete(`/transactions/${transactionId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    const response = await request(app.getHttpServer())
+      .get('/app/pull')
+      .query({ since: 1 })
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.deletedTransactionIds).toContain(transactionId);
+    expect(
+      response.body.changedTransactions.map((t: { id: string }) => t.id),
+    ).not.toContain(transactionId);
+  });
+
   it('[GET] /app/pull?since inválido — deve tratar como pull completo (200)', async () => {
     const response = await request(app.getHttpServer())
       .get('/app/pull')

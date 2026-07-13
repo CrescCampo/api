@@ -148,6 +148,10 @@ class InMemoryTransactionRepository implements TransactionRepository {
     return [];
   }
 
+  async findDeletedIdsByFarmIdSince(): Promise<string[]> {
+    return [];
+  }
+
   async findByFarmIdRecent(): Promise<Transaction[]> {
     return [];
   }
@@ -664,6 +668,84 @@ describe('AppPushUseCase', () => {
     expect(harvestRepository.items[0].revenue).toBe(500);
     expect(harvestRepository.items[0].expenses).toBe(200);
     expect(harvestRepository.items[0].updatedAt).not.toBeNull();
+  });
+
+  it('should stamp pushed entities with server time regardless of client createdAt', async () => {
+    const {
+      sut,
+      farmerRepository,
+      cultureRepository,
+      harvestRepository,
+      transactionCategoryRepository,
+      transactionRepository,
+    } = makeSut();
+
+    const farm = Farm.create({});
+    const farmer = Farmer.create({
+      name: 'João',
+      email: 'joao@example.com',
+      password: 'hashed',
+      farmId: farm.id,
+    });
+    const culture = Culture.create({ name: 'Soja', farmId: farm.id });
+
+    await farmerRepository.save(farmer);
+    await cultureRepository.save(culture);
+
+    const staleClientTime = new Date('2020-01-01T00:00:00.000Z').getTime();
+    const before = Date.now();
+
+    await sut.execute(farmer.id, {
+      outbox: [
+        {
+          id: 'event-1',
+          event: OutboxEventType.CREATE,
+          entity: OutboxEventEntity.HARVEST,
+          payload: JSON.stringify({
+            id: 'harvest-id-1',
+            name: 'Safra 2025',
+            cultureId: culture.id,
+            startDate: staleClientTime,
+            revenue: 0,
+            expenses: 0,
+          }),
+          createdAt: staleClientTime,
+        },
+        {
+          id: 'event-2',
+          event: OutboxEventType.CREATE,
+          entity: OutboxEventEntity.TRANSACTION_CATEGORY,
+          payload: JSON.stringify({ id: 'category-id-1', name: 'Vendas' }),
+          createdAt: staleClientTime,
+        },
+        {
+          id: 'event-3',
+          event: OutboxEventType.CREATE,
+          entity: OutboxEventEntity.TRANSACTION,
+          payload: JSON.stringify({
+            id: 'transaction-id-1',
+            harvestId: 'harvest-id-1',
+            type: TransactionType.REVENUE,
+            description: 'Venda de soja',
+            amount: 100,
+            categoryId: 'category-id-1',
+            date: staleClientTime,
+          }),
+          createdAt: staleClientTime,
+        },
+      ],
+    });
+
+    const harvest = harvestRepository.items[0];
+    const category = transactionCategoryRepository.items[0];
+    const transaction = transactionRepository.items[0];
+
+    expect(harvest.createdAt.getTime()).toBeGreaterThanOrEqual(before);
+    expect(category.createdAt.getTime()).toBeGreaterThanOrEqual(before);
+    expect(transaction.createdAt.getTime()).toBeGreaterThanOrEqual(before);
+    expect(harvest.updatedAt?.getTime()).toBeGreaterThanOrEqual(before);
+    expect(transaction.date.getTime()).toBe(staleClientTime);
+    expect(harvest.startDate.getTime()).toBe(staleClientTime);
   });
 
   it('should throw when pushing a harvest that belongs to another farm', async () => {

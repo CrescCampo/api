@@ -52,6 +52,7 @@ export interface Output {
   transactionsPagination: PaginationParams;
   changedHarvests: HarvestDTO[];
   changedTransactions: TransactionDTO[];
+  deletedTransactionIds: string[];
   totalRevenue: number;
   totalExpenses: number;
   totalProfit: number;
@@ -167,6 +168,7 @@ export default class AppPullUseCase {
       ),
       changedHarvests: [],
       changedTransactions: [],
+      deletedTransactionIds: [],
       totalRevenue,
       totalExpenses,
       totalProfit: totalRevenue - totalExpenses,
@@ -186,6 +188,7 @@ export default class AppPullUseCase {
       changedHarvests,
       transactionCategories,
       changedTransactions,
+      deletedTransactionIds,
       harvestTotals,
     ] = await Promise.all([
       this.cultureRepository.findByFarmId(farmId),
@@ -193,6 +196,7 @@ export default class AppPullUseCase {
       this.harvestRepository.findSinceByFarmId(farmId, sinceDate),
       this.transactionCategoryRepository.findByFarmId(farmId),
       this.transactionRepository.findByFarmIdSince(farmId, sinceDate),
+      this.transactionRepository.findDeletedIdsByFarmIdSince(farmId, sinceDate),
       this.harvestRepository.getTotalsByFarmId(farmId),
     ]);
 
@@ -210,6 +214,7 @@ export default class AppPullUseCase {
       transactionsPagination: toPagination(0, 0),
       changedHarvests: changedHarvests.map(toHarvestDTO),
       changedTransactions: changedTransactions.map(toTransactionDTO),
+      deletedTransactionIds,
       totalRevenue,
       totalExpenses,
       totalProfit: totalRevenue - totalExpenses,

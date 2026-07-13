@@ -328,9 +328,7 @@ export default class AppPushUseCase {
         endDate: toOptionalDate(payload.endDate),
         revenue: existingHarvest ? existingHarvest.revenue : payload.revenue,
         expenses: existingHarvest ? existingHarvest.expenses : payload.expenses,
-        createdAt: existingHarvest
-          ? existingHarvest.createdAt
-          : toDate(event.createdAt),
+        createdAt: existingHarvest ? existingHarvest.createdAt : new Date(),
         updatedAt: existingHarvest ? new Date() : null,
       },
       payload.id,
@@ -347,7 +345,7 @@ export default class AppPushUseCase {
       {
         name: event.payload.name,
         farmId,
-        createdAt: toDate(event.createdAt),
+        createdAt: new Date(),
       },
       event.payload.id,
     );
@@ -385,16 +383,12 @@ export default class AppPushUseCase {
         amount: payload.amount,
         category,
         date: toDate(payload.date),
-        createdAt: toDate(event.createdAt),
+        createdAt: new Date(),
       },
       payload.id,
     );
 
-    harvest.applyTransaction(
-      payload.type,
-      payload.amount,
-      toDate(event.createdAt),
-    );
+    harvest.applyTransaction(payload.type, payload.amount);
     await this.transactionRepository.save(transaction);
     await this.harvestRepository.save(harvest);
   }

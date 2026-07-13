@@ -11,6 +11,7 @@ interface TransactionProps {
   category: TransactionCategory;
   date: Date;
   createdAt: Date;
+  updatedAt: Date | null;
 }
 
 export default class Transaction extends Entity<TransactionProps> {
@@ -24,6 +25,7 @@ export default class Transaction extends Entity<TransactionProps> {
 
   set type(type: TransactionType) {
     this.props.type = type;
+    this.#touch();
   }
 
   get description() {
@@ -32,6 +34,7 @@ export default class Transaction extends Entity<TransactionProps> {
 
   set description(description: string) {
     this.props.description = description;
+    this.#touch();
   }
 
   get amount() {
@@ -40,6 +43,7 @@ export default class Transaction extends Entity<TransactionProps> {
 
   set amount(amount: number) {
     this.props.amount = amount;
+    this.#touch();
   }
 
   get category() {
@@ -48,6 +52,7 @@ export default class Transaction extends Entity<TransactionProps> {
 
   set category(category: TransactionCategory) {
     this.props.category = category;
+    this.#touch();
   }
 
   get date() {
@@ -56,17 +61,30 @@ export default class Transaction extends Entity<TransactionProps> {
 
   set date(date: Date) {
     this.props.date = date;
+    this.#touch();
   }
 
   get createdAt() {
     return this.props.createdAt;
   }
 
-  static create(props: Optional<TransactionProps, 'createdAt'>, id?: string) {
+  get updatedAt() {
+    return this.props.updatedAt;
+  }
+
+  #touch() {
+    this.props.updatedAt = new Date();
+  }
+
+  static create(
+    props: Optional<TransactionProps, 'createdAt' | 'updatedAt'>,
+    id?: string,
+  ) {
     return new Transaction(
       {
         ...props,
         createdAt: props.createdAt ?? new Date(),
+        updatedAt: props.updatedAt ?? null,
       },
       id,
     );

@@ -51,9 +51,16 @@ export default class PullResponseDTO {
   @ApiProperty({
     type: [PullTransactionDTO],
     description:
-      'Transactions created since the "since" query param; empty on full pulls',
+      'Transactions created or updated since the "since" query param; empty on full pulls',
   })
   changedTransactions: PullTransactionDTO[];
+
+  @ApiProperty({
+    type: [String],
+    description:
+      'IDs of transactions deleted since the "since" query param; empty on full pulls',
+  })
+  deletedTransactionIds: string[];
 
   @ApiProperty({
     type: Number,

@@ -6,12 +6,17 @@ export default abstract class TransactionRepository {
 
   abstract findById(id: string): Promise<Transaction | null>;
 
-  abstract delete(id: string): Promise<void>;
+  abstract delete(id: string, farmId: string): Promise<void>;
 
   abstract findByFarmIdSince(
     farmId: string,
     since: Date,
   ): Promise<Transaction[]>;
+
+  abstract findDeletedIdsByFarmIdSince(
+    farmId: string,
+    since: Date,
+  ): Promise<string[]>;
 
   abstract findByFarmIdRecent(
     farmId: string,

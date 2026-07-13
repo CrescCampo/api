@@ -4,9 +4,10 @@ import TransactionCategory from 'domain/enterprise/entities/TransactionCategory'
 import TransactionType from 'domain/enterprise/enums/TransactionType';
 import { Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
-import { and, desc, eq, gte, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, or, sql } from 'drizzle-orm';
 import TransactionModel from '../models/Transaction';
 import TransactionCategoryModel from '../models/TransactionCategory';
+import TransactionTombstoneModel from '../models/TransactionTombstone';
 import type { AppDrizzleAdapter, DrizzleConnection } from '../types';
 
 @Injectable()
@@ -29,6 +30,7 @@ export default class DrizzleTransactionRepository implements TransactionReposito
         amount: transaction.amount,
         date: transaction.date,
         createdAt: transaction.createdAt,
+        updatedAt: transaction.updatedAt,
       })
       .onConflictDoUpdate({
         target: TransactionModel.id,
@@ -39,6 +41,7 @@ export default class DrizzleTransactionRepository implements TransactionReposito
           description: transaction.description,
           amount: transaction.amount,
           date: transaction.date,
+          updatedAt: transaction.updatedAt,
         },
       });
   }
@@ -63,8 +66,32 @@ export default class DrizzleTransactionRepository implements TransactionReposito
     return this.mapRowToTransaction(rows[0]);
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: string, farmId: string): Promise<void> {
     await this.db.delete(TransactionModel).where(eq(TransactionModel.id, id));
+    await this.db
+      .insert(TransactionTombstoneModel)
+      .values({ id, farmId, deletedAt: new Date() })
+      .onConflictDoUpdate({
+        target: TransactionTombstoneModel.id,
+        set: { deletedAt: new Date() },
+      });
+  }
+
+  async findDeletedIdsByFarmIdSince(
+    farmId: string,
+    since: Date,
+  ): Promise<string[]> {
+    const rows = await this.db
+      .select({ id: TransactionTombstoneModel.id })
+      .from(TransactionTombstoneModel)
+      .where(
+        and(
+          eq(TransactionTombstoneModel.farmId, farmId),
+          gte(TransactionTombstoneModel.deletedAt, since),
+        ),
+      );
+
+    return rows.map(row => row.id);
   }
 
   async findByFarmIdSince(farmId: string, since: Date): Promise<Transaction[]> {
@@ -81,7 +108,10 @@ export default class DrizzleTransactionRepository implements TransactionReposito
       .where(
         and(
           eq(TransactionCategoryModel.farmId, farmId),
-          gte(TransactionModel.createdAt, since),
+          or(
+            gte(TransactionModel.createdAt, since),
+            gte(TransactionModel.updatedAt, since),
+          ),
         ),
       );
 
@@ -214,6 +244,7 @@ export default class DrizzleTransactionRepository implements TransactionReposito
         category,
         date: row.transaction.date,
         createdAt: row.transaction.createdAt,
+        updatedAt: row.transaction.updatedAt,
       },
       row.transaction.id,
     );

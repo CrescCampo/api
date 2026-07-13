@@ -453,6 +453,78 @@ describe('AppPullUseCase', () => {
     expect(result.totalRevenue).toBe(500);
   });
 
+  it('should return deleted transaction ids in delta pulls', async () => {
+    const farm = Farm.create({});
+    const farmer = Farmer.create({
+      name: 'João',
+      email: 'joao@example.com',
+      farmId: farm.id,
+      password: 'hashed',
+    });
+    const category = TransactionCategory.create({
+      name: 'Vendas',
+      farmId: farm.id,
+    });
+    const transaction = Transaction.create({
+      harvestId: 'harvest-id-1',
+      type: TransactionType.REVENUE,
+      description: 'Venda',
+      amount: 100,
+      category,
+      date: new Date(),
+    });
+
+    await inMemoryFarmerRepository.save(farmer);
+    await inMemoryTransactionRepository.save(transaction);
+    await inMemoryTransactionRepository.delete(transaction.id, farm.id);
+
+    const since = new Date('2025-06-01T00:00:00.000Z').getTime();
+    const deltaResult = await sut.execute(farmer.id, since);
+
+    expect(deltaResult.deletedTransactionIds).toEqual([transaction.id]);
+
+    const fullResult = await sut.execute(farmer.id);
+
+    expect(fullResult.deletedTransactionIds).toEqual([]);
+  });
+
+  it('should include transactions edited after since even when created before', async () => {
+    const farm = Farm.create({});
+    const farmer = Farmer.create({
+      name: 'João',
+      email: 'joao@example.com',
+      farmId: farm.id,
+      password: 'hashed',
+    });
+    const category = TransactionCategory.create({
+      name: 'Vendas',
+      farmId: farm.id,
+    });
+
+    const oldDate = new Date('2025-01-01T00:00:00.000Z');
+    const since = new Date('2025-06-01T00:00:00.000Z').getTime();
+
+    const transaction = Transaction.create({
+      harvestId: 'harvest-id-1',
+      type: TransactionType.REVENUE,
+      description: 'Venda',
+      amount: 100,
+      category,
+      date: oldDate,
+      createdAt: oldDate,
+    });
+    transaction.amount = 250;
+
+    await inMemoryFarmerRepository.save(farmer);
+    await inMemoryTransactionRepository.save(transaction);
+
+    const result = await sut.execute(farmer.id, since);
+
+    expect(result.changedTransactions).toHaveLength(1);
+    expect(result.changedTransactions[0].id).toBe(transaction.id);
+    expect(result.changedTransactions[0].amount).toBe(250);
+  });
+
   it('should only return data from the farmer farm', async () => {
     const farm1 = Farm.create({});
     const farm2 = Farm.create({});

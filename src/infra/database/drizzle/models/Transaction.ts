@@ -23,6 +23,7 @@ export const TransactionModel = pgTable(
     amount: doublePrecision().notNull(),
     date: timestamp({ mode: 'date' }).notNull(),
     createdAt: timestamp({ mode: 'date' }).notNull(),
+    updatedAt: timestamp({ mode: 'date' }),
   },
   table => [
     index('transaction_harvest_idx').on(table.harvestId),
