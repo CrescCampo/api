@@ -321,6 +321,138 @@ describe('AppPullUseCase', () => {
     expect(result.transactionsPagination.meta.totalItems).toBe(15);
   });
 
+  it('should return serverTime on every pull', async () => {
+    const farm = Farm.create({});
+    const farmer = Farmer.create({
+      name: 'João',
+      email: 'joao@example.com',
+      farmId: farm.id,
+      password: 'hashed',
+    });
+
+    await inMemoryFarmerRepository.save(farmer);
+
+    const before = Date.now();
+    const result = await sut.execute(farmer.id);
+    const after = Date.now();
+
+    expect(result.serverTime).toBeGreaterThanOrEqual(before);
+    expect(result.serverTime).toBeLessThanOrEqual(after);
+    expect(result.changedHarvests).toHaveLength(0);
+    expect(result.changedTransactions).toHaveLength(0);
+  });
+
+  it('should return only changes since the given timestamp', async () => {
+    const farm = Farm.create({});
+    const farmer = Farmer.create({
+      name: 'João',
+      email: 'joao@example.com',
+      farmId: farm.id,
+      password: 'hashed',
+    });
+    const culture = Culture.create({ name: 'Soja', farmId: farm.id });
+    const category = TransactionCategory.create({
+      name: 'Vendas',
+      farmId: farm.id,
+    });
+
+    const oldDate = new Date('2025-01-01T00:00:00.000Z');
+    const since = new Date('2025-06-01T00:00:00.000Z').getTime();
+    const newDate = new Date('2025-07-01T00:00:00.000Z');
+
+    const oldHarvest = Harvest.create({
+      name: 'Safra Antiga',
+      culture,
+      startDate: oldDate,
+      farmId: farm.id,
+      createdAt: oldDate,
+      endDate: oldDate,
+    });
+    const newHarvest = Harvest.create({
+      name: 'Safra Nova',
+      culture,
+      startDate: newDate,
+      farmId: farm.id,
+      createdAt: newDate,
+    });
+    const oldTransaction = Transaction.create({
+      harvestId: oldHarvest.id,
+      type: TransactionType.EXPENSE,
+      description: 'Despesa antiga',
+      amount: 100,
+      category,
+      date: oldDate,
+      createdAt: oldDate,
+    });
+    const newTransaction = Transaction.create({
+      harvestId: newHarvest.id,
+      type: TransactionType.REVENUE,
+      description: 'Venda nova',
+      amount: 300,
+      category,
+      date: newDate,
+      createdAt: newDate,
+    });
+
+    await inMemoryFarmerRepository.save(farmer);
+    await inMemoryCultureRepository.save(culture);
+    await inMemoryTransactionCategoryRepository.save(category);
+    await inMemoryHarvestRepository.save(oldHarvest);
+    await inMemoryHarvestRepository.save(newHarvest);
+    await inMemoryTransactionRepository.save(oldTransaction);
+    await inMemoryTransactionRepository.save(newTransaction);
+
+    const result = await sut.execute(farmer.id, since);
+
+    expect(result.changedHarvests).toHaveLength(1);
+    expect(result.changedHarvests[0].id).toBe(newHarvest.id);
+    expect(result.changedTransactions).toHaveLength(1);
+    expect(result.changedTransactions[0].id).toBe(newTransaction.id);
+
+    expect(result.recentHarvests).toHaveLength(0);
+    expect(result.transactions).toHaveLength(0);
+
+    expect(result.cultures).toHaveLength(1);
+    expect(result.transactionCategories).toHaveLength(1);
+    expect(result.activeHarvests).toHaveLength(1);
+    expect(result.activeHarvests[0].id).toBe(newHarvest.id);
+  });
+
+  it('should include harvests updated after since even when created before', async () => {
+    const farm = Farm.create({});
+    const farmer = Farmer.create({
+      name: 'João',
+      email: 'joao@example.com',
+      farmId: farm.id,
+      password: 'hashed',
+    });
+    const culture = Culture.create({ name: 'Soja', farmId: farm.id });
+
+    const oldDate = new Date('2025-01-01T00:00:00.000Z');
+    const since = new Date('2025-06-01T00:00:00.000Z').getTime();
+    const updateDate = new Date('2025-07-01T00:00:00.000Z');
+
+    const harvest = Harvest.create({
+      name: 'Safra Antiga',
+      culture,
+      startDate: oldDate,
+      farmId: farm.id,
+      createdAt: oldDate,
+    });
+    harvest.applyTransaction(TransactionType.REVENUE, 500, updateDate);
+
+    await inMemoryFarmerRepository.save(farmer);
+    await inMemoryCultureRepository.save(culture);
+    await inMemoryHarvestRepository.save(harvest);
+
+    const result = await sut.execute(farmer.id, since);
+
+    expect(result.changedHarvests).toHaveLength(1);
+    expect(result.changedHarvests[0].id).toBe(harvest.id);
+    expect(result.changedHarvests[0].revenue).toBe(500);
+    expect(result.totalRevenue).toBe(500);
+  });
+
   it('should only return data from the farmer farm', async () => {
     const farm1 = Farm.create({});
     const farm2 = Farm.create({});

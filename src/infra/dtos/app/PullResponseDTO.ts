@@ -42,6 +42,28 @@ export default class PullResponseDTO {
   transactionsPagination: PullPaginationDTO;
 
   @ApiProperty({
+    type: [PullHarvestDTO],
+    description:
+      'Harvests created or updated since the "since" query param; empty on full pulls',
+  })
+  changedHarvests: PullHarvestDTO[];
+
+  @ApiProperty({
+    type: [PullTransactionDTO],
+    description:
+      'Transactions created since the "since" query param; empty on full pulls',
+  })
+  changedTransactions: PullTransactionDTO[];
+
+  @ApiProperty({
+    type: Number,
+    example: 1767225600000,
+    description:
+      'Server clock (epoch ms); send back as "since" on the next pull',
+  })
+  serverTime: number;
+
+  @ApiProperty({
     type: Number,
     example: 50000,
   })

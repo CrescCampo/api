@@ -607,6 +607,204 @@ describe('AppPushUseCase', () => {
     expect(outboxEventRepository.items).toHaveLength(1);
   });
 
+  it('should preserve server totals when pushing an existing harvest', async () => {
+    const { sut, farmerRepository, cultureRepository, harvestRepository } =
+      makeSut();
+
+    const farm = Farm.create({});
+    const farmer = Farmer.create({
+      name: 'João',
+      email: 'joao@example.com',
+      password: 'hashed',
+      farmId: farm.id,
+    });
+    const culture = Culture.create({ name: 'Soja', farmId: farm.id });
+    const startDate = new Date('2025-01-01T00:00:00.000Z');
+    const existingHarvest = Harvest.create(
+      {
+        name: 'Safra 2025',
+        culture,
+        farmId: farm.id,
+        startDate,
+        revenue: 500,
+        expenses: 200,
+      },
+      'harvest-id-1',
+    );
+
+    await farmerRepository.save(farmer);
+    await cultureRepository.save(culture);
+    await harvestRepository.save(existingHarvest);
+
+    const endDate = new Date('2025-06-01T00:00:00.000Z').getTime();
+
+    await sut.execute(farmer.id, {
+      outbox: [
+        {
+          id: 'event-1',
+          event: OutboxEventType.CREATE,
+          entity: OutboxEventEntity.HARVEST,
+          payload: JSON.stringify({
+            id: 'harvest-id-1',
+            name: 'Safra 2025 Finalizada',
+            cultureId: culture.id,
+            startDate: startDate.getTime(),
+            endDate,
+            revenue: 0,
+            expenses: 0,
+          }),
+          createdAt: Date.now(),
+        },
+      ],
+    });
+
+    expect(harvestRepository.items).toHaveLength(1);
+    expect(harvestRepository.items[0].name).toBe('Safra 2025 Finalizada');
+    expect(harvestRepository.items[0].endDate?.getTime()).toBe(endDate);
+    expect(harvestRepository.items[0].revenue).toBe(500);
+    expect(harvestRepository.items[0].expenses).toBe(200);
+    expect(harvestRepository.items[0].updatedAt).not.toBeNull();
+  });
+
+  it('should throw when pushing a harvest that belongs to another farm', async () => {
+    const { sut, farmerRepository, cultureRepository, harvestRepository } =
+      makeSut();
+
+    const farm = Farm.create({});
+    const otherFarm = Farm.create({});
+    const farmer = Farmer.create({
+      name: 'João',
+      email: 'joao@example.com',
+      password: 'hashed',
+      farmId: farm.id,
+    });
+    const culture = Culture.create({ name: 'Soja', farmId: farm.id });
+    const otherCulture = Culture.create({
+      name: 'Milho',
+      farmId: otherFarm.id,
+    });
+    const otherFarmHarvest = Harvest.create(
+      {
+        name: 'Safra Alheia',
+        culture: otherCulture,
+        farmId: otherFarm.id,
+        startDate: new Date(),
+      },
+      'harvest-id-1',
+    );
+
+    await farmerRepository.save(farmer);
+    await cultureRepository.save(culture);
+    await cultureRepository.save(otherCulture);
+    await harvestRepository.save(otherFarmHarvest);
+
+    await expect(
+      sut.execute(farmer.id, {
+        outbox: [
+          {
+            id: 'event-1',
+            event: OutboxEventType.CREATE,
+            entity: OutboxEventEntity.HARVEST,
+            payload: JSON.stringify({
+              id: 'harvest-id-1',
+              name: 'Safra Roubada',
+              cultureId: culture.id,
+              startDate: Date.now(),
+              revenue: 0,
+              expenses: 0,
+            }),
+            createdAt: Date.now(),
+          },
+        ],
+      }),
+    ).rejects.toThrow('Harvest harvest-id-1 does not belong to farmer');
+  });
+
+  it('should not double count when a transaction and a harvest update arrive in the same batch', async () => {
+    const {
+      sut,
+      farmerRepository,
+      cultureRepository,
+      harvestRepository,
+      transactionCategoryRepository,
+    } = makeSut();
+
+    const farm = Farm.create({});
+    const farmer = Farmer.create({
+      name: 'João',
+      email: 'joao@example.com',
+      password: 'hashed',
+      farmId: farm.id,
+    });
+    const culture = Culture.create({ name: 'Soja', farmId: farm.id });
+    const category = TransactionCategory.create({
+      name: 'Vendas',
+      farmId: farm.id,
+    });
+
+    await farmerRepository.save(farmer);
+    await cultureRepository.save(culture);
+    await transactionCategoryRepository.save(category);
+
+    const startDate = new Date('2025-01-01T00:00:00.000Z').getTime();
+    const endDate = new Date('2025-06-01T00:00:00.000Z').getTime();
+    const baseTime = Date.now();
+
+    await sut.execute(farmer.id, {
+      outbox: [
+        {
+          id: 'event-1',
+          event: OutboxEventType.CREATE,
+          entity: OutboxEventEntity.HARVEST,
+          payload: JSON.stringify({
+            id: 'harvest-id-1',
+            name: 'Safra 2025',
+            cultureId: culture.id,
+            startDate,
+            revenue: 0,
+            expenses: 0,
+          }),
+          createdAt: baseTime,
+        },
+        {
+          id: 'event-2',
+          event: OutboxEventType.CREATE,
+          entity: OutboxEventEntity.TRANSACTION,
+          payload: JSON.stringify({
+            id: 'transaction-id-1',
+            harvestId: 'harvest-id-1',
+            type: TransactionType.REVENUE,
+            description: 'Venda de soja',
+            amount: 100,
+            categoryId: category.id,
+            date: baseTime,
+          }),
+          createdAt: baseTime + 1,
+        },
+        {
+          id: 'event-3',
+          event: OutboxEventType.CREATE,
+          entity: OutboxEventEntity.HARVEST,
+          payload: JSON.stringify({
+            id: 'harvest-id-1',
+            name: 'Safra 2025',
+            cultureId: culture.id,
+            startDate,
+            endDate,
+            revenue: 100,
+            expenses: 0,
+          }),
+          createdAt: baseTime + 2,
+        },
+      ],
+    });
+
+    expect(harvestRepository.items).toHaveLength(1);
+    expect(harvestRepository.items[0].revenue).toBe(100);
+    expect(harvestRepository.items[0].expenses).toBe(0);
+    expect(harvestRepository.items[0].endDate?.getTime()).toBe(endDate);
+  });
+
   it('should throw when culture for harvest is not found', async () => {
     const { sut, farmerRepository } = makeSut();
 
