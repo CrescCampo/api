@@ -250,134 +250,146 @@ export default class AppPushUseCase {
           return;
         }
 
-        if (event.entity === OutboxEventEntity.CULTURE) {
-          const culture = Culture.create(
-            {
-              name: event.payload.name,
-              farmId,
-            },
-            event.payload.id,
-          );
-
-          await this.cultureRepository.save(culture);
-          await this.outboxEventRepository.save({
-            id: event.id,
-            event: event.event,
-            entity: event.entity,
-            createdAt: event.createdAt,
-          });
-          return;
-        }
-
-        if (event.entity === OutboxEventEntity.HARVEST) {
-          const culture = await this.cultureRepository.findById(
-            event.payload.cultureId,
-          );
-
-          if (!culture) {
-            throw new Error(
-              `Culture ${event.payload.cultureId} not found for harvest ${event.id}`,
-            );
-          }
-
-          const harvest = Harvest.create(
-            {
-              name: event.payload.name,
-              culture,
-              farmId: culture.farmId,
-              startDate: toDate(event.payload.startDate),
-              endDate: toOptionalDate(event.payload.endDate),
-              revenue: event.payload.revenue,
-              expenses: event.payload.expenses,
-              createdAt: toDate(event.createdAt),
-            },
-            event.payload.id,
-          );
-
-          await this.harvestRepository.save(harvest);
-          await this.outboxEventRepository.save({
-            id: event.id,
-            event: event.event,
-            entity: event.entity,
-            createdAt: event.createdAt,
-          });
-          return;
-        }
-
-        if (event.entity === OutboxEventEntity.TRANSACTION_CATEGORY) {
-          const category = TransactionCategory.create(
-            {
-              name: event.payload.name,
-              farmId,
-              createdAt: toDate(event.createdAt),
-            },
-            event.payload.id,
-          );
-
-          await this.transactionCategoryRepository.save(category);
-          await this.outboxEventRepository.save({
-            id: event.id,
-            event: event.event,
-            entity: event.entity,
-            createdAt: event.createdAt,
-          });
-          return;
-        }
-
-        if (event.entity === OutboxEventEntity.TRANSACTION) {
-          const harvest = await this.harvestRepository.findById(
-            event.payload.harvestId,
-          );
-
-          if (!harvest) {
-            throw new Error(
-              `Harvest ${event.payload.harvestId} not found for transaction ${event.id}`,
-            );
-          }
-
-          const category = await this.transactionCategoryRepository.findById(
-            event.payload.categoryId,
-          );
-
-          if (!category) {
-            throw new Error(
-              `Transaction category ${event.payload.categoryId} not found for transaction ${event.id}`,
-            );
-          }
-
-          const transaction = Transaction.create(
-            {
-              harvestId: event.payload.harvestId,
-              type: event.payload.type,
-              description: event.payload.description,
-              amount: event.payload.amount,
-              category,
-              date: toDate(event.payload.date),
-              createdAt: toDate(event.createdAt),
-            },
-            event.payload.id,
-          );
-
-          harvest.applyTransaction(
-            event.payload.type,
-            event.payload.amount,
-            toDate(event.createdAt),
-          );
-          await this.transactionRepository.save(transaction);
-          await this.harvestRepository.save(harvest);
-          await this.outboxEventRepository.save({
-            id: event.id,
-            event: event.event,
-            entity: event.entity,
-            createdAt: event.createdAt,
-          });
-          return;
-        }
-
-        throw new Error(`Unsupported outbox entity ${event}`);
+        await this.processEvent(event, farmId, userId);
+        await this.outboxEventRepository.save({
+          id: event.id,
+          event: event.event,
+          entity: event.entity,
+          createdAt: event.createdAt,
+        });
       });
     }, Promise.resolve());
 
     return parsedEvents;
+  }
+
+  private async processEvent(
+    event: ParsedOutboxEvent,
+    farmId: string,
+    userId: string,
+  ): Promise<void> {
+    switch (event.entity) {
+      case OutboxEventEntity.CULTURE:
+        return this.processCulture(event.payload, farmId);
+      case OutboxEventEntity.HARVEST:
+        return this.processHarvest(event, farmId, userId);
+      case OutboxEventEntity.TRANSACTION_CATEGORY:
+        return this.processTransactionCategory(event, farmId);
+      case OutboxEventEntity.TRANSACTION:
+        return this.processTransaction(event);
+      default:
+        throw new Error(`Unsupported outbox entity ${JSON.stringify(event)}`);
+    }
+  }
+
+  private async processCulture(
+    payload: CultureDTO,
+    farmId: string,
+  ): Promise<void> {
+    const culture = Culture.create(
+      {
+        name: payload.name,
+        farmId,
+      },
+      payload.id,
+    );
+
+    await this.cultureRepository.save(culture);
+  }
+
+  private async processHarvest(
+    event: ParsedOutboxEventBase & { payload: HarvestDTO },
+    farmId: string,
+    userId: string,
+  ): Promise<void> {
+    const { payload } = event;
+    const culture = await this.cultureRepository.findById(payload.cultureId);
+
+    if (!culture) {
+      throw new Error(
+        `Culture ${payload.cultureId} not found for harvest ${event.id}`,
+      );
+    }
+
+    const existingHarvest = await this.harvestRepository.findById(payload.id);
+
+    if (existingHarvest && existingHarvest.farmId !== farmId) {
+      throw new Error(
+        `Harvest ${payload.id} does not belong to farmer ${userId}`,
+      );
+    }
+
+    const harvest = Harvest.create(
+      {
+        name: payload.name,
+        culture,
+        farmId: culture.farmId,
+        startDate: toDate(payload.startDate),
+        endDate: toOptionalDate(payload.endDate),
+        revenue: existingHarvest ? existingHarvest.revenue : payload.revenue,
+        expenses: existingHarvest ? existingHarvest.expenses : payload.expenses,
+        createdAt: existingHarvest ? existingHarvest.createdAt : new Date(),
+        updatedAt: existingHarvest ? new Date() : null,
+      },
+      payload.id,
+    );
+
+    await this.harvestRepository.save(harvest);
+  }
+
+  private async processTransactionCategory(
+    event: ParsedOutboxEventBase & { payload: TransactionCategoryDTO },
+    farmId: string,
+  ): Promise<void> {
+    const category = TransactionCategory.create(
+      {
+        name: event.payload.name,
+        farmId,
+        createdAt: new Date(),
+      },
+      event.payload.id,
+    );
+
+    await this.transactionCategoryRepository.save(category);
+  }
+
+  private async processTransaction(
+    event: ParsedOutboxEventBase & { payload: TransactionDTO },
+  ): Promise<void> {
+    const { payload } = event;
+    const harvest = await this.harvestRepository.findById(payload.harvestId);
+
+    if (!harvest) {
+      throw new Error(
+        `Harvest ${payload.harvestId} not found for transaction ${event.id}`,
+      );
+    }
+
+    const category = await this.transactionCategoryRepository.findById(
+      payload.categoryId,
+    );
+
+    if (!category) {
+      throw new Error(
+        `Transaction category ${payload.categoryId} not found for transaction ${event.id}`,
+      );
+    }
+
+    const transaction = Transaction.create(
+      {
+        harvestId: payload.harvestId,
+        type: payload.type,
+        description: payload.description,
+        amount: payload.amount,
+        category,
+        date: toDate(payload.date),
+        createdAt: new Date(),
+      },
+      payload.id,
+    );
+
+    harvest.applyTransaction(payload.type, payload.amount);
+    await this.transactionRepository.save(transaction);
+    await this.harvestRepository.save(harvest);
   }
 }

@@ -2,8 +2,16 @@ import TransactionRepository from 'domain/application/repositories/TransactionRe
 import Transaction from 'domain/enterprise/entities/Transaction';
 import TransactionType from 'domain/enterprise/enums/TransactionType';
 
+interface TransactionTombstone {
+  id: string;
+  farmId: string;
+  deletedAt: Date;
+}
+
 export default class InMemoryTransactionRepository implements TransactionRepository {
   items: Transaction[] = [];
+
+  tombstones: TransactionTombstone[] = [];
 
   save(transaction: Transaction): Promise<void> {
     const existingIndex = this.items.findIndex(
@@ -24,16 +32,32 @@ export default class InMemoryTransactionRepository implements TransactionReposit
     return Promise.resolve(transaction ?? null);
   }
 
-  delete(id: string): Promise<void> {
+  delete(id: string, farmId: string): Promise<void> {
     this.items = this.items.filter(item => item.id !== id);
+    this.tombstones.push({ id, farmId, deletedAt: new Date() });
     return Promise.resolve();
   }
 
   findByFarmIdSince(farmId: string, since: Date): Promise<Transaction[]> {
     const transactions = this.items.filter(
-      item => item.category.farmId === farmId && item.createdAt >= since,
+      item =>
+        item.category.farmId === farmId &&
+        (item.createdAt >= since ||
+          (item.updatedAt !== null && item.updatedAt >= since)),
     );
     return Promise.resolve(transactions);
+  }
+
+  findDeletedIdsByFarmIdSince(farmId: string, since: Date): Promise<string[]> {
+    const ids = this.tombstones
+      .filter(item => item.farmId === farmId && item.deletedAt >= since)
+      .map(item => item.id);
+    return Promise.resolve(ids);
+  }
+
+  purgeDeletedBefore(cutoff: Date): Promise<void> {
+    this.tombstones = this.tombstones.filter(item => item.deletedAt >= cutoff);
+    return Promise.resolve();
   }
 
   findByFarmIdRecent(farmId: string, limit: number): Promise<Transaction[]> {

@@ -146,6 +146,9 @@ describe('DeleteTransaction', () => {
     expect(result.transactionId).toBe(transaction.id);
     expect(inMemoryTransactionRepository.items).toHaveLength(0);
     expect(inMemoryHarvestRepository.items[0].expenses).toBe(0);
+    expect(inMemoryTransactionRepository.tombstones).toHaveLength(1);
+    expect(inMemoryTransactionRepository.tombstones[0].id).toBe(transaction.id);
+    expect(inMemoryTransactionRepository.tombstones[0].farmId).toBe(farm.id);
     expect(unitOfWork.commitCount).toBe(1);
     expect(unitOfWork.rollbackCount).toBe(0);
   });

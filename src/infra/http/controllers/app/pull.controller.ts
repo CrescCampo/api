@@ -1,8 +1,9 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOkResponse,
   ApiOperation,
+  ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -28,12 +29,27 @@ export default class PullController {
   @ApiOperation({
     summary: 'Pull current app state for the authenticated farmer',
   })
+  @ApiQuery({
+    name: 'since',
+    required: false,
+    type: Number,
+    description:
+      'Server timestamp (epoch ms) of the last pull; when present, returns only changes since then',
+  })
   @ApiOkResponse({
     description: 'App state pulled successfully',
     type: PullResponseDTO,
   })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  async handle(@Req() req: AuthenticatedRequest) {
-    return this.appPullUseCase.execute(req.user.id);
+  async handle(
+    @Req() req: AuthenticatedRequest,
+    @Query('since') since?: string,
+  ) {
+    const sinceMs = since === undefined ? NaN : Number(since);
+
+    return this.appPullUseCase.execute(
+      req.user.id,
+      Number.isFinite(sinceMs) && sinceMs > 0 ? sinceMs : undefined,
+    );
   }
 }

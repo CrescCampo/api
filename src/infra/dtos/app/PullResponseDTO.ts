@@ -7,6 +7,13 @@ import PullTransactionDTO from 'infra/dtos/app/PullTransactionDTO';
 
 export default class PullResponseDTO {
   @ApiProperty({
+    enum: ['full', 'delta'],
+    description:
+      'full: snapshot window (replace local state); delta: changes since the "since" query param (merge into local state). A stale "since" (older than the tombstone retention) falls back to full.',
+  })
+  mode: 'full' | 'delta';
+
+  @ApiProperty({
     type: [PullCultureDTO],
   })
   cultures: PullCultureDTO[];
@@ -40,6 +47,35 @@ export default class PullResponseDTO {
     type: () => PullPaginationDTO,
   })
   transactionsPagination: PullPaginationDTO;
+
+  @ApiProperty({
+    type: [PullHarvestDTO],
+    description:
+      'Harvests created or updated since the "since" query param; empty on full pulls',
+  })
+  changedHarvests: PullHarvestDTO[];
+
+  @ApiProperty({
+    type: [PullTransactionDTO],
+    description:
+      'Transactions created or updated since the "since" query param; empty on full pulls',
+  })
+  changedTransactions: PullTransactionDTO[];
+
+  @ApiProperty({
+    type: [String],
+    description:
+      'IDs of transactions deleted since the "since" query param; empty on full pulls',
+  })
+  deletedTransactionIds: string[];
+
+  @ApiProperty({
+    type: Number,
+    example: 1767225600000,
+    description:
+      'Server clock (epoch ms); send back as "since" on the next pull',
+  })
+  serverTime: number;
 
   @ApiProperty({
     type: Number,

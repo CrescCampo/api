@@ -71,6 +71,13 @@
       "when": 1782512942938,
       "tag": "0009_workable_wallow",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1783978363447,
+      "tag": "0010_striped_red_wolf",
+      "breakpoints": true
     }
   ]
 }

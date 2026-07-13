@@ -27,7 +27,10 @@ export default class InMemoryHarvestRepository implements HarvestRepository {
 
   findSinceByFarmId(farmId: string, since: Date): Promise<Harvest[]> {
     const harvests = this.items.filter(
-      item => item.farmId === farmId && item.createdAt >= since,
+      item =>
+        item.farmId === farmId &&
+        (item.createdAt >= since ||
+          (item.updatedAt !== null && item.updatedAt >= since)),
     );
     return Promise.resolve(harvests);
   }
