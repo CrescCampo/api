@@ -1,11 +1,13 @@
 import Encrypter from 'domain/application/cryptography/encrypter';
 import HashComparer from 'domain/application/cryptography/hash-comparer';
+import EmailNotVerifiedError from 'domain/application/errors/auth/EmailNotVerifiedError';
 import WrongCredentialsError from 'domain/application/errors/auth/WrongCredentialsError';
 import Farm from 'domain/enterprise/entities/Farm';
 import Farmer from 'domain/enterprise/entities/Farmer';
 import LoginFarmerByEmail from 'domain/application/use-cases/auth/login-farmer-by-email';
 import HashGenerator from 'domain/application/cryptography/hash-generator';
 import TokenGenerator from 'domain/application/cryptography/token-generator';
+import SessionIssuer from 'domain/application/services/session-issuer';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryRefreshTokenRepository from '../../repositories/InMemoryRefreshTokenRepository';
 import InMemoryUnitOfWork from '../../unit-of-work/InMemoryUnitOfWork';
@@ -15,6 +17,7 @@ let hashComparer: HashComparer;
 let encrypter: Encrypter;
 let hashGenerator: HashGenerator;
 let tokenGenerator: TokenGenerator;
+let sessionIssuer: SessionIssuer;
 let refreshTokenRepository: InMemoryRefreshTokenRepository;
 let unitOfWork: InMemoryUnitOfWork;
 let sut: LoginFarmerByEmail;
@@ -57,6 +60,7 @@ describe('LoginFarmerByEmail', () => {
     encrypter = new FakeEncrypter();
     hashGenerator = new FakeHashGenerator();
     tokenGenerator = new FakeTokenGenerator();
+    sessionIssuer = new SessionIssuer(tokenGenerator, encrypter);
     refreshTokenRepository = new InMemoryRefreshTokenRepository();
     unitOfWork = new InMemoryUnitOfWork();
 
@@ -64,9 +68,8 @@ describe('LoginFarmerByEmail', () => {
       inMemoryFarmerRepository,
       hashComparer,
       hashGenerator,
-      encrypter,
+      sessionIssuer,
       unitOfWork,
-      tokenGenerator,
       refreshTokenRepository,
     );
   });
@@ -110,6 +113,23 @@ describe('LoginFarmerByEmail', () => {
     ).rejects.toBeInstanceOf(WrongCredentialsError);
   });
 
+  it('should throw when the email is not verified', async () => {
+    const farm = Farm.create({});
+    const farmer = Farmer.create({
+      name: 'Pedro Alves',
+      email: 'pedro@example.com',
+      farmId: farm.id,
+      password: 'hashed-secret',
+      emailVerified: false,
+    });
+
+    await inMemoryFarmerRepository.save(farmer);
+
+    await expect(
+      sut.execute({ email: 'pedro@example.com', password: 'secret' }),
+    ).rejects.toBeInstanceOf(EmailNotVerifiedError);
+  });
+
   it('should authenticate a farmer and return a token', async () => {
     const farm = Farm.create({});
     const farmer = Farmer.create({
@@ -117,6 +137,7 @@ describe('LoginFarmerByEmail', () => {
       email: 'maria@example.com',
       farmId: farm.id,
       password: 'hashed-secret',
+      emailVerified: true,
     });
 
     await inMemoryFarmerRepository.save(farmer);

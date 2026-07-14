@@ -26,6 +26,7 @@ export const FarmerModel = pgTable(
     updatedAt: date({ mode: 'date' }),
     lastLogin: date({ mode: 'date' }),
     tokenVersion: integer().default(0).notNull(),
+    emailVerified: boolean().default(false).notNull(),
   },
   table => [index('farmer_email_idx').on(table.email)],
 );

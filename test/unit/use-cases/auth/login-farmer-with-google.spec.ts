@@ -9,6 +9,7 @@ import AccountCreatedNotifier, {
   AccountCreatedNotification,
 } from 'domain/application/notifications/account-created-notifier';
 import FarmerProvisioner from 'domain/application/services/farmer-provisioner';
+import SessionIssuer from 'domain/application/services/session-issuer';
 import LoginFarmerWithGoogle from 'domain/application/use-cases/auth/login-farmer-with-google';
 import Farm from 'domain/enterprise/entities/Farm';
 import Farmer from 'domain/enterprise/entities/Farmer';
@@ -91,13 +92,14 @@ describe('LoginFarmerWithGoogle', () => {
       transactionCategoryRepository,
     );
 
+    const sessionIssuer = new SessionIssuer(tokenGenerator, encrypter);
+
     sut = new LoginFarmerWithGoogle(
       googleTokenVerifier,
       farmerRepository,
       farmerProvisioner,
       refreshTokenRepository,
-      tokenGenerator,
-      encrypter,
+      sessionIssuer,
       unitOfWork,
       accountCreatedNotifier,
     );
@@ -112,6 +114,7 @@ describe('LoginFarmerWithGoogle', () => {
     expect(result.email).toBe('maria@example.com');
     expect(result.hasPassword).toBe(false);
     expect(farmerRepository.items[0].googleId).toBe('google-sub-1');
+    expect(farmerRepository.items[0].emailVerified).toBe(true);
     expect(refreshTokenRepository.items).toHaveLength(1);
     expect(accountCreatedNotifier.notifications).toHaveLength(1);
   });
@@ -133,6 +136,22 @@ describe('LoginFarmerWithGoogle', () => {
     expect(result.hasPassword).toBe(true);
     expect(farmerRepository.items[0].googleId).toBe('google-sub-1');
     expect(accountCreatedNotifier.notifications).toHaveLength(0);
+  });
+
+  it('should verify an unverified local account after Google login', async () => {
+    const farm = Farm.create({});
+    const farmer = Farmer.create({
+      name: 'Maria Clara',
+      email: 'maria@example.com',
+      farmId: farm.id,
+      password: 'hashed-secret',
+      emailVerified: false,
+    });
+    await farmerRepository.save(farmer);
+
+    await sut.execute({ idToken: 'any' });
+
+    expect(farmerRepository.items[0].emailVerified).toBe(true);
   });
 
   it('should authenticate an account already linked by googleId', async () => {

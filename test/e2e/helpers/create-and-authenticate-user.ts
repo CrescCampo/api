@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { randomUUID } from 'crypto';
 import { INestApplication } from '@nestjs/common';
+import { markEmailVerified } from '../factories/make-user';
 
 interface Overrides {
   name?: string;
@@ -27,6 +28,8 @@ export default async function createAndAuthenticateUser(
       )}`,
     );
   }
+
+  await markEmailVerified(app, email);
 
   const loginResponse = await request(app.getHttpServer())
     .post('/auth/login')

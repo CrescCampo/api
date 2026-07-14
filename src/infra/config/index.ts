@@ -58,6 +58,9 @@ const config: Config = {
       `https://cresccampo.com.br/redefinir-senha?token=${token}`,
     resendTemplateAlias: 'reset-password',
   },
+  verifyEmail: {
+    resendTemplateAlias: 'verify-email',
+  },
 };
 
 export default config;

@@ -30,6 +30,7 @@ export default class DrizzleFarmerRepository implements FarmerRepository {
         lastLogin: row.lastLogin ?? null,
         farmId: row.farmId,
         tokenVersion: row.tokenVersion,
+        emailVerified: row.emailVerified,
       },
       row.id,
     );
@@ -51,6 +52,7 @@ export default class DrizzleFarmerRepository implements FarmerRepository {
         updatedAt: farmer.updatedAt,
         lastLogin: farmer.lastLogin,
         tokenVersion: farmer.tokenVersion,
+        emailVerified: farmer.emailVerified,
       })
       .onConflictDoUpdate({
         target: FarmerModel.id,
@@ -65,6 +67,7 @@ export default class DrizzleFarmerRepository implements FarmerRepository {
           updatedAt: farmer.updatedAt,
           lastLogin: farmer.lastLogin,
           tokenVersion: farmer.tokenVersion,
+          emailVerified: farmer.emailVerified,
         },
       });
   }

@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import Encrypter from 'domain/application/cryptography/encrypter';
 import HashComparer from 'domain/application/cryptography/hash-comparer';
 import HashGenerator from 'domain/application/cryptography/hash-generator';
-import TokenGenerator from 'domain/application/cryptography/token-generator';
+import EmailNotVerifiedError from 'domain/application/errors/auth/EmailNotVerifiedError';
 import WrongCredentialsError from 'domain/application/errors/auth/WrongCredentialsError';
 import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import RefreshTokenRepository from 'domain/application/repositories/RefreshTokenRepository';
+import SessionIssuer from 'domain/application/services/session-issuer';
 import UnitOfWork from 'domain/application/unit-of-work/UnitOfWork';
-import RefreshToken from 'domain/enterprise/entities/RefreshToken';
 
 export interface Input {
   email: string;
@@ -31,9 +30,8 @@ export default class LoginFarmerByEmail {
     private readonly farmerRepository: FarmerRepository,
     private readonly hashComparer: HashComparer,
     private readonly hashGenerator: HashGenerator,
-    private readonly encrypter: Encrypter,
+    private readonly sessionIssuer: SessionIssuer,
     private readonly unitOfWork: UnitOfWork,
-    private readonly tokenGenerator: TokenGenerator,
     private readonly refreshTokenRepository: RefreshTokenRepository,
   ) {}
 
@@ -57,38 +55,28 @@ export default class LoginFarmerByEmail {
       throw new WrongCredentialsError();
     }
 
+    if (!farmer.emailVerified) {
+      throw new EmailNotVerifiedError();
+    }
+
     farmer.logged();
 
     if (farmer.password.startsWith('$2a$08$')) {
       farmer.password = await this.hashGenerator.hash(input.password);
     }
 
-    const { plain, hash } = await this.tokenGenerator.generate();
-
-    const refreshToken = RefreshToken.create({
-      farmerId: farmer.id,
-      hash,
-    });
+    const { token, refreshTokenPlain, refreshToken } =
+      await this.sessionIssuer.issue(farmer);
 
     await this.unitOfWork.run(async () => {
       await this.farmerRepository.save(farmer);
       await this.refreshTokenRepository.save(refreshToken);
     });
 
-    const token = await this.encrypter.encrypt({
-      farmId: farmer.farmId,
-      id: farmer.id,
-      email: farmer.email,
-      name: farmer.name,
-      phone: farmer.phone,
-      tv: farmer.tokenVersion,
-      sessionId: refreshToken.familyId,
-    });
-
     return {
       userId: farmer.id,
       token,
-      refreshToken: plain,
+      refreshToken: refreshTokenPlain,
       name: farmer.name,
       email: farmer.email,
       phone: farmer.phone,
