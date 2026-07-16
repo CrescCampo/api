@@ -24,6 +24,7 @@ const SENSITIVE_BODY_FIELDS = [
   'refreshToken',
   'idToken',
   'apiKey',
+  'code',
 ];
 
 function pickSafeHeaders(h: Request['headers']) {

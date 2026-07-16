@@ -6,7 +6,9 @@ const EmailVerificationCodeModel = pgTable(
   'email_verification_codes',
   {
     id: text().primaryKey(),
-    farmerId: text().notNull(),
+    farmerId: text()
+      .notNull()
+      .references(() => FarmerModel.id),
     codeHash: text().notNull(),
     ttlMinutes: integer().notNull(),
     attempts: integer().default(0).notNull(),

@@ -18,6 +18,12 @@ export default class InMemoryEmailVerificationCodeRepository implements EmailVer
     return Promise.resolve();
   }
 
+  findActiveByFarmerIdForUpdate(
+    farmerId: string,
+  ): Promise<EmailVerificationCode | null> {
+    return this.findActiveByFarmerId(farmerId);
+  }
+
   findActiveByFarmerId(
     farmerId: string,
   ): Promise<EmailVerificationCode | null> {

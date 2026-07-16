@@ -29,23 +29,24 @@ export default class ResendVerificationCodeUseCase {
       return;
     }
 
-    const activeCode =
-      await this.emailVerificationCodeRepository.findActiveByFarmerId(
-        farmer.id,
-      );
-
-    if (
-      activeCode &&
-      Date.now() - activeCode.createdAt.getTime() < RESEND_COOLDOWN_MS
-    ) {
-      return;
-    }
-
     const { plain, hash } = await this.otpGenerator.generate();
 
-    await this.unitOfWork.run(async () => {
+    const codeIssued = await this.unitOfWork.run(async () => {
+      const activeCode =
+        await this.emailVerificationCodeRepository.findActiveByFarmerIdForUpdate(
+          farmer.id,
+        );
+
+      if (
+        activeCode &&
+        Date.now() - activeCode.createdAt.getTime() < RESEND_COOLDOWN_MS
+      ) {
+        return false;
+      }
+
       if (activeCode) {
         activeCode.invalidate();
+
         await this.emailVerificationCodeRepository.save(activeCode);
       }
 
@@ -56,11 +57,19 @@ export default class ResendVerificationCodeUseCase {
 
       await this.emailVerificationCodeRepository.save(emailVerificationCode);
 
-      await this.verificationEmailSender.sendVerificationEmail({
+      return true;
+    });
+
+    if (!codeIssued) {
+      return;
+    }
+
+    await this.verificationEmailSender
+      .sendVerificationEmail({
         to: farmer.email,
         name: farmer.firstName,
         code: plain,
-      });
-    });
+      })
+      .catch(() => undefined);
   }
 }

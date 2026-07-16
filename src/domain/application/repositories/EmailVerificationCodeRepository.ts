@@ -6,4 +6,8 @@ export default abstract class EmailVerificationCodeRepository {
   abstract findActiveByFarmerId(
     farmerId: string,
   ): Promise<EmailVerificationCode | null>;
+
+  abstract findActiveByFarmerIdForUpdate(
+    farmerId: string,
+  ): Promise<EmailVerificationCode | null>;
 }

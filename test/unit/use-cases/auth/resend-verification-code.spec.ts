@@ -118,7 +118,26 @@ describe('ResendVerificationCodeUseCase', () => {
     expect(recent.isInvalidated).toBe(false);
     expect(emailVerificationCodeRepository.items).toHaveLength(1);
     expect(emailSender.calls).toHaveLength(0);
-    expect(unitOfWork.commitCount).toBe(0);
+  });
+
+  it('should not surface delivery failures to the caller', async () => {
+    await seedFarmer();
+    emailSender.sendVerificationEmail = () =>
+      Promise.reject(new Error('provider is down'));
+
+    await expect(
+      sut.execute({ email: 'joao@example.com' }),
+    ).resolves.toBeUndefined();
+  });
+
+  it('should persist the new code even when delivery fails', async () => {
+    await seedFarmer();
+    emailSender.sendVerificationEmail = () =>
+      Promise.reject(new Error('provider is down'));
+
+    await sut.execute({ email: 'joao@example.com' });
+
+    expect(emailVerificationCodeRepository.items).toHaveLength(1);
   });
 
   it('should silently no-op when the farmer does not exist', async () => {

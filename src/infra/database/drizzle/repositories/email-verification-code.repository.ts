@@ -34,7 +34,20 @@ export default class DrizzleEmailVerificationCodeRepository implements EmailVeri
   async findActiveByFarmerId(
     farmerId: string,
   ): Promise<EmailVerificationCode | null> {
-    const [row] = await this.db
+    return this.findActive(farmerId, false);
+  }
+
+  async findActiveByFarmerIdForUpdate(
+    farmerId: string,
+  ): Promise<EmailVerificationCode | null> {
+    return this.findActive(farmerId, true);
+  }
+
+  private async findActive(
+    farmerId: string,
+    lock: boolean,
+  ): Promise<EmailVerificationCode | null> {
+    const query = this.db
       .select()
       .from(EmailVerificationCodeModel)
       .where(
@@ -46,6 +59,8 @@ export default class DrizzleEmailVerificationCodeRepository implements EmailVeri
       )
       .orderBy(desc(EmailVerificationCodeModel.createdAt))
       .limit(1);
+
+    const [row] = await (lock ? query.for('update') : query);
 
     if (!row) {
       return null;

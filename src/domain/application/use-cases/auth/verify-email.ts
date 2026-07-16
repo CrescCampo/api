@@ -46,45 +46,48 @@ export default class VerifyEmailUseCase {
       throw new EmailAlreadyVerifiedError();
     }
 
-    const verificationCode =
-      await this.emailVerificationCodeRepository.findActiveByFarmerId(
-        farmer.id,
-      );
+    const session = await this.unitOfWork.run(async () => {
+      const verificationCode =
+        await this.emailVerificationCodeRepository.findActiveByFarmerIdForUpdate(
+          farmer.id,
+        );
 
-    if (!verificationCode || !verificationCode.isUsable) {
-      throw new InvalidVerificationCodeError();
-    }
+      if (!verificationCode || !verificationCode.isUsable) {
+        return null;
+      }
 
-    const isCodeValid =
-      this.otpGenerator.hash(input.code) === verificationCode.codeHash;
+      const isCodeValid =
+        this.otpGenerator.hash(input.code) === verificationCode.codeHash;
 
-    if (!isCodeValid) {
-      verificationCode.registerFailedAttempt();
+      if (!isCodeValid) {
+        verificationCode.registerFailedAttempt();
 
-      await this.unitOfWork.run(async () => {
         await this.emailVerificationCodeRepository.save(verificationCode);
-      });
 
-      throw new InvalidVerificationCodeError();
-    }
+        return null;
+      }
 
-    farmer.verifyEmail();
-    farmer.logged();
-    verificationCode.markAsUsed();
+      farmer.verifyEmail();
+      farmer.logged();
+      verificationCode.markAsUsed();
 
-    const { token, refreshTokenPlain, refreshToken } =
-      await this.sessionIssuer.issue(farmer);
+      const issuedSession = await this.sessionIssuer.issue(farmer);
 
-    await this.unitOfWork.run(async () => {
       await this.farmerRepository.save(farmer);
       await this.emailVerificationCodeRepository.save(verificationCode);
-      await this.refreshTokenRepository.save(refreshToken);
+      await this.refreshTokenRepository.save(issuedSession.refreshToken);
+
+      return issuedSession;
     });
+
+    if (!session) {
+      throw new InvalidVerificationCodeError();
+    }
 
     return {
       userId: farmer.id,
-      token,
-      refreshToken: refreshTokenPlain,
+      token: session.token,
+      refreshToken: session.refreshTokenPlain,
       name: farmer.name,
       email: farmer.email,
       phone: farmer.phone,
