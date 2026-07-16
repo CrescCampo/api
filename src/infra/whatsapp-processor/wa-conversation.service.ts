@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
+import type {
+  ChatCompletionMessageParam,
+  ChatCompletionMessageToolCall,
+} from 'openai/resources/chat/completions';
 import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import DrizzleService from 'infra/database/drizzle/drizzle.service';
 import {
@@ -17,11 +20,35 @@ const MAX_CONTEXT_MESSAGES = 20;
 // O modelo já foi flagrado afirmando "Pronto! Registrei ✅" sem nunca ter
 // chamado create_transaction. Qualquer resposta que soe como confirmação de
 // escrita precisa ser conferida contra as tools que de fato rodaram no turno.
+// Só verbos em primeira pessoa: "registrei" é uma alegação de escrita, mas
+// "categorias registradas" / "3 safras registradas" são respostas de leitura.
 const REGISTRATION_CLAIM_PATTERN =
-  /registr(ei|ado|ada)|anotei|lan[çc]ei|salvei/i;
+  /\b(registrei|anotei|lan[çc]ei|salvei|adicionei|cadastrei)\b/i;
 
 const UNVERIFIED_WRITE_REPLY =
   'Ops, não consegui registrar isso agora 😕 Pode me mandar de novo, dizendo o valor, a safra e a categoria?';
+
+// Tools de leitura: se qualquer uma rodar sem erro no turno, o modelo teve
+// acesso a dado fresco e pode citar números.
+const READ_TOOLS = new Set([
+  'list_harvests',
+  'list_categories',
+  'get_profit_report',
+  'get_harvest_profit',
+  'get_harvest_expenses',
+]);
+
+// Termos que, junto de um número, caracterizam uma AFIRMAÇÃO sobre dado da
+// fazenda (não uma pergunta de confirmação nem uma explicação de recurso).
+const FARM_DATA_TERMS =
+  /lucro|receita|despesa|saldo|gast|ganho|fatur|safra|total/i;
+
+const GROUNDING_NUDGE =
+  'Você respondeu com um dado da fazenda sem consultar nenhuma tool. Você NÃO ' +
+  'tem esse dado nas suas instruções e não pode usar valores de mensagens ' +
+  'anteriores. Chame agora a tool apropriada (list_harvests, list_categories, ' +
+  'get_profit_report, get_harvest_profit ou get_harvest_expenses) e responda ' +
+  'apenas com o que ela devolver.';
 
 @Injectable()
 export default class WaConversationService {
@@ -65,75 +92,15 @@ export default class WaConversationService {
 
     const history = conversation.context as ChatCompletionMessageParam[];
 
-    let response = await this.llmService.process({
+    const { content: finalContent, confirmedWrites } = await this.runAgent(
       systemPrompt,
       history,
-      userMessage: content,
-    });
-
-    const accumulated: ChatCompletionMessageParam[] = [
-      { role: 'system', content: systemPrompt },
-      ...history,
-      { role: 'user', content },
-    ];
-
-    let iterations = 0;
-    const confirmedWrites: string[] = [];
-
-    while (iterations < MAX_TOOL_ITERATIONS) {
-      const choice = response.choices[0];
-
-      if (
-        !choice.message.tool_calls ||
-        choice.message.tool_calls.length === 0
-      ) {
-        break;
-      }
-
-      accumulated.push(choice.message);
-
-      for (const toolCall of choice.message.tool_calls) {
-        if (toolCall.type !== 'function') continue;
-
-        let args: Record<string, unknown>;
-        try {
-          args = JSON.parse(toolCall.function.arguments) as Record<
-            string,
-            unknown
-          >;
-        } catch {
-          args = {};
-        }
-
-        const result = await this.toolExecutor.execute(
-          toolCall.function.name,
-          args,
-          farmer.farmId,
-        );
-
-        if (toolCall.function.name === 'create_transaction') {
-          const message = this.extractWriteConfirmation(result);
-          if (message) {
-            confirmedWrites.push(message);
-          }
-        }
-
-        accumulated.push({
-          role: 'tool',
-          tool_call_id: toolCall.id,
-          content: result,
-        });
-      }
-
-      response = await this.llmService.continueWithToolResults(accumulated);
-      iterations++;
-    }
-
-    const reply = this.resolveReply(
-      response.choices[0]?.message?.content ?? null,
-      confirmedWrites,
+      content,
+      farmer.farmId,
       phoneNumber,
     );
+
+    const reply = this.resolveReply(finalContent, confirmedWrites, phoneNumber);
 
     const newHistory = this.updateContext(history, content, reply);
 
@@ -149,6 +116,139 @@ export default class WaConversationService {
     await this.sendReply(phoneNumber, reply, jid);
   }
 
+  /**
+   * Roda o modelo e o ciclo de tools até uma resposta final. Devolve o texto
+   * do modelo e as confirmações de escrita que de fato ocorreram no turno.
+   */
+  private async runAgent(
+    systemPrompt: string,
+    history: ChatCompletionMessageParam[],
+    userMessage: string,
+    farmId: string,
+    phoneNumber: string,
+  ): Promise<{ content: string | null; confirmedWrites: string[] }> {
+    let response = await this.llmService.process({
+      systemPrompt,
+      history,
+      userMessage,
+    });
+
+    const accumulated: ChatCompletionMessageParam[] = [
+      { role: 'system', content: systemPrompt },
+      ...history,
+      { role: 'user', content: userMessage },
+    ];
+
+    const confirmedWrites: string[] = [];
+    let readToolGrounded = false;
+    let correctionUsed = false;
+
+    for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
+      const choice = response.choices[0];
+      const toolCalls = choice.message.tool_calls ?? [];
+
+      if (toolCalls.length === 0) {
+        const content = choice.message.content ?? null;
+
+        // O prompt não carrega mais dado da fazenda, então qualquer número que
+        // o modelo afirme precisa ter vindo de uma tool rodada NESTE turno. Se
+        // afirma um valor sem isso, está repetindo contexto velho — força uma
+        // única consulta real em vez de repassar.
+        const needsGrounding =
+          !correctionUsed &&
+          !readToolGrounded &&
+          confirmedWrites.length === 0 &&
+          this.assertsFarmData(content);
+
+        if (!needsGrounding) {
+          return { content, confirmedWrites };
+        }
+
+        correctionUsed = true;
+        accumulated.push(choice.message);
+        accumulated.push({ role: 'system', content: GROUNDING_NUDGE });
+        this.logger.warn(
+          `Model asserted farm data to ${phoneNumber} without a tool lookup; forcing a grounded retry.`,
+        );
+        response = await this.llmService.continueWithToolResults(
+          accumulated,
+          'required',
+        );
+        continue;
+      }
+
+      accumulated.push(choice.message);
+      readToolGrounded =
+        (await this.dispatchToolCalls(
+          toolCalls,
+          farmId,
+          accumulated,
+          confirmedWrites,
+        )) || readToolGrounded;
+
+      response = await this.llmService.continueWithToolResults(accumulated);
+    }
+
+    return {
+      content: response.choices[0]?.message?.content ?? null,
+      confirmedWrites,
+    };
+  }
+
+  /**
+   * Executa as tool calls de uma rodada, empilha os resultados em `accumulated`
+   * e coleta as confirmações de escrita. Retorna se alguma tool de leitura
+   * rodou sem erro (grounding para a resposta seguinte).
+   */
+  private async dispatchToolCalls(
+    toolCalls: ChatCompletionMessageToolCall[],
+    farmId: string,
+    accumulated: ChatCompletionMessageParam[],
+    confirmedWrites: string[],
+  ): Promise<boolean> {
+    let readToolGrounded = false;
+
+    for (const toolCall of toolCalls) {
+      if (toolCall.type !== 'function') continue;
+
+      let args: Record<string, unknown>;
+      try {
+        args = JSON.parse(toolCall.function.arguments) as Record<
+          string,
+          unknown
+        >;
+      } catch {
+        args = {};
+      }
+
+      const result = await this.toolExecutor.execute(
+        toolCall.function.name,
+        args,
+        farmId,
+      );
+
+      if (toolCall.function.name === 'create_transaction') {
+        const message = this.extractWriteConfirmation(result);
+        if (message) {
+          confirmedWrites.push(message);
+        }
+      } else if (
+        READ_TOOLS.has(toolCall.function.name) &&
+        !this.toolResultHasError(result)
+      ) {
+        readToolGrounded = true;
+      }
+
+      accumulated.push({
+        role: 'tool',
+        tool_call_id: toolCall.id,
+        content: result,
+      });
+    }
+
+    return readToolGrounded;
+  }
+
   private extractWriteConfirmation(toolResult: string): string | null {
     try {
       const parsed = JSON.parse(toolResult) as {
@@ -160,6 +260,30 @@ export default class WaConversationService {
     } catch {
       return null;
     }
+  }
+
+  private toolResultHasError(toolResult: string): boolean {
+    try {
+      const parsed = JSON.parse(toolResult) as { error?: unknown };
+      return parsed?.error !== undefined;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Uma resposta afirma dado da fazenda quando cita um número junto de um termo
+   * financeiro/de safra. Perguntas de confirmação ("quer registrar R$50?") e
+   * confirmações de escrita ("registrei...") ficam de fora: a primeira porque é
+   * o próprio valor do usuário, a segunda porque tem tratamento próprio.
+   */
+  private assertsFarmData(content: string | null): boolean {
+    if (!content) return false;
+    if (REGISTRATION_CLAIM_PATTERN.test(content)) return false;
+    if (content.includes('?')) return false;
+    if (!/\d/.test(content)) return false;
+
+    return FARM_DATA_TERMS.test(content);
   }
 
   /**

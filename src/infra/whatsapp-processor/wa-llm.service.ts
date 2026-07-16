@@ -3,6 +3,7 @@ import OpenAI, { toFile } from 'openai';
 import type {
   ChatCompletionMessageParam,
   ChatCompletionTool,
+  ChatCompletionToolChoiceOption,
   ChatCompletion,
 } from 'openai/resources/chat/completions';
 import config from 'infra/config';
@@ -146,8 +147,9 @@ export default class WaLlmService {
 
   async continueWithToolResults(
     messages: ChatCompletionMessageParam[],
+    toolChoice: ChatCompletionToolChoiceOption = 'auto',
   ): Promise<ChatCompletion> {
-    return this.call(messages);
+    return this.call(messages, toolChoice);
   }
 
   async transcribe(buffer: Buffer): Promise<string> {
@@ -164,6 +166,7 @@ export default class WaLlmService {
 
   private async call(
     messages: ChatCompletionMessageParam[],
+    toolChoice: ChatCompletionToolChoiceOption = 'auto',
   ): Promise<ChatCompletion> {
     this.logger.debug(`Calling OpenAI with ${messages.length} messages`);
 
@@ -171,6 +174,7 @@ export default class WaLlmService {
       model: MODEL,
       messages,
       tools,
+      tool_choice: toolChoice,
       temperature: 0.3,
     });
   }

@@ -189,18 +189,82 @@ describe('WaConversationService', () => {
     expect(systemPrompt).not.toMatch(/receita: R\$/);
   });
 
-  it('should pass through a normal answer that claims no write', async () => {
-    const answer = 'O lucro da sua safra de Morango 2028 é de R$506,53 🌱';
+  it('should force a grounded lookup when the model states farm data without a tool', async () => {
+    const grounded = 'O lucro da sua safra de Morango 2028 é de R$506,53 🌱';
     const llmService = {
-      process: vi.fn().mockResolvedValue(completion({ content: answer })),
-      continueWithToolResults: vi.fn(),
+      // Primeira resposta: número tirado do contexto velho, sem tool nenhuma.
+      process: vi
+        .fn()
+        .mockResolvedValue(
+          completion({ content: 'Seu lucro é de R$13,02 🌱' }),
+        ),
+      continueWithToolResults: vi
+        .fn()
+        // Retry forçado: o modelo finalmente chama a tool.
+        .mockResolvedValueOnce(
+          completion({
+            tool_calls: [toolCall('get_harvest_profit', { harvestId: 'h1' })],
+          }),
+        )
+        // Com o resultado da tool, responde com o valor real.
+        .mockResolvedValueOnce(completion({ content: grounded })),
+    };
+    const toolExecutor = {
+      execute: vi.fn().mockResolvedValue(
+        JSON.stringify({
+          harvestName: 'Morango 2028',
+          revenue: 806.73,
+          expenses: 300.2,
+          profit: 506.53,
+        }),
+      ),
     };
 
-    const { sut, replyText } = makeSut(llmService, { execute: vi.fn() });
+    const { sut, replyText } = makeSut(llmService, toolExecutor);
 
     await sut.handle(PHONE, 'Qual o lucro da safra?');
 
+    expect(toolExecutor.execute).toHaveBeenCalledWith(
+      'get_harvest_profit',
+      { harvestId: 'h1' },
+      FARMER.farmId,
+    );
+    // O primeiro follow-up é forçado a usar tool.
+    expect(llmService.continueWithToolResults).toHaveBeenNthCalledWith(
+      1,
+      expect.anything(),
+      'required',
+    );
+    expect(replyText()).toBe(grounded);
+    expect(replyText()).not.toContain('13,02');
+  });
+
+  it('should not mistake a read answer with "registradas" for a failed write', async () => {
+    // "categorias registradas" é resposta de leitura, não confirmação de escrita.
+    const answer =
+      'Suas categorias registradas são: Insumos, Vendas e Mão de obra 🌱';
+    const llmService = {
+      process: vi.fn().mockResolvedValue(
+        completion({
+          tool_calls: [toolCall('list_categories', {})],
+        }),
+      ),
+      continueWithToolResults: vi
+        .fn()
+        .mockResolvedValue(completion({ content: answer })),
+    };
+    const toolExecutor = {
+      execute: vi
+        .fn()
+        .mockResolvedValue(JSON.stringify([{ id: 'c1', name: 'Insumos' }])),
+    };
+
+    const { sut, replyText } = makeSut(llmService, toolExecutor);
+
+    await sut.handle(PHONE, 'Quais categorias eu tenho?');
+
     expect(replyText()).toBe(answer);
+    expect(replyText()).not.toContain('não consegui registrar');
   });
 
   it('should persist the exchange in the conversation context', async () => {
