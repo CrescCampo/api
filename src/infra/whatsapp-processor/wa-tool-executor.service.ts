@@ -4,6 +4,7 @@ import TransactionRepository from 'domain/application/repositories/TransactionRe
 import TransactionCategoryRepository from 'domain/application/repositories/TransactionCategoryRepository';
 import Transaction from 'domain/enterprise/entities/Transaction';
 import TransactionType from 'domain/enterprise/enums/TransactionType';
+import UnitOfWork from 'domain/application/unit-of-work/UnitOfWork';
 
 @Injectable()
 export default class WaToolExecutorService {
@@ -13,6 +14,7 @@ export default class WaToolExecutorService {
     private readonly harvestRepository: HarvestRepository,
     private readonly transactionRepository: TransactionRepository,
     private readonly transactionCategoryRepository: TransactionCategoryRepository,
+    private readonly unitOfWork: UnitOfWork,
   ) {}
 
   async execute(
@@ -32,6 +34,8 @@ export default class WaToolExecutorService {
           return await this.listCategories(farmId);
         case 'get_profit_report':
           return await this.getProfitReport(farmId);
+        case 'get_harvest_profit':
+          return await this.getHarvestProfit(args, farmId);
         case 'get_harvest_expenses':
           return await this.getHarvestExpenses(args, farmId);
         default:
@@ -96,8 +100,10 @@ export default class WaToolExecutorService {
 
     harvest.applyTransaction(transactionType, amount);
 
-    await this.transactionRepository.save(transaction);
-    await this.harvestRepository.save(harvest);
+    await this.unitOfWork.run(async () => {
+      await this.transactionRepository.save(transaction);
+      await this.harvestRepository.save(harvest);
+    });
 
     const typeLabel =
       transactionType === TransactionType.REVENUE ? 'receita' : 'despesa';
@@ -115,11 +121,9 @@ export default class WaToolExecutorService {
       id: h.id,
       name: h.name,
       culture: h.culture.name,
-      revenue: h.revenue,
-      expenses: h.expenses,
     }));
 
-    return JSON.stringify(list);
+    return JSON.stringify({ harvestCount: list.length, harvests: list });
   }
 
   private async listCategories(farmId: string): Promise<string> {
@@ -135,12 +139,44 @@ export default class WaToolExecutorService {
   }
 
   private async getProfitReport(farmId: string): Promise<string> {
-    const totals = await this.harvestRepository.getTotalsByFarmId(farmId);
+    const [totals, harvestCount, finishedCount] = await Promise.all([
+      this.harvestRepository.getTotalsByFarmId(farmId),
+      this.harvestRepository.countByFarmId(farmId),
+      this.harvestRepository.countByFarmId(farmId, undefined, false),
+    ]);
 
     return JSON.stringify({
       totalRevenue: totals.totalRevenue,
       totalExpenses: totals.totalExpenses,
       profit: totals.totalRevenue - totals.totalExpenses,
+      harvestCount,
+      finishedCount,
+    });
+  }
+
+  private async getHarvestProfit(
+    args: Record<string, unknown>,
+    farmId: string,
+  ): Promise<string> {
+    const harvestId = args.harvestId as string;
+
+    const harvest = await this.harvestRepository.findById(harvestId);
+    if (!harvest) {
+      return JSON.stringify({
+        error: 'Não encontrei essa safra. Verifique o nome e tente novamente.',
+      });
+    }
+    if (harvest.farmId !== farmId) {
+      return JSON.stringify({
+        error: 'Essa safra não faz parte da sua fazenda.',
+      });
+    }
+
+    return JSON.stringify({
+      harvestName: harvest.name,
+      revenue: harvest.revenue,
+      expenses: harvest.expenses,
+      profit: harvest.revenue - harvest.expenses,
     });
   }
 
