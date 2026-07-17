@@ -104,16 +104,13 @@ function makeSut(
 
 describe('WaConversationService', () => {
   it('should refuse to confirm a transaction the model never actually created', async () => {
-    // Reproduz o bug de produção: o modelo devolveu "Pronto! Registrei ✅"
-    // sem nenhuma tool_call, e a transação nunca existiu no banco.
+    const claim =
+      'Pronto! Registrei uma receita de R$6,51 na safra de Morango 2026 ✅';
     const llmService = {
-      process: vi.fn().mockResolvedValue(
-        completion({
-          content:
-            'Pronto! Registrei uma receita de R$6,51 na safra de Morango 2026 ✅',
-        }),
-      ),
-      continueWithToolResults: vi.fn(),
+      process: vi.fn().mockResolvedValue(completion({ content: claim })),
+      continueWithToolResults: vi
+        .fn()
+        .mockResolvedValue(completion({ content: claim })),
     };
     const toolExecutor = { execute: vi.fn() };
 
@@ -122,8 +119,47 @@ describe('WaConversationService', () => {
     await sut.handle(PHONE, 'Adiciona uma receita de 6,51.');
 
     expect(toolExecutor.execute).not.toHaveBeenCalled();
+    expect(llmService.continueWithToolResults).toHaveBeenCalled();
     expect(replyText()).not.toContain('Registrei');
     expect(replyText()).toContain('não consegui registrar');
+  });
+
+  it('should let the model correct an unconfirmed write claim with a grounded read', async () => {
+    const grounded = 'Sim! Ontem entrou R$50,00 de Adubo na safra Morango 🌱';
+    const llmService = {
+      process: vi
+        .fn()
+        .mockResolvedValue(
+          completion({ content: 'Sim, registrei ontem R$50 de adubo ✅' }),
+        ),
+      continueWithToolResults: vi
+        .fn()
+        .mockResolvedValueOnce(
+          completion({
+            tool_calls: [toolCall('get_harvest_expenses', { harvestId: 'h1' })],
+          }),
+        )
+        .mockResolvedValueOnce(completion({ content: grounded })),
+    };
+    const toolExecutor = {
+      execute: vi
+        .fn()
+        .mockResolvedValue(
+          JSON.stringify({ expenses: [{ amount: 50, category: 'Adubo' }] }),
+        ),
+    };
+
+    const { sut, replyText } = makeSut(llmService, toolExecutor);
+
+    await sut.handle(PHONE, 'Você registrou aquela despesa de ontem?');
+
+    expect(toolExecutor.execute).toHaveBeenCalledWith(
+      'get_harvest_expenses',
+      { harvestId: 'h1' },
+      FARMER.farmId,
+    );
+    expect(replyText()).toBe(grounded);
+    expect(replyText()).not.toContain('não consegui registrar');
   });
 
   it('should confirm with the tool message, not with what the model wrote', async () => {
@@ -144,7 +180,6 @@ describe('WaConversationService', () => {
           ],
         }),
       ),
-      // O modelo inventa outro valor e o nome antigo da safra na confirmação.
       continueWithToolResults: vi.fn().mockResolvedValue(
         completion({
           content: 'Pronto! Registrei R$99,00 na safra de Morango 2026 ✅',
@@ -192,7 +227,6 @@ describe('WaConversationService', () => {
   it('should force a grounded lookup when the model states farm data without a tool', async () => {
     const grounded = 'O lucro da sua safra de Morango 2028 é de R$506,53 🌱';
     const llmService = {
-      // Primeira resposta: número tirado do contexto velho, sem tool nenhuma.
       process: vi
         .fn()
         .mockResolvedValue(
@@ -200,13 +234,11 @@ describe('WaConversationService', () => {
         ),
       continueWithToolResults: vi
         .fn()
-        // Retry forçado: o modelo finalmente chama a tool.
         .mockResolvedValueOnce(
           completion({
             tool_calls: [toolCall('get_harvest_profit', { harvestId: 'h1' })],
           }),
         )
-        // Com o resultado da tool, responde com o valor real.
         .mockResolvedValueOnce(completion({ content: grounded })),
     };
     const toolExecutor = {
@@ -229,7 +261,6 @@ describe('WaConversationService', () => {
       { harvestId: 'h1' },
       FARMER.farmId,
     );
-    // O primeiro follow-up é forçado a usar tool.
     expect(llmService.continueWithToolResults).toHaveBeenNthCalledWith(
       1,
       expect.anything(),
@@ -239,8 +270,95 @@ describe('WaConversationService', () => {
     expect(replyText()).not.toContain('13,02');
   });
 
+  it('should force grounding even when the stale assertion ends with a follow-up question', async () => {
+    const grounded = 'Seu lucro total é de R$506,53 🌱';
+    const llmService = {
+      process: vi.fn().mockResolvedValue(
+        completion({
+          content: 'Seu lucro é de R$13,02 💰 Quer ver as despesas também?',
+        }),
+      ),
+      continueWithToolResults: vi
+        .fn()
+        .mockResolvedValueOnce(
+          completion({
+            tool_calls: [toolCall('get_profit_report', {})],
+          }),
+        )
+        .mockResolvedValueOnce(completion({ content: grounded })),
+    };
+    const toolExecutor = {
+      execute: vi.fn().mockResolvedValue(
+        JSON.stringify({
+          totalRevenue: 806.73,
+          totalExpenses: 300.2,
+          profit: 506.53,
+        }),
+      ),
+    };
+
+    const { sut, replyText } = makeSut(llmService, toolExecutor);
+
+    await sut.handle(PHONE, 'Qual meu lucro?');
+
+    expect(llmService.continueWithToolResults).toHaveBeenNthCalledWith(
+      1,
+      expect.anything(),
+      'required',
+    );
+    expect(replyText()).toBe(grounded);
+    expect(replyText()).not.toContain('13,02');
+  });
+
+  it('should keep the grounded read answer alongside the tool write confirmation', async () => {
+    const toolMessage =
+      'Pronto! Registrei uma despesa de R$50.00 na safra "Morango 2028", categoria "Insumos".';
+    const profitAnswer = 'O lucro da safra Morango 2028 é de R$456,53 🌱';
+    const llmService = {
+      process: vi.fn().mockResolvedValue(
+        completion({
+          tool_calls: [
+            toolCall('create_transaction', {
+              harvestId: 'harvest-1',
+              categoryId: 'cat-1',
+              type: 'expense',
+              amount: 50,
+              description: 'Adubo',
+            }),
+            toolCall('get_harvest_profit', { harvestId: 'harvest-1' }),
+          ],
+        }),
+      ),
+      continueWithToolResults: vi.fn().mockResolvedValue(
+        completion({
+          content: `Registrei R$50,00 de Insumos ✅ ${profitAnswer}`,
+        }),
+      ),
+    };
+    const toolExecutor = {
+      execute: vi.fn().mockImplementation((name: string) => {
+        if (name === 'create_transaction') {
+          return Promise.resolve(
+            JSON.stringify({ success: true, message: toolMessage }),
+          );
+        }
+        return Promise.resolve(JSON.stringify({ profit: 456.53 }));
+      }),
+    };
+
+    const { sut, replyText } = makeSut(llmService, toolExecutor);
+
+    await sut.handle(
+      PHONE,
+      'Lança R$50 de adubo no Morango 2028 e me diz o lucro dela.',
+    );
+
+    expect(replyText()).toContain(toolMessage);
+    expect(replyText()).toContain(profitAnswer);
+    expect(replyText()).not.toContain('Registrei R$50,00 de Insumos');
+  });
+
   it('should not mistake a read answer with "registradas" for a failed write', async () => {
-    // "categorias registradas" é resposta de leitura, não confirmação de escrita.
     const answer =
       'Suas categorias registradas são: Insumos, Vendas e Mão de obra 🌱';
     const llmService = {

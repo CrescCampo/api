@@ -102,6 +102,17 @@ export default class DrizzleFarmerRepository implements FarmerRepository {
     return row ? this.toDomain(row) : null;
   }
 
+  async findByIdForUpdate(id: string): Promise<Farmer | null> {
+    const [row] = await this.db
+      .select()
+      .from(FarmerModel)
+      .where(eq(FarmerModel.id, id))
+      .limit(1)
+      .for('update');
+
+    return row ? this.toDomain(row) : null;
+  }
+
   async findByPhone(phone: string): Promise<Farmer | null> {
     const normalized = phone.startsWith('+') ? phone : `+${phone}`;
     const candidates = this.brazilianPhoneVariants(normalized);

@@ -55,5 +55,6 @@ export interface Config {
   };
   verifyEmail: {
     resendTemplateAlias: string;
+    codeSecret: string;
   };
 }

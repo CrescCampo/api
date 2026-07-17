@@ -1,6 +1,6 @@
-import { createHash } from 'node:crypto';
 import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
+import OtpGenerator from 'domain/application/cryptography/otp-generator';
 import EmailVerificationCodeRepository from 'domain/application/repositories/EmailVerificationCodeRepository';
 import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import VerificationEmailSender from 'domain/application/email/verification-email-sender';
@@ -10,15 +10,12 @@ import FakeVerificationEmailSender from '../../helpers/fake-verification-email-s
 import { cleanDatabase } from '../../setup/clean-database';
 import { makeUser } from '../../factories/make-user';
 
-function sha256(plain: string): string {
-  return createHash('sha256').update(plain).digest('hex');
-}
-
 describe('Verify Email Controller (e2e)', () => {
   let app: INestApplication;
   let emailSender: FakeVerificationEmailSender;
   let farmerRepository: FarmerRepository;
   let emailVerificationCodeRepository: EmailVerificationCodeRepository;
+  let otpGenerator: OtpGenerator;
 
   beforeAll(async () => {
     await cleanDatabase();
@@ -26,6 +23,7 @@ describe('Verify Email Controller (e2e)', () => {
     emailSender = app.get(VerificationEmailSender);
     farmerRepository = app.get(FarmerRepository);
     emailVerificationCodeRepository = app.get(EmailVerificationCodeRepository);
+    otpGenerator = app.get(OtpGenerator);
   });
 
   afterAll(async () => {
@@ -34,8 +32,14 @@ describe('Verify Email Controller (e2e)', () => {
 
   async function registerUnverified() {
     const user = makeUser();
-    await request(app.getHttpServer()).post('/auth/register').send(user);
+    const response = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(user);
+    expect(response.status).toBe(201);
+
     const code = emailSender.lastCodeFor(user.email);
+    expect(code).toBeDefined();
+
     return { user, code };
   }
 
@@ -81,7 +85,7 @@ describe('Verify Email Controller (e2e)', () => {
 
     const expiredCode = EmailVerificationCode.create({
       farmerId: farmer!.id,
-      codeHash: sha256('222222'),
+      codeHash: otpGenerator.hash('222222'),
       expiresAt: new Date(Date.now() - 60_000),
     });
     await emailVerificationCodeRepository.save(expiredCode);
@@ -105,7 +109,7 @@ describe('Verify Email Controller (e2e)', () => {
 
     const oldCode = EmailVerificationCode.create({
       farmerId: farmer!.id,
-      codeHash: sha256('333333'),
+      codeHash: otpGenerator.hash('333333'),
       createdAt: new Date(Date.now() - 2 * 60_000),
     });
     await emailVerificationCodeRepository.save(oldCode);

@@ -60,6 +60,7 @@ const config: Config = {
   },
   verifyEmail: {
     resendTemplateAlias: 'verify-email',
+    codeSecret: envVars.VERIFICATION_CODE_SECRET,
   },
 };
 

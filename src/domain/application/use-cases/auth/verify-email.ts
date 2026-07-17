@@ -36,24 +36,36 @@ export default class VerifyEmailUseCase {
   ) {}
 
   async execute(input: Input): Promise<Output> {
-    const farmer = await this.farmerRepository.findByEmail(input.email);
+    const existingFarmer = await this.farmerRepository.findByEmail(input.email);
 
-    if (!farmer || farmer.disabled) {
+    if (!existingFarmer || existingFarmer.disabled) {
       throw new InvalidVerificationCodeError();
     }
 
-    if (farmer.emailVerified) {
+    if (existingFarmer.emailVerified) {
       throw new EmailAlreadyVerifiedError();
     }
 
-    const session = await this.unitOfWork.run(async () => {
+    const result = await this.unitOfWork.run(async () => {
+      const farmer = await this.farmerRepository.findByIdForUpdate(
+        existingFarmer.id,
+      );
+
+      if (!farmer || farmer.disabled) {
+        return { status: 'invalid' as const };
+      }
+
+      if (farmer.emailVerified) {
+        return { status: 'already-verified' as const };
+      }
+
       const verificationCode =
         await this.emailVerificationCodeRepository.findActiveByFarmerIdForUpdate(
           farmer.id,
         );
 
       if (!verificationCode || !verificationCode.isUsable) {
-        return null;
+        return { status: 'invalid' as const };
       }
 
       const isCodeValid =
@@ -64,25 +76,31 @@ export default class VerifyEmailUseCase {
 
         await this.emailVerificationCodeRepository.save(verificationCode);
 
-        return null;
+        return { status: 'invalid' as const };
       }
 
       farmer.verifyEmail();
       farmer.logged();
       verificationCode.markAsUsed();
 
-      const issuedSession = await this.sessionIssuer.issue(farmer);
+      const session = await this.sessionIssuer.issue(farmer);
 
       await this.farmerRepository.save(farmer);
       await this.emailVerificationCodeRepository.save(verificationCode);
-      await this.refreshTokenRepository.save(issuedSession.refreshToken);
+      await this.refreshTokenRepository.save(session.refreshToken);
 
-      return issuedSession;
+      return { status: 'verified' as const, session, farmer };
     });
 
-    if (!session) {
+    if (result.status === 'already-verified') {
+      throw new EmailAlreadyVerifiedError();
+    }
+
+    if (result.status !== 'verified') {
       throw new InvalidVerificationCodeError();
     }
+
+    const { session, farmer } = result;
 
     return {
       userId: farmer.id,

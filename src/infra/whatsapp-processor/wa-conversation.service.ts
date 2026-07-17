@@ -17,19 +17,12 @@ import WaToolExecutorService from './wa-tool-executor.service';
 const MAX_TOOL_ITERATIONS = 10;
 const MAX_CONTEXT_MESSAGES = 20;
 
-// O modelo já foi flagrado afirmando "Pronto! Registrei ✅" sem nunca ter
-// chamado create_transaction. Qualquer resposta que soe como confirmação de
-// escrita precisa ser conferida contra as tools que de fato rodaram no turno.
-// Só verbos em primeira pessoa: "registrei" é uma alegação de escrita, mas
-// "categorias registradas" / "3 safras registradas" são respostas de leitura.
 const REGISTRATION_CLAIM_PATTERN =
   /\b(registrei|anotei|lan[çc]ei|salvei|adicionei|cadastrei)\b/i;
 
 const UNVERIFIED_WRITE_REPLY =
   'Ops, não consegui registrar isso agora 😕 Pode me mandar de novo, dizendo o valor, a safra e a categoria?';
 
-// Tools de leitura: se qualquer uma rodar sem erro no turno, o modelo teve
-// acesso a dado fresco e pode citar números.
 const READ_TOOLS = new Set([
   'list_harvests',
   'list_categories',
@@ -38,10 +31,22 @@ const READ_TOOLS = new Set([
   'get_harvest_expenses',
 ]);
 
-// Termos que, junto de um número, caracterizam uma AFIRMAÇÃO sobre dado da
-// fazenda (não uma pergunta de confirmação nem uma explicação de recurso).
 const FARM_DATA_TERMS =
   /lucro|receita|despesa|saldo|gast|ganho|fatur|safra|total/i;
+
+const CONFIRMATION_QUESTION_MARKERS =
+  'quer|quiser|deseja|posso|pode|podemos|devo|confirma|confirmar|seria|certo|correto|ok|combinado|mais|algo|ajudo|ajudar';
+
+const CONFIRMATION_QUESTION_PATTERN = new RegExp(
+  `\\b(?:${CONFIRMATION_QUESTION_MARKERS})\\b(?:(?!\\b(?:${CONFIRMATION_QUESTION_MARKERS})\\b)[^?])*\\?`,
+  'gi',
+);
+
+const SENTENCE_BOUNDARY =
+  /(?<=[.!?])\s+|(?<=\p{Extended_Pictographic})\s+|\n+/u;
+
+const STATEMENT_BOUNDARY =
+  /(?<=[.!])\s+|(?<=\p{Extended_Pictographic})\s+|\n+/u;
 
 const GROUNDING_NUDGE =
   'Você respondeu com um dado da fazenda sem consultar nenhuma tool. Você NÃO ' +
@@ -49,6 +54,13 @@ const GROUNDING_NUDGE =
   'anteriores. Chame agora a tool apropriada (list_harvests, list_categories, ' +
   'get_profit_report, get_harvest_profit ou get_harvest_expenses) e responda ' +
   'apenas com o que ela devolver.';
+
+const WRITE_CLAIM_NUDGE =
+  'Você afirmou ter registrado algo, mas nenhuma create_transaction rodou ' +
+  'neste turno. Nunca afirme um registro que não aconteceu. Se o usuário ' +
+  'pediu um lançamento agora, chame create_transaction; se ele perguntou ' +
+  'sobre um lançamento antigo, confira com as tools de leitura antes de ' +
+  'responder.';
 
 @Injectable()
 export default class WaConversationService {
@@ -116,10 +128,6 @@ export default class WaConversationService {
     await this.sendReply(phoneNumber, reply, jid);
   }
 
-  /**
-   * Roda o modelo e o ciclo de tools até uma resposta final. Devolve o texto
-   * do modelo e as confirmações de escrita que de fato ocorreram no turno.
-   */
   private async runAgent(
     systemPrompt: string,
     history: ChatCompletionMessageParam[],
@@ -141,7 +149,8 @@ export default class WaConversationService {
 
     const confirmedWrites: string[] = [];
     let readToolGrounded = false;
-    let correctionUsed = false;
+    let groundingCorrectionUsed = false;
+    let writeClaimCorrectionUsed = false;
 
     for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
       const choice = response.choices[0];
@@ -150,21 +159,33 @@ export default class WaConversationService {
       if (toolCalls.length === 0) {
         const content = choice.message.content ?? null;
 
-        // O prompt não carrega mais dado da fazenda, então qualquer número que
-        // o modelo afirme precisa ter vindo de uma tool rodada NESTE turno. Se
-        // afirma um valor sem isso, está repetindo contexto velho — força uma
-        // única consulta real em vez de repassar.
-        const needsGrounding =
-          !correctionUsed &&
-          !readToolGrounded &&
+        const claimsUnconfirmedWrite =
+          !writeClaimCorrectionUsed &&
           confirmedWrites.length === 0 &&
+          content !== null &&
+          REGISTRATION_CLAIM_PATTERN.test(content);
+
+        if (claimsUnconfirmedWrite) {
+          writeClaimCorrectionUsed = true;
+          accumulated.push(choice.message);
+          accumulated.push({ role: 'system', content: WRITE_CLAIM_NUDGE });
+          this.logger.warn(
+            `Model claimed a write to ${phoneNumber} without a successful create_transaction; forcing a corrective retry.`,
+          );
+          response = await this.llmService.continueWithToolResults(accumulated);
+          continue;
+        }
+
+        const needsGrounding =
+          !groundingCorrectionUsed &&
+          !readToolGrounded &&
           this.assertsFarmData(content);
 
         if (!needsGrounding) {
           return { content, confirmedWrites };
         }
 
-        correctionUsed = true;
+        groundingCorrectionUsed = true;
         accumulated.push(choice.message);
         accumulated.push({ role: 'system', content: GROUNDING_NUDGE });
         this.logger.warn(
@@ -195,11 +216,6 @@ export default class WaConversationService {
     };
   }
 
-  /**
-   * Executa as tool calls de uma rodada, empilha os resultados em `accumulated`
-   * e coleta as confirmações de escrita. Retorna se alguma tool de leitura
-   * rodou sem erro (grounding para a resposta seguinte).
-   */
   private async dispatchToolCalls(
     toolCalls: ChatCompletionMessageToolCall[],
     farmId: string,
@@ -271,32 +287,39 @@ export default class WaConversationService {
     }
   }
 
-  /**
-   * Uma resposta afirma dado da fazenda quando cita um número junto de um termo
-   * financeiro/de safra. Perguntas de confirmação ("quer registrar R$50?") e
-   * confirmações de escrita ("registrei...") ficam de fora: a primeira porque é
-   * o próprio valor do usuário, a segunda porque tem tratamento próprio.
-   */
   private assertsFarmData(content: string | null): boolean {
     if (!content) return false;
-    if (REGISTRATION_CLAIM_PATTERN.test(content)) return false;
-    if (content.includes('?')) return false;
-    if (!/\d/.test(content)) return false;
 
-    return FARM_DATA_TERMS.test(content);
+    const statements = this.withoutWriteClaims(content)
+      .replace(CONFIRMATION_QUESTION_PATTERN, ' ')
+      .split(STATEMENT_BOUNDARY)
+      .filter(sentence => !sentence.trimEnd().endsWith('?'))
+      .join(' ');
+
+    return /\d/.test(statements) && FARM_DATA_TERMS.test(statements);
   }
 
-  /**
-   * A confirmação de um lançamento sai da tool, não do modelo: é a única forma
-   * de garantir que o que foi dito ao usuário corresponde ao que foi gravado.
-   */
+  private withoutWriteClaims(content: string): string {
+    return content
+      .split(SENTENCE_BOUNDARY)
+      .filter(sentence => !REGISTRATION_CLAIM_PATTERN.test(sentence))
+      .join(' ')
+      .trim();
+  }
+
   private resolveReply(
     modelReply: string | null,
     confirmedWrites: string[],
     phoneNumber: string,
   ): string {
     if (confirmedWrites.length > 0) {
-      return confirmedWrites.join(' ');
+      const remainder = modelReply ? this.withoutWriteClaims(modelReply) : '';
+      const remainderAddsInformation =
+        /\d/.test(remainder) || remainder.includes('?');
+
+      return remainderAddsInformation
+        ? [...confirmedWrites, remainder].join(' ')
+        : confirmedWrites.join(' ');
     }
 
     if (!modelReply) {

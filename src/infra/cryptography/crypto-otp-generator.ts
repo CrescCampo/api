@@ -1,5 +1,6 @@
-import { createHash, randomInt } from 'node:crypto';
+import { createHmac, randomInt } from 'node:crypto';
 import OtpGenerator from 'domain/application/cryptography/otp-generator';
+import config from 'infra/config';
 
 export default class CryptoOtpGenerator implements OtpGenerator {
   async generate(): Promise<{ plain: string; hash: string }> {
@@ -8,6 +9,8 @@ export default class CryptoOtpGenerator implements OtpGenerator {
   }
 
   hash(plain: string): string {
-    return createHash('sha256').update(plain).digest('hex');
+    return createHmac('sha256', config.verifyEmail.codeSecret)
+      .update(plain)
+      .digest('hex');
   }
 }

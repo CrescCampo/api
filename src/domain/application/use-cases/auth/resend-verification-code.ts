@@ -32,9 +32,21 @@ export default class ResendVerificationCodeUseCase {
     const { plain, hash } = await this.otpGenerator.generate();
 
     const codeIssued = await this.unitOfWork.run(async () => {
+      const lockedFarmer = await this.farmerRepository.findByIdForUpdate(
+        farmer.id,
+      );
+
+      if (
+        !lockedFarmer ||
+        lockedFarmer.disabled ||
+        lockedFarmer.emailVerified
+      ) {
+        return false;
+      }
+
       const activeCode =
         await this.emailVerificationCodeRepository.findActiveByFarmerIdForUpdate(
-          farmer.id,
+          lockedFarmer.id,
         );
 
       if (

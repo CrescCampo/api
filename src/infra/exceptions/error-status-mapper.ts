@@ -26,7 +26,6 @@ export default class ErrorStatusMapper {
     [CurrentPasswordRequiredError.name, HttpStatus.BAD_REQUEST],
     [InvalidVerificationCodeError.name, HttpStatus.BAD_REQUEST],
 
-    // 403 - Forbidden (Email not verified)
     [EmailNotVerifiedError.name, HttpStatus.FORBIDDEN],
 
     // 409 - Conflict (Resource already exists)
