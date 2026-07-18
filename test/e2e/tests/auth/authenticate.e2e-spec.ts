@@ -3,12 +3,16 @@ import { INestApplication } from '@nestjs/common';
 import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import TestAppFactory from '../../helpers/test-app-factory';
 import { cleanDatabase } from '../../setup/clean-database';
-import { makeUser } from '../../factories/make-user';
+import { makeUser, markEmailVerified } from '../../factories/make-user';
 
 const USER = makeUser({ name: 'Farmer Auth' });
 const DISABLED_USER = makeUser({
   name: 'Farmer Disabled',
   email: `disabled.${Date.now()}@exemplo.com`,
+});
+const UNVERIFIED_USER = makeUser({
+  name: 'Farmer Unverified',
+  email: `unverified.${Date.now()}@exemplo.com`,
 });
 
 describe('Authenticate Controller (e2e)', () => {
@@ -21,10 +25,16 @@ describe('Authenticate Controller (e2e)', () => {
     await request(app.getHttpServer())
       .post('/auth/register')
       .send(DISABLED_USER);
+    await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(UNVERIFIED_USER);
+
+    await markEmailVerified(app, USER.email);
 
     const farmerRepository = app.get(FarmerRepository);
     const farmer = await farmerRepository.findByEmail(DISABLED_USER.email);
     if (farmer) {
+      farmer.verifyEmail();
       farmer.disable();
       await farmerRepository.save(farmer);
     }
@@ -98,5 +108,16 @@ describe('Authenticate Controller (e2e)', () => {
       });
 
     expect(response.status).toBe(401);
+  });
+
+  it('[POST] /auth/login — deve rejeitar farmer com email não verificado (403)', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({
+        email: UNVERIFIED_USER.email,
+        password: UNVERIFIED_USER.password,
+      });
+
+    expect(response.status).toBe(403);
   });
 });

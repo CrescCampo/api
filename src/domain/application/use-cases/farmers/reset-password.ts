@@ -43,6 +43,7 @@ export default class ResetPasswordUseCase {
 
     await this.unitOfWork.run(async () => {
       farmer.password = hashedPassword;
+      farmer.verifyEmail();
       passwordResetToken.markAsUsed();
 
       await this.farmerRepository.save(farmer);

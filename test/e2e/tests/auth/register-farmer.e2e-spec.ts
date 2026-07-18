@@ -2,7 +2,7 @@ import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import TestAppFactory from '../../helpers/test-app-factory';
 import { cleanDatabase } from '../../setup/clean-database';
-import { makeUser } from '../../factories/make-user';
+import { makeUser, markEmailVerified } from '../../factories/make-user';
 
 const VALID_USER = makeUser({ name: 'Farmer Registro' });
 
@@ -27,6 +27,7 @@ describe('Register Farmer Controller (e2e)', () => {
     expect(response.body).toHaveProperty('userId');
     expect(typeof response.body.userId).toBe('string');
     expect(response.body.userId.length).toBeGreaterThan(0);
+    expect(response.body).not.toHaveProperty('token');
   });
 
   it('[POST] /auth/register — deve criar culturas e categorias padrão ao registrar', async () => {
@@ -37,6 +38,8 @@ describe('Register Farmer Controller (e2e)', () => {
     };
 
     await request(app.getHttpServer()).post('/auth/register').send(uniqueUser);
+
+    await markEmailVerified(app, uniqueUser.email);
 
     const loginRes = await request(app.getHttpServer())
       .post('/auth/login')
