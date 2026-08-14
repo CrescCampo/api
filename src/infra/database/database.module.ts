@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import FarmRepository from 'domain/application/repositories/FarmRepository';
+import InviteRepository from 'domain/application/repositories/InviteRepository';
 import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import CultureRepository from 'domain/application/repositories/CultureRepository';
 import HarvestRepository from 'domain/application/repositories/HarvestRepository';
@@ -12,6 +13,7 @@ import RefreshTokenRepository from 'domain/application/repositories/RefreshToken
 import UnitOfWork from 'domain/application/unit-of-work/UnitOfWork';
 import DrizzleService from './drizzle/drizzle.service';
 import DrizzleFarmRepository from './drizzle/repositories/farm.repository';
+import DrizzleInviteRepository from './drizzle/repositories/invite.repository';
 import DrizzleFarmerRepository from './drizzle/repositories/farmer.repository';
 import DrizzleCultureRepository from './drizzle/repositories/culture.repository';
 import DrizzleHarvestRepository from './drizzle/repositories/harvest.repository';
@@ -35,6 +37,7 @@ export const DRIZZLE_CONNECTION = Symbol('DRIZZLE_CONNECTION');
       inject: [DrizzleService],
     },
     { provide: FarmRepository, useClass: DrizzleFarmRepository },
+    { provide: InviteRepository, useClass: DrizzleInviteRepository },
     { provide: FarmerRepository, useClass: DrizzleFarmerRepository },
     { provide: CultureRepository, useClass: DrizzleCultureRepository },
     { provide: HarvestRepository, useClass: DrizzleHarvestRepository },
@@ -60,6 +63,7 @@ export const DRIZZLE_CONNECTION = Symbol('DRIZZLE_CONNECTION');
     DrizzleService,
     DRIZZLE_CONNECTION,
     FarmRepository,
+    InviteRepository,
     FarmerRepository,
     CultureRepository,
     HarvestRepository,

@@ -78,6 +78,13 @@
       "when": 1783978363447,
       "tag": "0010_striped_red_wolf",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1786748869107,
+      "tag": "0011_shiny_whizzer",
+      "breakpoints": true
     }
   ]
 }
