@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
+import InvalidInviteError from 'domain/application/errors/auth/InvalidInviteError';
+import InviteRequiredError from 'domain/application/errors/auth/InviteRequiredError';
 import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import FarmRepository from 'domain/application/repositories/FarmRepository';
+import InviteRepository from 'domain/application/repositories/InviteRepository';
 import CultureRepository from 'domain/application/repositories/CultureRepository';
 import TransactionCategoryRepository from 'domain/application/repositories/TransactionCategoryRepository';
 import Farm from 'domain/enterprise/entities/Farm';
 import Farmer from 'domain/enterprise/entities/Farmer';
 import Culture from 'domain/enterprise/entities/Culture';
+import Invite from 'domain/enterprise/entities/Invite';
 import TransactionCategory from 'domain/enterprise/entities/TransactionCategory';
 
 const DEFAULT_CULTURES = ['Morango', 'Mandioca', 'Café', 'Pimentão'];
@@ -24,6 +28,7 @@ export interface ProvisionFarmerInput {
   email: string;
   password?: string | null;
   googleId?: string | null;
+  inviteCode?: string | null;
 }
 
 @Injectable()
@@ -31,12 +36,15 @@ export default class FarmerProvisioner {
   constructor(
     private readonly farmerRepository: FarmerRepository,
     private readonly farmRepository: FarmRepository,
+    private readonly inviteRepository: InviteRepository,
     private readonly cultureRepository: CultureRepository,
     private readonly transactionCategoryRepository: TransactionCategoryRepository,
   ) {}
 
   async provision(input: ProvisionFarmerInput): Promise<Farmer> {
-    const farm = Farm.create({});
+    const invite = await this.redeemInvite(input.inviteCode);
+
+    const farm = Farm.create({ inviteId: invite.id });
 
     await this.farmRepository.save(farm);
 
@@ -62,5 +70,25 @@ export default class FarmerProvisioner {
     await this.farmerRepository.save(farmer);
 
     return farmer;
+  }
+
+  private async redeemInvite(rawCode?: string | null): Promise<Invite> {
+    if (!rawCode || !rawCode.trim()) {
+      throw new InviteRequiredError();
+    }
+
+    const invite = await this.inviteRepository.findByCodeForUpdate(
+      Invite.normalizeCode(rawCode),
+    );
+
+    if (!invite || !invite.isUsable) {
+      throw new InvalidInviteError();
+    }
+
+    invite.redeem();
+
+    await this.inviteRepository.save(invite);
+
+    return invite;
   }
 }

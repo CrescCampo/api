@@ -15,6 +15,7 @@ import RefreshToken from 'domain/enterprise/entities/RefreshToken';
 
 export interface Input {
   idToken: string;
+  inviteCode?: string | null;
 }
 
 export interface Output {
@@ -73,6 +74,7 @@ export default class LoginFarmerWithGoogle {
             name: googleUser.name ?? googleUser.email,
             email: googleUser.email,
             googleId: googleUser.sub,
+            inviteCode: input.inviteCode,
           }));
 
         if (!resolvedFarmer.googleId) {

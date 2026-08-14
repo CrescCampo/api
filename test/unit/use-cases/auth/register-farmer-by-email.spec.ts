@@ -1,6 +1,7 @@
 import UserAlreadyExistsError from 'domain/application/errors/auth/UserAlreadyExistsError';
 import Farm from 'domain/enterprise/entities/Farm';
 import Farmer from 'domain/enterprise/entities/Farmer';
+import Invite from 'domain/enterprise/entities/Invite';
 import HashGenerator from 'domain/application/cryptography/hash-generator';
 import AccountCreatedNotifier, {
   AccountCreatedNotification,
@@ -11,6 +12,7 @@ import InMemoryFarmRepository from '../../repositories/InMemoryFarmRepository';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryCultureRepository from '../../repositories/InMemoryCultureRepository';
 import InMemoryTransactionCategoryRepository from '../../repositories/InMemoryTransactionCategoryRepository';
+import InMemoryInviteRepository from '../../repositories/InMemoryInviteRepository';
 import InMemoryUnitOfWork from '../../unit-of-work/InMemoryUnitOfWork';
 import NoopTracer from '../../tracing/NoopTracer';
 
@@ -32,6 +34,7 @@ let inMemoryFarmerRepository: InMemoryFarmerRepository;
 let inMemoryFarmRepository: InMemoryFarmRepository;
 let inMemoryCultureRepository: InMemoryCultureRepository;
 let inMemoryTransactionCategoryRepository: InMemoryTransactionCategoryRepository;
+let inMemoryInviteRepository: InMemoryInviteRepository;
 let hashGenerator: HashGenerator;
 let unitOfWork: InMemoryUnitOfWork;
 let tracer: NoopTracer;
@@ -44,6 +47,8 @@ class FakeHashGenerator implements HashGenerator {
   }
 }
 
+const INVITE_CODE = 'CRESC-4F2K';
+
 describe('RegisterUserUseCase', () => {
   beforeEach(() => {
     inMemoryFarmerRepository = new InMemoryFarmerRepository();
@@ -51,6 +56,10 @@ describe('RegisterUserUseCase', () => {
     inMemoryCultureRepository = new InMemoryCultureRepository();
     inMemoryTransactionCategoryRepository =
       new InMemoryTransactionCategoryRepository();
+    inMemoryInviteRepository = new InMemoryInviteRepository();
+    inMemoryInviteRepository.items.push(
+      Invite.create({ code: INVITE_CODE, maxUses: 10 }),
+    );
     hashGenerator = new FakeHashGenerator();
     unitOfWork = new InMemoryUnitOfWork();
     tracer = new NoopTracer();
@@ -59,6 +68,7 @@ describe('RegisterUserUseCase', () => {
     const farmerProvisioner = new FarmerProvisioner(
       inMemoryFarmerRepository,
       inMemoryFarmRepository,
+      inMemoryInviteRepository,
       inMemoryCultureRepository,
       inMemoryTransactionCategoryRepository,
     );
@@ -89,6 +99,7 @@ describe('RegisterUserUseCase', () => {
         name: 'Maria Clara',
         email: 'maria@example.com',
         password: 'password',
+        inviteCode: INVITE_CODE,
       }),
     ).rejects.toBeInstanceOf(UserAlreadyExistsError);
   });
@@ -98,6 +109,7 @@ describe('RegisterUserUseCase', () => {
       name: 'Joao Paulo',
       email: 'joao@example.com',
       password: 'secret',
+      inviteCode: INVITE_CODE,
     });
 
     expect(inMemoryFarmRepository.items).toHaveLength(1);
@@ -116,6 +128,7 @@ describe('RegisterUserUseCase', () => {
       name: 'Joao Paulo',
       email: 'joao@example.com',
       password: 'secret',
+      inviteCode: INVITE_CODE,
     });
 
     const farmId = inMemoryFarmRepository.items[0].id;
@@ -132,6 +145,7 @@ describe('RegisterUserUseCase', () => {
       name: 'Joao Paulo',
       email: 'joao@example.com',
       password: 'secret',
+      inviteCode: INVITE_CODE,
     });
 
     const farmId = inMemoryFarmRepository.items[0].id;
@@ -156,6 +170,7 @@ describe('RegisterUserUseCase', () => {
       name: 'Joao Paulo',
       email: 'joao@example.com',
       password: 'secret',
+      inviteCode: INVITE_CODE,
     });
 
     expect(accountCreatedNotifier.notifications).toEqual([
@@ -170,6 +185,7 @@ describe('RegisterUserUseCase', () => {
       name: 'Joao Paulo',
       email: 'joao@example.com',
       password: 'secret',
+      inviteCode: INVITE_CODE,
     });
 
     expect(result.userId).toBeTruthy();
