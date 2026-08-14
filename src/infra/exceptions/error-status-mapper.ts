@@ -7,6 +7,8 @@ import InvalidGoogleTokenError from 'domain/application/errors/auth/InvalidGoogl
 import EmailNotVerifiedByProviderError from 'domain/application/errors/auth/EmailNotVerifiedByProviderError';
 import OAuthNotConfiguredError from 'domain/application/errors/auth/OAuthNotConfiguredError';
 import CurrentPasswordRequiredError from 'domain/application/errors/auth/CurrentPasswordRequiredError';
+import InviteRequiredError from 'domain/application/errors/auth/InviteRequiredError';
+import InvalidInviteError from 'domain/application/errors/auth/InvalidInviteError';
 import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFoundError';
 import TransactionNotFoundError from 'domain/application/errors/transaction/TransactionNotFoundError';
 import HarvestNotFoundError from 'domain/application/errors/harvest/HarvestNotFoundError';
@@ -21,6 +23,10 @@ export default class ErrorStatusMapper {
     [InvalidPasswordResetTokenError.name, HttpStatus.BAD_REQUEST],
     [EmailNotVerifiedByProviderError.name, HttpStatus.BAD_REQUEST],
     [CurrentPasswordRequiredError.name, HttpStatus.BAD_REQUEST],
+
+    // 403 - Forbidden (Access not granted)
+    [InviteRequiredError.name, HttpStatus.FORBIDDEN],
+    [InvalidInviteError.name, HttpStatus.FORBIDDEN],
 
     // 409 - Conflict (Resource already exists)
     [UserAlreadyExistsError.name, HttpStatus.CONFLICT],
