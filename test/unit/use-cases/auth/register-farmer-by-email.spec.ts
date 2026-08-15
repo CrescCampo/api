@@ -1,4 +1,7 @@
 import UserAlreadyExistsError from 'domain/application/errors/auth/UserAlreadyExistsError';
+import InviteRequiredError from 'domain/application/errors/auth/InviteRequiredError';
+import InvalidInviteError from 'domain/application/errors/auth/InvalidInviteError';
+import FarmAccessStatus from 'domain/enterprise/enums/FarmAccessStatus';
 import Farm from 'domain/enterprise/entities/Farm';
 import Farmer from 'domain/enterprise/entities/Farmer';
 import Invite from 'domain/enterprise/entities/Invite';
@@ -191,5 +194,107 @@ describe('RegisterUserUseCase', () => {
     expect(result.userId).toBeTruthy();
     expect(inMemoryFarmerRepository.items).toHaveLength(1);
     expect(inMemoryFarmerRepository.items[0].id).toBe(result.userId);
+  });
+
+  describe('gate de convite', () => {
+    const user = {
+      name: 'Joao Paulo',
+      email: 'joao@example.com',
+      password: 'secret',
+    };
+
+    it('should reject when no invite code is given', async () => {
+      await expect(sut.execute({ ...user })).rejects.toBeInstanceOf(
+        InviteRequiredError,
+      );
+      expect(inMemoryFarmRepository.items).toHaveLength(0);
+      expect(inMemoryFarmerRepository.items).toHaveLength(0);
+    });
+
+    it('should reject a blank invite code', async () => {
+      await expect(
+        sut.execute({ ...user, inviteCode: '   ' }),
+      ).rejects.toBeInstanceOf(InviteRequiredError);
+    });
+
+    it('should reject an unknown invite code', async () => {
+      await expect(
+        sut.execute({ ...user, inviteCode: 'CRESC-ZZZZ' }),
+      ).rejects.toBeInstanceOf(InvalidInviteError);
+    });
+
+    it('should reject an exhausted invite', async () => {
+      const invite = Invite.create({ code: 'CRESC-ONCE' });
+      invite.redeem();
+      inMemoryInviteRepository.items.push(invite);
+
+      await expect(
+        sut.execute({ ...user, inviteCode: 'CRESC-ONCE' }),
+      ).rejects.toBeInstanceOf(InvalidInviteError);
+    });
+
+    it('should reject an expired invite', async () => {
+      inMemoryInviteRepository.items.push(
+        Invite.create({
+          code: 'CRESC-OLD1',
+          expiresAt: new Date(Date.now() - 1000),
+        }),
+      );
+
+      await expect(
+        sut.execute({ ...user, inviteCode: 'CRESC-OLD1' }),
+      ).rejects.toBeInstanceOf(InvalidInviteError);
+    });
+
+    it('should reject a revoked invite', async () => {
+      const invite = Invite.create({ code: 'CRESC-REVK' });
+      invite.revoke();
+      inMemoryInviteRepository.items.push(invite);
+
+      await expect(
+        sut.execute({ ...user, inviteCode: 'CRESC-REVK' }),
+      ).rejects.toBeInstanceOf(InvalidInviteError);
+    });
+
+    it('should redeem the invite and link it to the new farm', async () => {
+      const invite = Invite.create({ code: 'CRESC-GOOD' });
+      inMemoryInviteRepository.items.push(invite);
+
+      await sut.execute({ ...user, inviteCode: '  cresc-good  ' });
+
+      expect(invite.usedCount).toBe(1);
+      expect(invite.isUsable).toBe(false);
+      expect(inMemoryFarmRepository.items[0].inviteId).toBe(invite.id);
+      expect(inMemoryFarmRepository.items[0].accessStatus).toBe(
+        FarmAccessStatus.COURTESY,
+      );
+    });
+
+    it('should honour an invite with more than one use', async () => {
+      inMemoryInviteRepository.items.push(
+        Invite.create({ code: 'CRESC-COOP', maxUses: 2 }),
+      );
+
+      await sut.execute({
+        ...user,
+        email: 'a@example.com',
+        inviteCode: 'CRESC-COOP',
+      });
+      await sut.execute({
+        ...user,
+        email: 'b@example.com',
+        inviteCode: 'CRESC-COOP',
+      });
+
+      await expect(
+        sut.execute({
+          ...user,
+          email: 'c@example.com',
+          inviteCode: 'CRESC-COOP',
+        }),
+      ).rejects.toBeInstanceOf(InvalidInviteError);
+
+      expect(inMemoryFarmRepository.items).toHaveLength(2);
+    });
   });
 });

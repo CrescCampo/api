@@ -13,6 +13,7 @@ import LoginFarmerWithGoogle from 'domain/application/use-cases/auth/login-farme
 import Farm from 'domain/enterprise/entities/Farm';
 import Farmer from 'domain/enterprise/entities/Farmer';
 import Invite from 'domain/enterprise/entities/Invite';
+import InviteRequiredError from 'domain/application/errors/auth/InviteRequiredError';
 import InMemoryFarmRepository from '../../repositories/InMemoryFarmRepository';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryCultureRepository from '../../repositories/InMemoryCultureRepository';
@@ -191,5 +192,22 @@ describe('LoginFarmerWithGoogle', () => {
     await expect(sut.execute({ idToken: 'any' })).rejects.toBeInstanceOf(
       WrongCredentialsError,
     );
+  });
+
+  it('should reject a first Google login without an invite code', async () => {
+    await expect(sut.execute({ idToken: 'any' })).rejects.toBeInstanceOf(
+      InviteRequiredError,
+    );
+    expect(farmerRepository.items).toHaveLength(0);
+    expect(farmRepository.items).toHaveLength(0);
+  });
+
+  it('should redeem the invite when provisioning through Google', async () => {
+    const invite = inviteRepository.items[0];
+
+    await sut.execute({ idToken: 'any', inviteCode: INVITE_CODE });
+
+    expect(invite.usedCount).toBe(1);
+    expect(farmRepository.items[0].inviteId).toBe(invite.id);
   });
 });

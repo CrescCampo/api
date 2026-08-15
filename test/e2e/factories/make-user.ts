@@ -1,5 +1,6 @@
 import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
+import registerUser from '../helpers/register-user';
 
 export interface UserData {
   name: string;
@@ -33,7 +34,7 @@ export async function registerAndAuthenticate(
 ): Promise<AuthenticatedUser> {
   const user = makeUser(overrides);
 
-  await request(app.getHttpServer()).post('/auth/register').send(user);
+  await registerUser(app, user);
 
   const loginRes = await request(app.getHttpServer())
     .post('/auth/login')

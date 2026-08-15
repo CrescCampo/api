@@ -1,11 +1,13 @@
 import request from 'supertest';
 import { randomUUID } from 'crypto';
 import { INestApplication } from '@nestjs/common';
+import seedInvite from './seed-invite';
 
 interface Overrides {
   name?: string;
   email?: string;
   password?: string;
+  inviteCode?: string;
 }
 
 export default async function createAndAuthenticateUser(
@@ -15,10 +17,11 @@ export default async function createAndAuthenticateUser(
   const name = overrides.name ?? 'Usuário Teste';
   const email = overrides.email ?? `user-${randomUUID()}@teste.com`;
   const password = overrides.password ?? 'senha-muito-segura123';
+  const inviteCode = overrides.inviteCode ?? (await seedInvite());
 
   const registerResponse = await request(app.getHttpServer())
     .post('/auth/register')
-    .send({ name, email, password });
+    .send({ name, email, password, inviteCode });
 
   if (registerResponse.status !== 201) {
     throw new Error(
