@@ -71,6 +71,10 @@ export class EnvVariables {
   @IsNotEmpty()
   RESEND_API_KEY: string;
 
+  @IsString()
+  @IsNotEmpty()
+  VERIFICATION_CODE_SECRET: string;
+
   @IsOptional()
   @IsString()
   DISCORD_ACCOUNT_CREATED_WEBHOOK_URL?: string;

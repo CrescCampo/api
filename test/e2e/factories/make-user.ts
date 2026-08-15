@@ -1,5 +1,6 @@
 import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
+import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import registerUser from '../helpers/register-user';
 
 export interface UserData {
@@ -28,6 +29,21 @@ export function makeUser(overrides?: Partial<UserData>): UserData {
   };
 }
 
+export async function markEmailVerified(
+  app: INestApplication,
+  email: string,
+): Promise<void> {
+  const farmerRepository = app.get(FarmerRepository);
+  const farmer = await farmerRepository.findByEmail(email);
+
+  if (!farmer) {
+    throw new Error(`Farmer not found for email ${email}`);
+  }
+
+  farmer.verifyEmail();
+  await farmerRepository.save(farmer);
+}
+
 export async function registerAndAuthenticate(
   app: INestApplication,
   overrides?: Partial<UserData>,
@@ -35,6 +51,8 @@ export async function registerAndAuthenticate(
   const user = makeUser(overrides);
 
   await registerUser(app, user);
+
+  await markEmailVerified(app, user.email);
 
   const loginRes = await request(app.getHttpServer())
     .post('/auth/login')

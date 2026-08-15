@@ -53,4 +53,8 @@ export interface Config {
     passwordResetUrl: (token: string) => string;
     resendTemplateAlias: string;
   };
+  verifyEmail: {
+    resendTemplateAlias: string;
+    codeSecret: string;
+  };
 }

@@ -77,6 +77,23 @@ describe('ResetPasswordUseCase', () => {
     expect(unitOfWork.commitCount).toBe(1);
   });
 
+  it('marks the email as verified when the emailed token is redeemed', async () => {
+    const farmer = createFarmer();
+    await farmerRepository.save(farmer);
+
+    const token = PasswordResetToken.create({
+      farmerId: farmer.id,
+      tokenHash: tokenGenerator.hash('plain-token'),
+    });
+    await passwordResetTokenRepository.save(token);
+
+    expect(farmer.emailVerified).toBe(false);
+
+    await sut.execute({ token: 'plain-token', newPassword: 'new-secret' });
+
+    expect(farmerRepository.items[0].emailVerified).toBe(true);
+  });
+
   it('throws when the token does not exist', async () => {
     await expect(
       sut.execute({ token: 'plain-token', newPassword: 'new-secret' }),

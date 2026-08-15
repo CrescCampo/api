@@ -9,6 +9,7 @@ import TransactionRepository from 'domain/application/repositories/TransactionRe
 import OutboxEventRepository from 'domain/application/repositories/OutboxEventRepository';
 import FeedbackRepository from 'domain/application/repositories/FeedbackRepository';
 import PasswordResetTokenRepository from 'domain/application/repositories/PasswordResetTokenRepository';
+import EmailVerificationCodeRepository from 'domain/application/repositories/EmailVerificationCodeRepository';
 import RefreshTokenRepository from 'domain/application/repositories/RefreshTokenRepository';
 import UnitOfWork from 'domain/application/unit-of-work/UnitOfWork';
 import DrizzleService from './drizzle/drizzle.service';
@@ -22,6 +23,7 @@ import DrizzleTransactionRepository from './drizzle/repositories/transaction.rep
 import DrizzleOutboxEventRepository from './drizzle/repositories/outbox-event.repository';
 import DrizzleFeedbackRepository from './drizzle/repositories/feedback.repository';
 import DrizzlePasswordResetTokenRepository from './drizzle/repositories/password-reset-token.repository';
+import DrizzleEmailVerificationCodeRepository from './drizzle/repositories/email-verification-code.repository';
 import DrizzleRefreshTokenRepository from './drizzle/repositories/refreshToken.repository';
 import DrizzleUnitOfWork from './drizzle/unit-of-work/drizzle-unit-of-work';
 import TombstonePurgeService from './tombstone-purge.service';
@@ -53,6 +55,10 @@ export const DRIZZLE_CONNECTION = Symbol('DRIZZLE_CONNECTION');
       useClass: DrizzlePasswordResetTokenRepository,
     },
     {
+      provide: EmailVerificationCodeRepository,
+      useClass: DrizzleEmailVerificationCodeRepository,
+    },
+    {
       provide: RefreshTokenRepository,
       useClass: DrizzleRefreshTokenRepository,
     },
@@ -72,6 +78,7 @@ export const DRIZZLE_CONNECTION = Symbol('DRIZZLE_CONNECTION');
     OutboxEventRepository,
     FeedbackRepository,
     PasswordResetTokenRepository,
+    EmailVerificationCodeRepository,
     RefreshTokenRepository,
     UnitOfWork,
   ],
