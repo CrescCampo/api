@@ -43,6 +43,9 @@ export interface Config {
   resend: {
     apiKey: string;
   };
+  admin: {
+    apiKey: string;
+  };
   discord: {
     accountCreatedWebhookUrl: string;
   };
