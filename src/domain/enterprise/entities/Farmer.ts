@@ -13,6 +13,7 @@ interface FarmerProps {
   lastLogin: Date | null;
   farmId: string;
   tokenVersion: number;
+  emailVerified: boolean;
 }
 
 export default class Farmer extends Entity<FarmerProps> {
@@ -70,6 +71,16 @@ export default class Farmer extends Entity<FarmerProps> {
     return this.props.tokenVersion;
   }
 
+  get emailVerified() {
+    return this.props.emailVerified;
+  }
+
+  verifyEmail() {
+    if (this.props.emailVerified) return;
+    this.props.emailVerified = true;
+    this.#touch();
+  }
+
   get phone() {
     return this.props.phone;
   }
@@ -113,6 +124,7 @@ export default class Farmer extends Entity<FarmerProps> {
       | 'tokenVersion'
       | 'password'
       | 'googleId'
+      | 'emailVerified'
     >,
     id?: string,
   ) {
@@ -127,6 +139,7 @@ export default class Farmer extends Entity<FarmerProps> {
         updatedAt: props.updatedAt ?? null,
         lastLogin: props.lastLogin ?? null,
         tokenVersion: props.tokenVersion ?? 0,
+        emailVerified: props.emailVerified ?? false,
       },
       id,
     );

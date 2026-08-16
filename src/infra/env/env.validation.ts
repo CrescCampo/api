@@ -74,6 +74,10 @@ export class EnvVariables {
 
   @IsString()
   @IsNotEmpty()
+  VERIFICATION_CODE_SECRET: string;
+
+  @IsString()
+  @IsNotEmpty()
   @MinLength(32)
   ADMIN_API_KEY: string;
 

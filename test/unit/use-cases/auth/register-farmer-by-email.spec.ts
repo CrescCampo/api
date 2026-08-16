@@ -6,6 +6,10 @@ import Farm from 'domain/enterprise/entities/Farm';
 import Farmer from 'domain/enterprise/entities/Farmer';
 import Invite from 'domain/enterprise/entities/Invite';
 import HashGenerator from 'domain/application/cryptography/hash-generator';
+import OtpGenerator from 'domain/application/cryptography/otp-generator';
+import VerificationEmailSender, {
+  SendVerificationEmailInput,
+} from 'domain/application/email/verification-email-sender';
 import AccountCreatedNotifier, {
   AccountCreatedNotification,
 } from 'domain/application/notifications/account-created-notifier';
@@ -16,6 +20,7 @@ import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepositor
 import InMemoryCultureRepository from '../../repositories/InMemoryCultureRepository';
 import InMemoryTransactionCategoryRepository from '../../repositories/InMemoryTransactionCategoryRepository';
 import InMemoryInviteRepository from '../../repositories/InMemoryInviteRepository';
+import InMemoryEmailVerificationCodeRepository from '../../repositories/InMemoryEmailVerificationCodeRepository';
 import InMemoryUnitOfWork from '../../unit-of-work/InMemoryUnitOfWork';
 import NoopTracer from '../../tracing/NoopTracer';
 
@@ -33,12 +38,41 @@ class FakeAccountCreatedNotifier implements AccountCreatedNotifier {
   }
 }
 
+class FakeOtpGenerator implements OtpGenerator {
+  async generate(): Promise<{ plain: string; hash: string }> {
+    return { plain: '123456', hash: this.hash('123456') };
+  }
+
+  hash(plain: string): string {
+    return `hashed-${plain}`;
+  }
+}
+
+class FakeVerificationEmailSender implements VerificationEmailSender {
+  calls: SendVerificationEmailInput[] = [];
+
+  shouldFail = false;
+
+  async sendVerificationEmail(
+    input: SendVerificationEmailInput,
+  ): Promise<void> {
+    this.calls.push(input);
+
+    if (this.shouldFail) {
+      throw new Error('Resend is down');
+    }
+  }
+}
+
 let inMemoryFarmerRepository: InMemoryFarmerRepository;
 let inMemoryFarmRepository: InMemoryFarmRepository;
 let inMemoryCultureRepository: InMemoryCultureRepository;
 let inMemoryTransactionCategoryRepository: InMemoryTransactionCategoryRepository;
 let inMemoryInviteRepository: InMemoryInviteRepository;
+let inMemoryEmailVerificationCodeRepository: InMemoryEmailVerificationCodeRepository;
 let hashGenerator: HashGenerator;
+let otpGenerator: FakeOtpGenerator;
+let verificationEmailSender: FakeVerificationEmailSender;
 let unitOfWork: InMemoryUnitOfWork;
 let tracer: NoopTracer;
 let accountCreatedNotifier: FakeAccountCreatedNotifier;
@@ -63,7 +97,11 @@ describe('RegisterUserUseCase', () => {
     inMemoryInviteRepository.items.push(
       Invite.create({ code: INVITE_CODE, maxUses: 10 }),
     );
+    inMemoryEmailVerificationCodeRepository =
+      new InMemoryEmailVerificationCodeRepository();
     hashGenerator = new FakeHashGenerator();
+    otpGenerator = new FakeOtpGenerator();
+    verificationEmailSender = new FakeVerificationEmailSender();
     unitOfWork = new InMemoryUnitOfWork();
     tracer = new NoopTracer();
     accountCreatedNotifier = new FakeAccountCreatedNotifier();
@@ -80,6 +118,9 @@ describe('RegisterUserUseCase', () => {
       inMemoryFarmerRepository,
       farmerProvisioner,
       hashGenerator,
+      otpGenerator,
+      inMemoryEmailVerificationCodeRepository,
+      verificationEmailSender,
       unitOfWork,
       tracer,
       accountCreatedNotifier,
@@ -124,6 +165,51 @@ describe('RegisterUserUseCase', () => {
     expect(inMemoryFarmerRepository.items[0].farmId).toBe(
       inMemoryFarmRepository.items[0].id,
     );
+  });
+
+  it('should create the farmer with an unverified email', async () => {
+    await sut.execute({
+      name: 'Joao Paulo',
+      email: 'joao@example.com',
+      password: 'secret',
+      inviteCode: INVITE_CODE,
+    });
+
+    expect(inMemoryFarmerRepository.items[0].emailVerified).toBe(false);
+  });
+
+  it('should persist a verification code and send it by email', async () => {
+    const result = await sut.execute({
+      name: 'Joao Paulo',
+      email: 'joao@example.com',
+      password: 'secret',
+      inviteCode: INVITE_CODE,
+    });
+
+    expect(inMemoryEmailVerificationCodeRepository.items).toHaveLength(1);
+    const stored = inMemoryEmailVerificationCodeRepository.items[0];
+    expect(stored.farmerId).toBe(result.userId);
+    expect(stored.codeHash).toBe('hashed-123456');
+    expect(stored.usedAt).toBeNull();
+
+    expect(verificationEmailSender.calls).toEqual([
+      { to: 'joao@example.com', name: 'Joao', code: '123456' },
+    ]);
+  });
+
+  it('should still create the account when the verification email fails', async () => {
+    verificationEmailSender.shouldFail = true;
+
+    const result = await sut.execute({
+      name: 'Joao Paulo',
+      email: 'joao@example.com',
+      password: 'secret',
+      inviteCode: INVITE_CODE,
+    });
+
+    expect(result.userId).toBeTruthy();
+    expect(inMemoryFarmerRepository.items).toHaveLength(1);
+    expect(inMemoryEmailVerificationCodeRepository.items).toHaveLength(1);
   });
 
   it('should create default cultures for the new farm', async () => {

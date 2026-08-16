@@ -30,6 +30,7 @@ export default class DrizzleFarmerRepository implements FarmerRepository {
         lastLogin: row.lastLogin ?? null,
         farmId: row.farmId,
         tokenVersion: row.tokenVersion,
+        emailVerified: row.emailVerified,
       },
       row.id,
     );
@@ -51,6 +52,7 @@ export default class DrizzleFarmerRepository implements FarmerRepository {
         updatedAt: farmer.updatedAt,
         lastLogin: farmer.lastLogin,
         tokenVersion: farmer.tokenVersion,
+        emailVerified: farmer.emailVerified,
       })
       .onConflictDoUpdate({
         target: FarmerModel.id,
@@ -65,6 +67,7 @@ export default class DrizzleFarmerRepository implements FarmerRepository {
           updatedAt: farmer.updatedAt,
           lastLogin: farmer.lastLogin,
           tokenVersion: farmer.tokenVersion,
+          emailVerified: farmer.emailVerified,
         },
       });
   }
@@ -95,6 +98,17 @@ export default class DrizzleFarmerRepository implements FarmerRepository {
       .from(FarmerModel)
       .where(eq(FarmerModel.id, id))
       .limit(1);
+
+    return row ? this.toDomain(row) : null;
+  }
+
+  async findByIdForUpdate(id: string): Promise<Farmer | null> {
+    const [row] = await this.db
+      .select()
+      .from(FarmerModel)
+      .where(eq(FarmerModel.id, id))
+      .limit(1)
+      .for('update');
 
     return row ? this.toDomain(row) : null;
   }

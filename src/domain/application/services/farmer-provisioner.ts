@@ -28,6 +28,7 @@ export interface ProvisionFarmerInput {
   email: string;
   password?: string | null;
   googleId?: string | null;
+  emailVerified?: boolean;
   inviteCode?: string | null;
 }
 
@@ -65,6 +66,7 @@ export default class FarmerProvisioner {
       farmId: farm.id,
       password: input.password ?? null,
       googleId: input.googleId ?? null,
+      emailVerified: input.emailVerified ?? false,
     });
 
     await this.farmerRepository.save(farmer);

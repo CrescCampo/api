@@ -3,7 +3,7 @@ import request from 'supertest';
 import TestAppFactory from '../../helpers/test-app-factory';
 import registerUser from '../../helpers/register-user';
 import { cleanDatabase } from '../../setup/clean-database';
-import { makeUser } from '../../factories/make-user';
+import { makeUser, markEmailVerified } from '../../factories/make-user';
 
 const USER = makeUser({ name: 'Farmer Refresh' });
 
@@ -14,6 +14,7 @@ describe('Refresh Token Controller (e2e)', () => {
     await cleanDatabase();
     app = await TestAppFactory.create();
     await registerUser(app, USER);
+    await markEmailVerified(app, USER.email);
   });
 
   afterAll(async () => {

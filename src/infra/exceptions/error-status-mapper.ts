@@ -5,6 +5,9 @@ import UserAlreadyExistsError from 'domain/application/errors/auth/UserAlreadyEx
 import WrongCredentialsError from 'domain/application/errors/auth/WrongCredentialsError';
 import InvalidGoogleTokenError from 'domain/application/errors/auth/InvalidGoogleTokenError';
 import EmailNotVerifiedByProviderError from 'domain/application/errors/auth/EmailNotVerifiedByProviderError';
+import EmailNotVerifiedError from 'domain/application/errors/auth/EmailNotVerifiedError';
+import InvalidVerificationCodeError from 'domain/application/errors/auth/InvalidVerificationCodeError';
+import EmailAlreadyVerifiedError from 'domain/application/errors/auth/EmailAlreadyVerifiedError';
 import OAuthNotConfiguredError from 'domain/application/errors/auth/OAuthNotConfiguredError';
 import CurrentPasswordRequiredError from 'domain/application/errors/auth/CurrentPasswordRequiredError';
 import InviteRequiredError from 'domain/application/errors/auth/InviteRequiredError';
@@ -24,7 +27,10 @@ export default class ErrorStatusMapper {
     [InvalidPasswordResetTokenError.name, HttpStatus.BAD_REQUEST],
     [EmailNotVerifiedByProviderError.name, HttpStatus.BAD_REQUEST],
     [CurrentPasswordRequiredError.name, HttpStatus.BAD_REQUEST],
+    [InvalidVerificationCodeError.name, HttpStatus.BAD_REQUEST],
     [InvalidInviteSettingsError.name, HttpStatus.BAD_REQUEST],
+
+    [EmailNotVerifiedError.name, HttpStatus.FORBIDDEN],
 
     // 403 - Forbidden (Access not granted)
     [InviteRequiredError.name, HttpStatus.FORBIDDEN],
@@ -32,6 +38,7 @@ export default class ErrorStatusMapper {
 
     // 409 - Conflict (Resource already exists)
     [UserAlreadyExistsError.name, HttpStatus.CONFLICT],
+    [EmailAlreadyVerifiedError.name, HttpStatus.CONFLICT],
 
     // 503 - Service Unavailable (Provider not configured)
     [OAuthNotConfiguredError.name, HttpStatus.SERVICE_UNAVAILABLE],

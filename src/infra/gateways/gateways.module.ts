@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import AccountCreatedNotifier from 'domain/application/notifications/account-created-notifier';
 import ResetPasswordEmailSender from 'domain/application/email/reset-password-email-sender';
+import VerificationEmailSender from 'domain/application/email/verification-email-sender';
 import WhatsAppGateway from 'domain/application/gateways/whatsapp-gateway';
 import GoogleTokenVerifier from 'domain/application/gateways/google-token-verifier';
 import config from 'infra/config';
@@ -18,6 +19,7 @@ import GoogleOAuthTokenVerifier from './google-oauth-token-verifier';
     },
     { provide: WhatsAppGateway, useClass: WhatsAppHttpGateway },
     { provide: ResetPasswordEmailSender, useClass: ResendEmailService },
+    { provide: VerificationEmailSender, useClass: ResendEmailService },
     {
       provide: AccountCreatedNotifier,
       useClass: DiscordAccountCreatedNotifier,
@@ -27,6 +29,7 @@ import GoogleOAuthTokenVerifier from './google-oauth-token-verifier';
   exports: [
     WhatsAppGateway,
     ResetPasswordEmailSender,
+    VerificationEmailSender,
     AccountCreatedNotifier,
     GoogleTokenVerifier,
   ],

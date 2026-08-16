@@ -9,5 +9,7 @@ export default abstract class FarmerRepository {
 
   abstract findById(id: string): Promise<Farmer | null>;
 
+  abstract findByIdForUpdate(id: string): Promise<Farmer | null>;
+
   abstract findByPhone(phone: string): Promise<Farmer | null>;
 }

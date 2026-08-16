@@ -3,7 +3,10 @@ import LoginFarmerByEmail from 'domain/application/use-cases/auth/login-farmer-b
 import LoginFarmerWithGoogle from 'domain/application/use-cases/auth/login-farmer-with-google';
 import RefreshTokenUseCase from 'domain/application/use-cases/auth/refresh-token';
 import RegisterUserUseCase from 'domain/application/use-cases/auth/register-farmer-by-email';
+import VerifyEmailUseCase from 'domain/application/use-cases/auth/verify-email';
+import ResendVerificationCodeUseCase from 'domain/application/use-cases/auth/resend-verification-code';
 import FarmerProvisioner from 'domain/application/services/farmer-provisioner';
+import SessionIssuer from 'domain/application/services/session-issuer';
 import SetFarmerPassword from 'domain/application/use-cases/farmers/set-farmer-password';
 import CryptographyModule from 'infra/cryptography/cryptography.module';
 import DatabaseModule from 'infra/database/database.module';
@@ -28,6 +31,8 @@ import HealthCheckController from './controllers/health/health-check.controller'
 import AuthenticateController from './controllers/auth/authenticate.controller';
 import GoogleAuthController from './controllers/auth/google-auth.controller';
 import RegisterFarmerController from './controllers/auth/register-farmer.controller';
+import VerifyEmailController from './controllers/auth/verify-email.controller';
+import ResendVerificationCodeController from './controllers/auth/resend-verification-code.controller';
 import RefreshTokenController from './controllers/auth/refresh-token.controller';
 import PushController from './controllers/app/push.controller';
 import PullController from './controllers/app/pull.controller';
@@ -55,6 +60,8 @@ import RevokeInviteController from './controllers/invites/revoke-invite.controll
     AuthenticateController,
     GoogleAuthController,
     RegisterFarmerController,
+    VerifyEmailController,
+    ResendVerificationCodeController,
     RefreshTokenController,
     GetHarvestsController,
     GetHarvestTransactionsController,
@@ -76,7 +83,10 @@ import RevokeInviteController from './controllers/invites/revoke-invite.controll
     LoginFarmerWithGoogle,
     RefreshTokenUseCase,
     RegisterUserUseCase,
+    VerifyEmailUseCase,
+    ResendVerificationCodeUseCase,
     FarmerProvisioner,
+    SessionIssuer,
     SetFarmerPassword,
     AppPushUseCase,
     AppPullUseCase,

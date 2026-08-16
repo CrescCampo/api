@@ -1,0 +1,1 @@
+ALTER TABLE "email_verification_codes" ADD CONSTRAINT "email_verification_codes_farmer_id_farmers_id_fk" FOREIGN KEY ("farmer_id") REFERENCES "public"."farmers"("id") ON DELETE no action ON UPDATE no action;
