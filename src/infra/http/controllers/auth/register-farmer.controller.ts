@@ -26,12 +26,13 @@ export default class RegisterFarmerController {
     type: RegisterFarmerResponseDTO,
   })
   async handle(@Body() body: RegisterFarmerRequestDTO) {
-    const { name, email, password } = body;
+    const { name, email, password, inviteCode } = body;
 
     const result = await this.registerFarmerUseCase.execute({
       name,
       email,
       password,
+      inviteCode,
     });
 
     return result;

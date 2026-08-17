@@ -13,10 +13,13 @@ import SessionIssuer from 'domain/application/services/session-issuer';
 import LoginFarmerWithGoogle from 'domain/application/use-cases/auth/login-farmer-with-google';
 import Farm from 'domain/enterprise/entities/Farm';
 import Farmer from 'domain/enterprise/entities/Farmer';
+import Invite from 'domain/enterprise/entities/Invite';
+import InviteRequiredError from 'domain/application/errors/auth/InviteRequiredError';
 import InMemoryFarmRepository from '../../repositories/InMemoryFarmRepository';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryCultureRepository from '../../repositories/InMemoryCultureRepository';
 import InMemoryTransactionCategoryRepository from '../../repositories/InMemoryTransactionCategoryRepository';
+import InMemoryInviteRepository from '../../repositories/InMemoryInviteRepository';
 import InMemoryRefreshTokenRepository from '../../repositories/InMemoryRefreshTokenRepository';
 import InMemoryUnitOfWork from '../../unit-of-work/InMemoryUnitOfWork';
 
@@ -64,6 +67,7 @@ let farmerRepository: InMemoryFarmerRepository;
 let farmRepository: InMemoryFarmRepository;
 let cultureRepository: InMemoryCultureRepository;
 let transactionCategoryRepository: InMemoryTransactionCategoryRepository;
+let inviteRepository: InMemoryInviteRepository;
 let refreshTokenRepository: InMemoryRefreshTokenRepository;
 let unitOfWork: InMemoryUnitOfWork;
 let googleTokenVerifier: FakeGoogleTokenVerifier;
@@ -72,12 +76,18 @@ let tokenGenerator: FakeTokenGenerator;
 let accountCreatedNotifier: FakeAccountCreatedNotifier;
 let sut: LoginFarmerWithGoogle;
 
+const INVITE_CODE = 'CRESC-4F2K';
+
 describe('LoginFarmerWithGoogle', () => {
   beforeEach(() => {
     farmerRepository = new InMemoryFarmerRepository();
     farmRepository = new InMemoryFarmRepository();
     cultureRepository = new InMemoryCultureRepository();
     transactionCategoryRepository = new InMemoryTransactionCategoryRepository();
+    inviteRepository = new InMemoryInviteRepository();
+    inviteRepository.items.push(
+      Invite.create({ code: INVITE_CODE, maxUses: 10 }),
+    );
     refreshTokenRepository = new InMemoryRefreshTokenRepository();
     unitOfWork = new InMemoryUnitOfWork();
     googleTokenVerifier = new FakeGoogleTokenVerifier();
@@ -88,6 +98,7 @@ describe('LoginFarmerWithGoogle', () => {
     const farmerProvisioner = new FarmerProvisioner(
       farmerRepository,
       farmRepository,
+      inviteRepository,
       cultureRepository,
       transactionCategoryRepository,
     );
@@ -106,7 +117,10 @@ describe('LoginFarmerWithGoogle', () => {
   });
 
   it('should provision a new account on first Google login', async () => {
-    const result = await sut.execute({ idToken: 'any' });
+    const result = await sut.execute({
+      idToken: 'any',
+      inviteCode: INVITE_CODE,
+    });
 
     expect(farmerRepository.items).toHaveLength(1);
     expect(farmRepository.items).toHaveLength(1);
@@ -197,5 +211,22 @@ describe('LoginFarmerWithGoogle', () => {
     await expect(sut.execute({ idToken: 'any' })).rejects.toBeInstanceOf(
       WrongCredentialsError,
     );
+  });
+
+  it('should reject a first Google login without an invite code', async () => {
+    await expect(sut.execute({ idToken: 'any' })).rejects.toBeInstanceOf(
+      InviteRequiredError,
+    );
+    expect(farmerRepository.items).toHaveLength(0);
+    expect(farmRepository.items).toHaveLength(0);
+  });
+
+  it('should redeem the invite when provisioning through Google', async () => {
+    const invite = inviteRepository.items[0];
+
+    await sut.execute({ idToken: 'any', inviteCode: INVITE_CODE });
+
+    expect(invite.usedCount).toBe(1);
+    expect(farmRepository.items[0].inviteId).toBe(invite.id);
   });
 });

@@ -9,6 +9,7 @@ import TestAppFactory from '../../helpers/test-app-factory';
 import FakeVerificationEmailSender from '../../helpers/fake-verification-email-sender';
 import { cleanDatabase } from '../../setup/clean-database';
 import { makeUser } from '../../factories/make-user';
+import registerUser from '../../helpers/register-user';
 
 describe('Verify Email Controller (e2e)', () => {
   let app: INestApplication;
@@ -32,9 +33,7 @@ describe('Verify Email Controller (e2e)', () => {
 
   async function registerUnverified() {
     const user = makeUser();
-    const response = await request(app.getHttpServer())
-      .post('/auth/register')
-      .send(user);
+    const response = await registerUser(app, user);
     expect(response.status).toBe(201);
 
     const code = emailSender.lastCodeFor(user.email);
@@ -80,7 +79,7 @@ describe('Verify Email Controller (e2e)', () => {
 
   it('[POST] /auth/verify-email — deve rejeitar código expirado (400)', async () => {
     const user = makeUser();
-    await request(app.getHttpServer()).post('/auth/register').send(user);
+    await registerUser(app, user);
     const farmer = await farmerRepository.findByEmail(user.email);
 
     const expiredCode = EmailVerificationCode.create({
@@ -99,7 +98,7 @@ describe('Verify Email Controller (e2e)', () => {
 
   it('[POST] /auth/verify-email — deve rejeitar após reenvio invalidar o código anterior (400) e aceitar o novo (201)', async () => {
     const user = makeUser();
-    await request(app.getHttpServer()).post('/auth/register').send(user);
+    await registerUser(app, user);
     const farmer = await farmerRepository.findByEmail(user.email);
 
     const registerCode =

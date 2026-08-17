@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import TestAppFactory from '../../helpers/test-app-factory';
+import registerUser from '../../helpers/register-user';
 import { cleanDatabase } from '../../setup/clean-database';
 import { makeUser, markEmailVerified } from '../../factories/make-user';
 
@@ -12,7 +13,7 @@ describe('Refresh Token Controller (e2e)', () => {
   beforeAll(async () => {
     await cleanDatabase();
     app = await TestAppFactory.create();
-    await request(app.getHttpServer()).post('/auth/register').send(USER);
+    await registerUser(app, USER);
     await markEmailVerified(app, USER.email);
   });
 

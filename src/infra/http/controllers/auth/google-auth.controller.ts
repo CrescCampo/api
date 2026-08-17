@@ -20,6 +20,9 @@ export default class GoogleAuthController {
     type: AuthenticateResponseDTO,
   })
   async handle(@Body() body: GoogleAuthRequestDTO) {
-    return this.loginFarmerWithGoogle.execute({ idToken: body.idToken });
+    return this.loginFarmerWithGoogle.execute({
+      idToken: body.idToken,
+      inviteCode: body.inviteCode,
+    });
   }
 }

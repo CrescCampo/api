@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
+  IsOptional,
   IsString,
   Matches,
   MaxLength,
@@ -36,4 +37,14 @@ export default class RegisterFarmerRequestDTO {
     message: 'password must contain a number or symbol',
   })
   password: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'Invite code required to create an account',
+    example: 'CRESC-4F2K',
+  })
+  @IsString()
+  @IsOptional()
+  @MaxLength(20)
+  inviteCode?: string;
 }

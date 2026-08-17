@@ -10,6 +10,8 @@ import GoogleTokenVerifier, {
 import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import { cleanDatabase } from '../../setup/clean-database';
 import { makeUser } from '../../factories/make-user';
+import registerUser from '../../helpers/register-user';
+import seedInvite from '../../helpers/seed-invite';
 
 class StubGoogleTokenVerifier implements GoogleTokenVerifier {
   next: GoogleUserInfo = {
@@ -70,7 +72,7 @@ describe('Google Auth Controller (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .post('/auth/google')
-      .send({ idToken: 'stub' });
+      .send({ idToken: 'stub', inviteCode: await seedInvite() });
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('userId');
@@ -81,7 +83,7 @@ describe('Google Auth Controller (e2e)', () => {
 
   it('[POST] /auth/google — deve vincular ao mesmo email cadastrado por senha', async () => {
     const user = makeUser({ name: 'Mesmo Email' });
-    await request(app.getHttpServer()).post('/auth/register').send(user);
+    await registerUser(app, user);
 
     verifier.next = {
       sub: 'sub-linked',
@@ -116,5 +118,21 @@ describe('Google Auth Controller (e2e)', () => {
       .send({ idToken: 'stub' });
 
     expect(response.status).toBe(400);
+  });
+
+  it('[POST] /auth/google — deve recusar primeiro login sem convite (403)', async () => {
+    verifier.next = {
+      sub: 'sub-sem-convite',
+      email: `sem.convite.${Date.now()}@example.com`,
+      emailVerified: true,
+      name: 'Sem Convite',
+    };
+
+    const response = await request(app.getHttpServer())
+      .post('/auth/google')
+      .send({ idToken: 'stub' });
+
+    expect(response.status).toBe(403);
+    expect(response.body.error).toBe('Invite Required');
   });
 });

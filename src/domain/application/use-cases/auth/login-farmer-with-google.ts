@@ -13,6 +13,7 @@ import Farmer from 'domain/enterprise/entities/Farmer';
 
 export interface Input {
   idToken: string;
+  inviteCode?: string | null;
 }
 
 export interface Output {
@@ -70,6 +71,7 @@ export default class LoginFarmerWithGoogle {
             email: googleUser.email,
             googleId: googleUser.sub,
             emailVerified: true,
+            inviteCode: input.inviteCode,
           }));
 
         if (!resolvedFarmer.googleId) {

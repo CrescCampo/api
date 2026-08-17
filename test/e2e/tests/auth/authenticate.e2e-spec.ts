@@ -2,6 +2,7 @@ import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import TestAppFactory from '../../helpers/test-app-factory';
+import registerUser from '../../helpers/register-user';
 import { cleanDatabase } from '../../setup/clean-database';
 import { makeUser, markEmailVerified } from '../../factories/make-user';
 
@@ -21,13 +22,9 @@ describe('Authenticate Controller (e2e)', () => {
   beforeAll(async () => {
     await cleanDatabase();
     app = await TestAppFactory.create();
-    await request(app.getHttpServer()).post('/auth/register').send(USER);
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send(DISABLED_USER);
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send(UNVERIFIED_USER);
+    await registerUser(app, USER);
+    await registerUser(app, DISABLED_USER);
+    await registerUser(app, UNVERIFIED_USER);
 
     await markEmailVerified(app, USER.email);
 

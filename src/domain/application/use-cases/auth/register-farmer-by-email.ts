@@ -15,6 +15,7 @@ export interface Input {
   name: string;
   email: string;
   password: string;
+  inviteCode?: string | null;
 }
 
 export interface Output {
@@ -55,6 +56,7 @@ export default class RegisterUserUseCase {
           name: input.name,
           email: input.email,
           password: hashedPassword,
+          inviteCode: input.inviteCode,
         });
 
         const emailVerificationCode = EmailVerificationCode.create({

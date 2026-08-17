@@ -3,6 +3,8 @@ import { INestApplication } from '@nestjs/common';
 import TestAppFactory from '../../helpers/test-app-factory';
 import { cleanDatabase } from '../../setup/clean-database';
 import { makeUser, markEmailVerified } from '../../factories/make-user';
+import registerUser from '../../helpers/register-user';
+import seedInvite from '../../helpers/seed-invite';
 
 const VALID_USER = makeUser({ name: 'Farmer Registro' });
 
@@ -19,9 +21,7 @@ describe('Register Farmer Controller (e2e)', () => {
   });
 
   it('[POST] /auth/register — deve registrar novo usuário e retornar userId (201)', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/auth/register')
-      .send(VALID_USER);
+    const response = await registerUser(app, VALID_USER);
 
     expect(response.status).toBe(201);
     expect(response.body).toHaveProperty('userId');
@@ -37,7 +37,7 @@ describe('Register Farmer Controller (e2e)', () => {
       password: 'senha-segura-123',
     };
 
-    await request(app.getHttpServer()).post('/auth/register').send(uniqueUser);
+    await registerUser(app, uniqueUser);
 
     await markEmailVerified(app, uniqueUser.email);
 
@@ -70,9 +70,7 @@ describe('Register Farmer Controller (e2e)', () => {
   });
 
   it('[POST] /auth/register — deve rejeitar email já cadastrado (409)', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/auth/register')
-      .send(VALID_USER);
+    const response = await registerUser(app, VALID_USER);
 
     expect(response.status).toBe(409);
   });
@@ -123,4 +121,58 @@ describe('Register Farmer Controller (e2e)', () => {
       expect(response.body).toHaveProperty('message');
     },
   );
+
+  it('[POST] /auth/register — deve recusar cadastro sem convite (403)', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(makeUser({ name: 'Sem Convite' }));
+
+    expect(response.status).toBe(403);
+    expect(response.body.error).toBe('Invite Required');
+  });
+
+  it('[POST] /auth/register — deve recusar convite inexistente (403)', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send({
+        ...makeUser({ name: 'Convite Ruim' }),
+        inviteCode: 'CRESC-ZZZZ',
+      });
+
+    expect(response.status).toBe(403);
+    expect(response.body.error).toBe('Invalid Invite');
+  });
+
+  it('[POST] /auth/register — deve recusar convite já esgotado (403)', async () => {
+    const inviteCode = await seedInvite();
+
+    const first = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send({ ...makeUser({ name: 'Primeiro Uso' }), inviteCode });
+    expect(first.status).toBe(201);
+
+    const second = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send({ ...makeUser({ name: 'Segundo Uso' }), inviteCode });
+
+    expect(second.status).toBe(403);
+    expect(second.body.error).toBe('Invalid Invite');
+  });
+
+  it('[POST] /auth/register — deve aceitar convite de multiplos usos ate esgotar', async () => {
+    const inviteCode = await seedInvite(2);
+
+    for (let i = 0; i < 2; i += 1) {
+      const res = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({ ...makeUser({ name: `Coop ${i}` }), inviteCode });
+      expect(res.status).toBe(201);
+    }
+
+    const exceeded = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send({ ...makeUser({ name: 'Coop Extra' }), inviteCode });
+
+    expect(exceeded.status).toBe(403);
+  });
 });
