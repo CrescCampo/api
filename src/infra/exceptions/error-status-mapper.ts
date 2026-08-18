@@ -10,9 +10,12 @@ import InvalidVerificationCodeError from 'domain/application/errors/auth/Invalid
 import EmailAlreadyVerifiedError from 'domain/application/errors/auth/EmailAlreadyVerifiedError';
 import OAuthNotConfiguredError from 'domain/application/errors/auth/OAuthNotConfiguredError';
 import CurrentPasswordRequiredError from 'domain/application/errors/auth/CurrentPasswordRequiredError';
-import InviteRequiredError from 'domain/application/errors/auth/InviteRequiredError';
-import InvalidInviteError from 'domain/application/errors/auth/InvalidInviteError';
+import InviteRequiredError from 'domain/application/errors/invite/InviteRequiredError';
+import InvalidInviteError from 'domain/application/errors/invite/InvalidInviteError';
 import InvalidInviteSettingsError from 'domain/application/errors/invite/InvalidInviteSettingsError';
+import InviteNotFoundError from 'domain/application/errors/invite/InviteNotFoundError';
+import InviteCodeGenerationError from 'domain/application/errors/invite/InviteCodeGenerationError';
+import InviteCodeAlreadyExistsError from 'domain/application/errors/invite/InviteCodeAlreadyExistsError';
 import FarmerNotFoundError from 'domain/application/errors/farmer/FarmerNotFoundError';
 import TransactionNotFoundError from 'domain/application/errors/transaction/TransactionNotFoundError';
 import HarvestNotFoundError from 'domain/application/errors/harvest/HarvestNotFoundError';
@@ -42,11 +45,14 @@ export default class ErrorStatusMapper {
 
     // 503 - Service Unavailable (Provider not configured)
     [OAuthNotConfiguredError.name, HttpStatus.SERVICE_UNAVAILABLE],
+    [InviteCodeGenerationError.name, HttpStatus.SERVICE_UNAVAILABLE],
+    [InviteCodeAlreadyExistsError.name, HttpStatus.SERVICE_UNAVAILABLE],
 
     // 404 - Not Found
     [FarmerNotFoundError.name, HttpStatus.NOT_FOUND],
     [TransactionNotFoundError.name, HttpStatus.NOT_FOUND],
     [HarvestNotFoundError.name, HttpStatus.NOT_FOUND],
+    [InviteNotFoundError.name, HttpStatus.NOT_FOUND],
   ]);
 
   static getStatusCode(error: Error): HttpStatus {

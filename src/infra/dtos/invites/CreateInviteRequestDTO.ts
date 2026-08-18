@@ -5,21 +5,25 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  Max,
   MaxLength,
   Min,
 } from 'class-validator';
+import { MAX_USES_LIMIT } from 'domain/application/use-cases/invites/create-invite';
 
 export default class CreateInviteRequestDTO {
   @ApiPropertyOptional({
     type: Number,
     example: 50,
     minimum: 1,
+    maximum: MAX_USES_LIMIT,
     default: 1,
     description: 'Quantos cadastros o código aceita antes de esgotar',
   })
   @IsOptional()
   @IsInt()
   @Min(1)
+  @Max(MAX_USES_LIMIT)
   @Type(() => Number)
   maxUses?: number;
 

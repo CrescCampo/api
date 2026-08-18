@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import RevokeInvite from 'domain/application/use-cases/invites/revoke-invite';
-import InvalidInviteError from 'domain/application/errors/auth/InvalidInviteError';
+import InviteNotFoundError from 'domain/application/errors/invite/InviteNotFoundError';
 import Invite from 'domain/enterprise/entities/Invite';
 import InMemoryInviteRepository from '../../repositories/InMemoryInviteRepository';
 import InMemoryUnitOfWork from '../../unit-of-work/InMemoryUnitOfWork';
@@ -58,9 +58,20 @@ describe('RevokeInvite', () => {
     expect(inviteRepository.items).toHaveLength(1);
   });
 
-  it('estoura InvalidInviteError quando o convite não existe', async () => {
+  it('não regrava quando o convite já estava revogado', async () => {
+    await inviteRepository.save(Invite.create({ code: 'CRESC-AAAA' }));
+    await sut.execute({ code: 'CRESC-AAAA' });
+
+    const saveSpy = vi.spyOn(inviteRepository, 'save');
+
+    await sut.execute({ code: 'CRESC-AAAA' });
+
+    expect(saveSpy).not.toHaveBeenCalled();
+  });
+
+  it('estoura InviteNotFoundError quando o convite não existe', async () => {
     await expect(sut.execute({ code: 'CRESC-ZZZZ' })).rejects.toThrow(
-      InvalidInviteError,
+      InviteNotFoundError,
     );
     expect(unitOfWork.rollbackCount).toBe(1);
   });

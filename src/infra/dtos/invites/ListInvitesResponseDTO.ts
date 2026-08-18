@@ -59,7 +59,26 @@ export class InviteSummaryDTO {
   isRevoked: boolean;
 }
 
+export class ListInvitesPaginationMetaDTO {
+  @ApiProperty({ type: Number, example: 1 })
+  currentPage: number;
+
+  @ApiProperty({ type: Number, example: 20 })
+  items: number;
+
+  @ApiProperty({ type: Number, example: 137 })
+  totalItems: number;
+}
+
+export class ListInvitesPaginationDTO {
+  @ApiProperty({ type: ListInvitesPaginationMetaDTO })
+  meta: ListInvitesPaginationMetaDTO;
+}
+
 export default class ListInvitesResponseDTO {
   @ApiProperty({ type: [InviteSummaryDTO] })
   invites: InviteSummaryDTO[];
+
+  @ApiProperty({ type: ListInvitesPaginationDTO })
+  pagination: ListInvitesPaginationDTO;
 }

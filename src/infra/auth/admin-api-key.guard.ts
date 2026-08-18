@@ -16,6 +16,8 @@ function digest(value: string) {
   return createHash('sha256').update(value, 'utf8').digest();
 }
 
+const EXPECTED_DIGEST = digest(config.admin.apiKey);
+
 @Injectable()
 export default class AdminApiKeyGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
@@ -26,7 +28,7 @@ export default class AdminApiKeyGuard implements CanActivate {
       throw new UnauthorizedException('Missing or invalid admin API key');
     }
 
-    if (!timingSafeEqual(digest(provided), digest(config.admin.apiKey))) {
+    if (!timingSafeEqual(digest(provided), EXPECTED_DIGEST)) {
       throw new UnauthorizedException('Missing or invalid admin API key');
     }
 

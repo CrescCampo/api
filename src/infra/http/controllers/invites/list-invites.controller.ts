@@ -1,22 +1,13 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
-import {
-  ApiOkResponse,
-  ApiOperation,
-  ApiSecurity,
-  ApiTags,
-  ApiUnauthorizedResponse,
-} from '@nestjs/swagger';
+import { Controller, Get, Query } from '@nestjs/common';
+import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import ListInvites from 'domain/application/use-cases/invites/list-invites';
-import AdminApiKeyGuard, {
-  ADMIN_API_KEY_SECURITY_SCHEME,
-} from 'infra/auth/admin-api-key.guard';
+import AdminEndpoint from 'infra/auth/admin-endpoint.decorator';
+import ListInvitesQueryDTO from 'infra/dtos/invites/ListInvitesQueryDTO';
 import ListInvitesResponseDTO from 'infra/dtos/invites/ListInvitesResponseDTO';
 
 @Controller('invites')
-@ApiTags('Invites')
-@UseGuards(AdminApiKeyGuard)
-@ApiSecurity(ADMIN_API_KEY_SECURITY_SCHEME)
+@AdminEndpoint('Invites')
 export default class ListInvitesController {
   constructor(private readonly listInvites: ListInvites) {}
 
@@ -27,8 +18,12 @@ export default class ListInvitesController {
     description: 'Invites listed successfully',
     type: ListInvitesResponseDTO,
   })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  async handle(): Promise<ListInvitesResponseDTO> {
-    return this.listInvites.execute();
+  async handle(
+    @Query() query: ListInvitesQueryDTO,
+  ): Promise<ListInvitesResponseDTO> {
+    return this.listInvites.execute({
+      page: query.page,
+      pageSize: query.pageSize,
+    });
   }
 }

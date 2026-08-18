@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import InvalidInviteError from 'domain/application/errors/auth/InvalidInviteError';
+import InviteNotFoundError from 'domain/application/errors/invite/InviteNotFoundError';
 import InviteRepository from 'domain/application/repositories/InviteRepository';
 import UnitOfWork from 'domain/application/unit-of-work/UnitOfWork';
 import Invite from 'domain/enterprise/entities/Invite';
@@ -27,14 +27,20 @@ export default class RevokeInvite {
       const invite = await this.inviteRepository.findByCodeForUpdate(code);
 
       if (!invite) {
-        throw new InvalidInviteError();
+        throw new InviteNotFoundError(code);
       }
 
-      invite.revoke();
+      const alreadyRevoked = invite.revokedAt;
+
+      if (alreadyRevoked) {
+        return { code: invite.code, revokedAt: alreadyRevoked };
+      }
+
+      const revokedAt = invite.revoke();
 
       await this.inviteRepository.save(invite);
 
-      return { code: invite.code, revokedAt: invite.revokedAt as Date };
+      return { code: invite.code, revokedAt };
     });
   }
 }

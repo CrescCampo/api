@@ -6,6 +6,7 @@ import { WinstonModule } from 'nest-winston';
 import helmet from 'helmet';
 import { json, urlencoded } from 'express';
 import winstonConfig from 'infra/config/winston.config';
+import { ADMIN_API_KEY_HEADER } from 'infra/auth/admin-api-key.guard';
 import setSwagger from 'infra/http/swagger';
 import config from 'infra/config';
 import Environment from 'infra/config/Environment';
@@ -25,7 +26,7 @@ async function bootstrap() {
     app.enableCors({
       origin: ['https://cresccampo.com.br', 'https://www.cresccampo.com.br'],
       methods: ['GET', 'POST', 'PATCH', 'DELETE'],
-      allowedHeaders: ['content-type', 'authorization'],
+      allowedHeaders: ['content-type', 'authorization', ADMIN_API_KEY_HEADER],
       credentials: false,
     });
   }

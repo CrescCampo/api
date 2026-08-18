@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import InvalidInviteError from 'domain/application/errors/auth/InvalidInviteError';
-import InviteRequiredError from 'domain/application/errors/auth/InviteRequiredError';
+import InvalidInviteError from 'domain/application/errors/invite/InvalidInviteError';
+import InviteRequiredError from 'domain/application/errors/invite/InviteRequiredError';
 import FarmerRepository from 'domain/application/repositories/FarmerRepository';
 import FarmRepository from 'domain/application/repositories/FarmRepository';
 import InviteRepository from 'domain/application/repositories/InviteRepository';

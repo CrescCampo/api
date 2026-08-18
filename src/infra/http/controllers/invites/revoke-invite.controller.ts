@@ -1,24 +1,17 @@
-import { Controller, HttpCode, Param, Post, UseGuards } from '@nestjs/common';
+import { Controller, HttpCode, Param, Post } from '@nestjs/common';
 import {
-  ApiForbiddenResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
-  ApiSecurity,
-  ApiTags,
-  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import RevokeInvite from 'domain/application/use-cases/invites/revoke-invite';
-import AdminApiKeyGuard, {
-  ADMIN_API_KEY_SECURITY_SCHEME,
-} from 'infra/auth/admin-api-key.guard';
+import AdminEndpoint from 'infra/auth/admin-endpoint.decorator';
 import RevokeInviteResponseDTO from 'infra/dtos/invites/RevokeInviteResponseDTO';
 
 @Controller('invites')
-@ApiTags('Invites')
-@UseGuards(AdminApiKeyGuard)
-@ApiSecurity(ADMIN_API_KEY_SECURITY_SCHEME)
+@AdminEndpoint('Invites')
 export default class RevokeInviteController {
   constructor(private readonly revokeInvite: RevokeInvite) {}
 
@@ -31,8 +24,7 @@ export default class RevokeInviteController {
     description: 'Invite revoked successfully',
     type: RevokeInviteResponseDTO,
   })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  @ApiForbiddenResponse({ description: 'Invite not found' })
+  @ApiNotFoundResponse({ description: 'Invite not found' })
   async handle(@Param('code') code: string): Promise<RevokeInviteResponseDTO> {
     return this.revokeInvite.execute({ code });
   }
