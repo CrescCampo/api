@@ -1,5 +1,8 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import ListInvites from 'domain/application/use-cases/invites/list-invites';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import ListInvites, {
+  DEFAULT_PAGE_SIZE,
+  MAX_PAGE_SIZE,
+} from 'domain/application/use-cases/invites/list-invites';
 import Invite from 'domain/enterprise/entities/Invite';
 import InMemoryInviteRepository from '../../repositories/InMemoryInviteRepository';
 
@@ -10,6 +13,10 @@ describe('ListInvites', () => {
   beforeEach(() => {
     inviteRepository = new InMemoryInviteRepository();
     sut = new ListInvites(inviteRepository);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('devolve lista vazia quando não há convites', async () => {
@@ -113,25 +120,31 @@ describe('ListInvites', () => {
     ]);
   });
 
-  it('não muta o array devolvido pelo repositório', async () => {
-    await inviteRepository.save(
-      Invite.create({
-        code: 'CRESC-AAAA',
-        createdAt: new Date('2026-01-01T00:00:00Z'),
-      }),
-    );
-    await inviteRepository.save(
+  it('não reordena nem muta o array que o repositório devolve', async () => {
+    const fromRepository = [
       Invite.create({
         code: 'CRESC-BBBB',
         createdAt: new Date('2026-02-01T00:00:00Z'),
       }),
+      Invite.create({
+        code: 'CRESC-AAAA',
+        createdAt: new Date('2026-01-01T00:00:00Z'),
+      }),
+    ];
+
+    vi.spyOn(inviteRepository, 'listPaginated').mockResolvedValue(
+      fromRepository,
     );
 
-    await sut.execute();
+    const { invites } = await sut.execute();
 
-    expect(inviteRepository.items.map(invite => invite.code)).toEqual([
-      'CRESC-AAAA',
+    expect(fromRepository.map(invite => invite.code)).toEqual([
       'CRESC-BBBB',
+      'CRESC-AAAA',
+    ]);
+    expect(invites.map(invite => invite.code)).toEqual([
+      'CRESC-BBBB',
+      'CRESC-AAAA',
     ]);
   });
 
@@ -165,9 +178,39 @@ describe('ListInvites', () => {
     expect(firstPage.invites[0].code).not.toBe(lastPage.invites[0].code);
   });
 
-  it('limita o pageSize ao teto', async () => {
-    const { pagination } = await sut.execute({ pageSize: 5_000 });
+  it('limita o pageSize pedido ao repositório', async () => {
+    const listPaginated = vi.spyOn(inviteRepository, 'listPaginated');
 
-    expect(pagination.meta.currentPage).toBe(1);
+    await sut.execute({ pageSize: 5_000 });
+
+    expect(listPaginated).toHaveBeenCalledWith(MAX_PAGE_SIZE, 0);
+  });
+
+  it.each([
+    { label: 'sem parâmetros', input: {}, limit: DEFAULT_PAGE_SIZE, offset: 0 },
+    {
+      label: 'pageSize zero cai no padrão',
+      input: { pageSize: 0 },
+      limit: DEFAULT_PAGE_SIZE,
+      offset: 0,
+    },
+    {
+      label: 'página negativa cai na primeira',
+      input: { page: -3, pageSize: 5 },
+      limit: 5,
+      offset: 0,
+    },
+    {
+      label: 'offset acompanha a página',
+      input: { page: 4, pageSize: 25 },
+      limit: 25,
+      offset: 75,
+    },
+  ])('traduz $label em limit e offset', async ({ input, limit, offset }) => {
+    const listPaginated = vi.spyOn(inviteRepository, 'listPaginated');
+
+    await sut.execute(input);
+
+    expect(listPaginated).toHaveBeenCalledWith(limit, offset);
   });
 });

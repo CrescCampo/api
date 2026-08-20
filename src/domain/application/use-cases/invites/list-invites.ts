@@ -2,8 +2,9 @@ import { Injectable } from '@nestjs/common';
 import InviteRepository from 'domain/application/repositories/InviteRepository';
 import type { PaginationParams } from 'core/pagination-params';
 
-const DEFAULT_PAGE_SIZE = 20;
-const MAX_PAGE_SIZE = 100;
+export const DEFAULT_PAGE_SIZE = 20;
+
+export const MAX_PAGE_SIZE = 100;
 
 export interface InviteSummary {
   id: string;

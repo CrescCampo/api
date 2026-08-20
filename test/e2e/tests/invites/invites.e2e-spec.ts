@@ -79,10 +79,12 @@ describe('Invites Controllers (e2e)', () => {
     });
 
     it('deve criar código de cooperativa com maxUses e expiresAt (201)', async () => {
+      const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+
       await createInvite({
         maxUses: 50,
         note: 'Cooperativa X',
-        expiresAt: '2027-12-31T00:00:00.000Z',
+        expiresAt: expiresAt.toISOString(),
       });
     });
 

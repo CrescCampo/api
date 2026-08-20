@@ -42,11 +42,11 @@ export default class ErrorStatusMapper {
     // 409 - Conflict (Resource already exists)
     [UserAlreadyExistsError.name, HttpStatus.CONFLICT],
     [EmailAlreadyVerifiedError.name, HttpStatus.CONFLICT],
+    [InviteCodeAlreadyExistsError.name, HttpStatus.CONFLICT],
 
-    // 503 - Service Unavailable (Provider not configured)
+    // 503 - Service Unavailable (Provider not configured, transient exhaustion)
     [OAuthNotConfiguredError.name, HttpStatus.SERVICE_UNAVAILABLE],
     [InviteCodeGenerationError.name, HttpStatus.SERVICE_UNAVAILABLE],
-    [InviteCodeAlreadyExistsError.name, HttpStatus.SERVICE_UNAVAILABLE],
 
     // 404 - Not Found
     [FarmerNotFoundError.name, HttpStatus.NOT_FOUND],
