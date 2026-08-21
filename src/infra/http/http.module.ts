@@ -24,6 +24,9 @@ import SendFeedbackUseCase from 'domain/application/use-cases/feedbacks/send-fee
 import UpdateFarmerPhone from 'domain/application/use-cases/farmers/update-farmer-phone';
 import PasswordResetChangeUseCase from 'domain/application/use-cases/farmers/request-password-reset';
 import ResetPasswordUseCase from 'domain/application/use-cases/farmers/reset-password';
+import CreateInvite from 'domain/application/use-cases/invites/create-invite';
+import ListInvites from 'domain/application/use-cases/invites/list-invites';
+import RevokeInvite from 'domain/application/use-cases/invites/revoke-invite';
 import HealthCheckController from './controllers/health/health-check.controller';
 import AuthenticateController from './controllers/auth/authenticate.controller';
 import GoogleAuthController from './controllers/auth/google-auth.controller';
@@ -44,6 +47,9 @@ import UpdateFarmerPhoneController from './controllers/farmers/update-farmer-pho
 import RequestPasswordResetController from './controllers/farmers/request-password-reset.controller';
 import ResetPasswordController from './controllers/farmers/reset-password.controller';
 import SetFarmerPasswordController from './controllers/farmers/set-farmer-password.controller';
+import CreateInviteController from './controllers/invites/create-invite.controller';
+import ListInvitesController from './controllers/invites/list-invites.controller';
+import RevokeInviteController from './controllers/invites/revoke-invite.controller';
 
 @Module({
   imports: [DatabaseModule, CryptographyModule, GatewaysModule, TracingModule],
@@ -68,6 +74,9 @@ import SetFarmerPasswordController from './controllers/farmers/set-farmer-passwo
     RequestPasswordResetController,
     ResetPasswordController,
     SetFarmerPasswordController,
+    CreateInviteController,
+    ListInvitesController,
+    RevokeInviteController,
   ],
   providers: [
     LoginFarmerByEmail,
@@ -91,6 +100,9 @@ import SetFarmerPasswordController from './controllers/farmers/set-farmer-passwo
     UpdateFarmerPhone,
     PasswordResetChangeUseCase,
     ResetPasswordUseCase,
+    CreateInvite,
+    ListInvites,
+    RevokeInvite,
   ],
 })
 export default class HttpModule {}

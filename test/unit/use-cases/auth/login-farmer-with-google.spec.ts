@@ -14,7 +14,7 @@ import LoginFarmerWithGoogle from 'domain/application/use-cases/auth/login-farme
 import Farm from 'domain/enterprise/entities/Farm';
 import Farmer from 'domain/enterprise/entities/Farmer';
 import Invite from 'domain/enterprise/entities/Invite';
-import InviteRequiredError from 'domain/application/errors/auth/InviteRequiredError';
+import InviteRequiredError from 'domain/application/errors/invite/InviteRequiredError';
 import InMemoryFarmRepository from '../../repositories/InMemoryFarmRepository';
 import InMemoryFarmerRepository from '../../repositories/InMemoryFarmerRepository';
 import InMemoryCultureRepository from '../../repositories/InMemoryCultureRepository';

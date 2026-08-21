@@ -69,9 +69,9 @@ export default class Invite extends Entity<InviteProps> {
     this.props.usedCount += 1;
   }
 
-  revoke() {
-    if (this.isRevoked) return;
-    this.props.revokedAt = new Date();
+  revoke(): Date {
+    this.props.revokedAt ??= new Date();
+    return this.props.revokedAt;
   }
 
   static normalizeCode(raw: string) {
