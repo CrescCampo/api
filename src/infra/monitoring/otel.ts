@@ -44,7 +44,9 @@ const sdk = new NodeSDK({
     'deployment.environment': process.env.APP_ENV || 'dev',
   }),
 
-  logRecordProcessors: [new BatchLogRecordProcessor(new OTLPLogExporter())],
+  logRecordProcessors: [
+    new BatchLogRecordProcessor({ exporter: new OTLPLogExporter() }),
+  ],
 
   instrumentations: [
     getNodeAutoInstrumentations({
