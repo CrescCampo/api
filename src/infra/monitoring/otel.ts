@@ -18,76 +18,85 @@ import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
+import parseBooleanEnv from 'infra/env/parse-boolean-env';
 
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-if (process.env.APP_ENV !== 'prod') {
-  diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.INFO);
+function startOtel(): void {
+  if (process.env.APP_ENV !== 'prod') {
+    diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.INFO);
+  }
+
+  const sdk = new NodeSDK({
+    traceExporter: new OTLPTraceExporter({}),
+
+    metricReaders: [
+      new PeriodicExportingMetricReader({
+        exporter: new OTLPMetricExporter(),
+        exportIntervalMillis: 30000,
+      }),
+    ],
+
+    resource: resourceFromAttributes({
+      [ATTR_SERVICE_NAME]: process.env.OTEL_SERVICE_NAME || 'API',
+      [ATTR_SERVICE_VERSION]: '0.0.1',
+      'service.namespace': 'CrescCampo',
+      'deployment.environment': process.env.APP_ENV || 'dev',
+    }),
+
+    logRecordProcessors: [
+      new BatchLogRecordProcessor({ exporter: new OTLPLogExporter() }),
+    ],
+
+    instrumentations: [
+      getNodeAutoInstrumentations({
+        '@opentelemetry/instrumentation-fs': { enabled: false },
+        '@opentelemetry/instrumentation-dns': { enabled: false },
+        '@opentelemetry/instrumentation-net': { enabled: false },
+        '@opentelemetry/instrumentation-http': {
+          ignoreIncomingRequestHook: req => {
+            const url = req.url || '';
+            return (
+              url.includes('/health') ||
+              url.includes('/metrics') ||
+              url.includes('/favicon')
+            );
+          },
+        },
+        '@opentelemetry/instrumentation-pg': {
+          enhancedDatabaseReporting: true,
+          requireParentSpan: false,
+        },
+        '@opentelemetry/instrumentation-nestjs-core': {
+          enabled: true,
+        },
+      }),
+    ],
+
+    resourceDetectors: [
+      envDetector,
+      hostDetector,
+      osDetector,
+      processDetector,
+      containerDetector,
+    ],
+  });
+
+  sdk.start();
+
+  process.on('SIGTERM', () => {
+    sdk
+      .shutdown()
+      .then(() => console.log('OpenTelemetry encerrado'))
+      .catch(error => console.error('Erro ao encerrar OTel', error))
+      .finally(() => process.exit(0));
+  });
 }
 
-const sdk = new NodeSDK({
-  traceExporter: new OTLPTraceExporter({}),
-
-  metricReaders: [
-    new PeriodicExportingMetricReader({
-      exporter: new OTLPMetricExporter(),
-      exportIntervalMillis: 30000,
-    }),
-  ],
-
-  resource: resourceFromAttributes({
-    [ATTR_SERVICE_NAME]: process.env.OTEL_SERVICE_NAME || 'API',
-    [ATTR_SERVICE_VERSION]: '0.0.1',
-    'service.namespace': 'CrescCampo',
-    'deployment.environment': process.env.APP_ENV || 'dev',
-  }),
-
-  logRecordProcessors: [
-    new BatchLogRecordProcessor({ exporter: new OTLPLogExporter() }),
-  ],
-
-  instrumentations: [
-    getNodeAutoInstrumentations({
-      '@opentelemetry/instrumentation-fs': { enabled: false },
-      '@opentelemetry/instrumentation-dns': { enabled: false },
-      '@opentelemetry/instrumentation-net': { enabled: false },
-      '@opentelemetry/instrumentation-http': {
-        ignoreIncomingRequestHook: req => {
-          const url = req.url || '';
-          return (
-            url.includes('/health') ||
-            url.includes('/metrics') ||
-            url.includes('/favicon')
-          );
-        },
-      },
-      '@opentelemetry/instrumentation-pg': {
-        enhancedDatabaseReporting: true,
-        requireParentSpan: false,
-      },
-      '@opentelemetry/instrumentation-nestjs-core': {
-        enabled: true,
-      },
-    }),
-  ],
-
-  resourceDetectors: [
-    envDetector,
-    hostDetector,
-    osDetector,
-    processDetector,
-    containerDetector,
-  ],
-});
-
-sdk.start();
-
-process.on('SIGTERM', () => {
-  sdk
-    .shutdown()
-    .then(() => console.log('OpenTelemetry encerrado'))
-    .catch(error => console.error('Erro ao encerrar OTel', error))
-    .finally(() => process.exit(0));
-});
+if (parseBooleanEnv(process.env.OTEL_ENABLED, true)) {
+  startOtel();
+} else {
+  console.log('OpenTelemetry desabilitado por OTEL_ENABLED');
+}

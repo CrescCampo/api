@@ -60,4 +60,7 @@ export interface Config {
     resendTemplateAlias: string;
     codeSecret: string;
   };
+  otel: {
+    enabled: boolean;
+  };
 }

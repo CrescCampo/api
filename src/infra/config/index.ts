@@ -65,6 +65,9 @@ const config: Config = {
     resendTemplateAlias: 'verify-email',
     codeSecret: envVars.VERIFICATION_CODE_SECRET,
   },
+  otel: {
+    enabled: envVars.OTEL_ENABLED,
+  },
 };
 
 export default config;

@@ -1,8 +1,9 @@
 import 'dotenv/config';
 import 'reflect-metadata';
 
-import { Type, plainToInstance } from 'class-transformer';
+import { Transform, Type, plainToInstance } from 'class-transformer';
 import {
+  IsBoolean,
   IsEnum,
   IsInt,
   IsNotEmpty,
@@ -15,6 +16,7 @@ import {
   validateSync,
 } from 'class-validator';
 import Environment from 'infra/config/Environment';
+import parseBooleanEnv from './parse-boolean-env';
 
 export class EnvVariables {
   @IsInt()
@@ -118,6 +120,11 @@ export class EnvVariables {
   @IsInt()
   @Type(() => Number)
   RATE_LIMIT_LIMIT: number = 5;
+
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ obj }) => parseBooleanEnv(obj.OTEL_ENABLED, true))
+  OTEL_ENABLED: boolean = true;
 }
 
 const envVarsInstance = plainToInstance(EnvVariables, process.env, {
